@@ -27,6 +27,7 @@
 #include "Sdust.h"
 #include "MateInfo.h"
 #include "ChrConverter.h"
+#include "HelperFunctions.h"
 
 namespace sophia {
 int Alignment::LOWQUALCLIPTHRESHOLD { }, Alignment::BASEQUALITYTHRESHOLD { }, Alignment::BASEQUALITYTHRESHOLDLOW { }, //
@@ -44,7 +45,7 @@ Alignment::Alignment() :
 				mateChrIndex { 0 },
 				matePos { 0 },
 				samLine { },
-				validLine { std::getline(std::cin, samLine) },
+				validLine { error_terminating_getline(std::cin, samLine) },
 				samChunkPositions { },
 				saCbegin { },
 				saCend { },

@@ -29,6 +29,7 @@
 #include "ChrConverter.h"
 #include <boost/algorithm/string/join.hpp>
 #include <chrono>
+#include "HelperFunctions.h"
 
 namespace sophia {
 MasterRefProcessor::MasterRefProcessor(const std::vector<std::string>& filesIn, const std::string &outputRootName, const std::string &version, const int defaultReadLengthIn) :
@@ -104,7 +105,7 @@ unsigned long long MasterRefProcessor::processFile(const std::string& gzPath, sh
 	std::string sophiaLine { };
 	std::vector<std::vector<BreakpointReduced>> fileBps { 85, std::vector<BreakpointReduced> { } };
 	auto lineIndex = 0;
-	while (std::getline(gzStream, sophiaLine)) {
+	while (error_terminating_getline(gzStream, sophiaLine)) {
 		if (sophiaLine[0] != '#') {
 			auto chrIndex = ChrConverter::indexConverter[ChrConverter::readChromosomeIndex(sophiaLine.cbegin(), '\t')];
 			if (chrIndex < 0) {

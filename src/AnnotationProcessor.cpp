@@ -30,6 +30,7 @@
 #include <cmath>
 #include <algorithm>
 #include "SuppAlignment.h"
+#include "HelperFunctions.h"
 
 namespace sophia {
 bool AnnotationProcessor::ABRIDGEDOUTPUT { false };
@@ -49,7 +50,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 	tumorGzHandle->push(*tumorInputHandle);
 	std::string line;
 	auto lineIndex = 0;
-	while (std::getline(*tumorGzHandle, line)) {
+	while (error_terminating_getline(*tumorGzHandle, line)) {
 		if (line.front() == '#') {
 			continue;
 		};
@@ -109,7 +110,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 	controlGzHandle->push(*controlInputHandle);
 	std::string line;
 	auto lineIndex = 0;
-	while (std::getline(*controlGzHandle, line)) {
+	while (error_terminating_getline(*controlGzHandle, line)) {
 		if (line.front() == '#') {
 			continue;
 		};
@@ -206,7 +207,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 	tumorGzHandle->push(boost::iostreams::gzip_decompressor());
 	tumorGzHandle->push(*tumorInputHandle);
 	lineIndex = 0;
-	while (std::getline(*tumorGzHandle, line)) {
+	while (error_terminating_getline(*tumorGzHandle, line)) {
 		if (line.front() == '#') {
 			continue;
 		};
