@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -uex
+trap 'echo "Compilation failed with an error" >> /dev/stderr' ERR
+
 install_strtk() {
     wget -c https://github.com/ArashPartow/strtk/raw/master/strtk.hpp -O ../include/strtk.hpp
     # sed -ir 's/#include <boost\/lexical_cast.hpp>/#include <boost\/convert\/lexical_cast.hpp>/' ../include/strtk.hpp
@@ -26,4 +29,4 @@ $CPP $CPP_OPTS -o "Sdust.o" "../src/Sdust.cpp"
 $CPP $CPP_OPTS -o "SuppAlignment.o" "../src/SuppAlignment.cpp"
 $CPP $CPP_OPTS -o "sophia.o" "../sophia.cpp"
 
-$CPP -L$CONDA_ENV_ROOT/lib -flto -o "sophia"  Alignment.o Breakpoint.o ChosenBp.o ChrConverter.o SamSegmentMapper.o Sdust.o SuppAlignment.o  ./sophia.o -lboost_program_options
+$CPP -L$CONDA_ENV_ROOT/lib -flto -o "sophia"  Alignment.o Breakpoint.o ChosenBp.o ChrConverter.o SamSegmentMapper.o Sdust.o SuppAlignment.o sophia.o -lboost_program_options

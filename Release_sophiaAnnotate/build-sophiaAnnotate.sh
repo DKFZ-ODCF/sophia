@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -uex
+trap 'echo "Compilation failed with an error" >> /dev/stderr' ERR
+
 install_strtk() {
     wget -c https://github.com/ArashPartow/strtk/raw/master/strtk.hpp -O ../include/strtk.hpp
     # sed -ir 's/#include <boost\/lexical_cast.hpp>/#include <boost\/convert\/lexical_cast.hpp>/' ../include/strtk.hpp
@@ -30,4 +33,4 @@ $CPP $CPP_OPTS -o "SuppAlignmentAnno.o" "../src/SuppAlignmentAnno.cpp"
 $CPP $CPP_OPTS -o "SvEvent.o" "../src/SvEvent.cpp"
 $CPP $CPP_OPTS -o "sophiaAnnotate.o" "../sophiaAnnotate.cpp"
 
-$CPP -L$CONDA_ENV_ROOT/lib -flto -o "sophiaAnnotate"  AnnotationProcessor.o Breakpoint.o BreakpointReduced.o ChrConverter.o DeFuzzier.o GermlineMatch.o MrefEntry.o MrefEntryAnno.o MrefMatch.o SuppAlignment.o SuppAlignmentAnno.o SvEvent.o  ./sophiaAnnotate.o   -lz -lboost_system -lboost_iostreams
+$CPP -L$CONDA_ENV_ROOT/lib -flto -o "sophiaAnnotate"  AnnotationProcessor.o Breakpoint.o BreakpointReduced.o ChrConverter.o DeFuzzier.o GermlineMatch.o MrefEntry.o MrefEntryAnno.o MrefMatch.o SuppAlignment.o SuppAlignmentAnno.o SvEvent.o  sophiaAnnotate.o   -lz -lboost_system -lboost_iostreams
