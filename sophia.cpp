@@ -117,7 +117,7 @@ std::pair<double, double> getIsizeParameters(const std::string &ISIZEFILE) {
 	std::ifstream infile { ISIZEFILE };
 	std::string line;
 	auto i = 0;
-	while (error_terminating_getline(infile, line)) {
+	while (sophia::error_terminating_getline(infile, line)) {
 		boost::algorithm::trim_right(line);
 		switch (i) {
 		case 0:

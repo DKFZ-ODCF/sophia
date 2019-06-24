@@ -21,19 +21,16 @@
 
 #include "HelperFunctions.h"
 
-#include <iostream>
-
 namespace sophia {
 
-    istream& error_terminating_getline(istream& is, string& str) {
-        if (!is.is_open())
-            perror("File is not open");
+    using namespace std;
 
-        std::getline(is, str);
+    istream& error_terminating_getline(istream& is, string& str) {
+        getline(is, str);
 
         if (is.bad()) {
             perror("Error reading line from file");
-            exit(IOERROR_EXITCODE);
+            exit(EXITCODE_IOERROR);
         }
 
         return is;

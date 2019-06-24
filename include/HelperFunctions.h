@@ -19,16 +19,17 @@
  *      LICENSE: GPL
  */
 
-#ifndef "HelperFunctions.h"
-#define "HelperFunctions.h"
+#ifndef HELPERFUNCIONS_H_
+#define HELPERFUNCIONS_H_
 
 #include <iostream>
+#include <string>
 
 namespace sophia {
 
     const int EXITCODE_IOERROR = 1;
 
-    istream& error_terminating_getline(istream& is, string& str, ostream& error_stream);
+    std::istream& error_terminating_getline(std::istream& is, std::string& str);
 
 } /* namespace sophia */
 
