@@ -1,0 +1,4 @@
+*.o
+Release_sophia/sophia
+Release_sophiaAnnotate/sophiaAnnotate
+include/strtk.hpp
