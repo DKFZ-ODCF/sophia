@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
 	mrefGzHandle->push(*mrefInputHandle);
 	std::cerr << "m\n";
 	std::string line { };
-	while (error_terminating_getline(*mrefGzHandle, line)) {
+	while (sophia::error_terminating_getline(*mrefGzHandle, line)) {
 		if (line.front() == '#') {
 			continue;
 		};
