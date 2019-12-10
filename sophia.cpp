@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 	("lowqualclipsize", boost::program_options::value<int>(), "Maximum length of a low qality split read overhang for discarding. (5)") //
 	("isizesigma", boost::program_options::value<int>(), "The number of sds a s's mate has to be away to be called as discordant. (5)") //
 	("bpsupport", boost::program_options::value<int>(), "Minimum number of reads supporting a discordant contig. (5)") //
-	("properpairratio", boost::program_options::value<double>(), "Proper pair ratio as a percentage (100.0)");
+	("properpairpercentage", boost::program_options::value<double>(), "Proper pair ratio as a percentage (100.0)");
 	boost::program_options::variables_map inputVariables { };
 	boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), inputVariables);
 	boost::program_options::notify(inputVariables);
@@ -69,8 +69,8 @@ int main(int argc, char** argv) {
 	if (inputVariables.count("bpsupport")) {
 		bpSupport = inputVariables["bpsupport"].as<int>();
 	}
-	if (inputVariables.count("properpairratio")) {
-		properPairRatio = inputVariables["properpairratio"].as<double>();
+	if (inputVariables.count("properpairpercentage")) {
+		properPairRatio = inputVariables["properpairpercentage"].as<double>();
 		properPairRatio /= 100;
 		if (properPairRatio < 0.9) {
 			sophia::Breakpoint::PROPERPAIRCOMPENSATIONMODE = true;
