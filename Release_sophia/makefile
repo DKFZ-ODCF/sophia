@@ -44,7 +44,7 @@ all: sophia
 sophia: $(OBJS) $(USER_OBJS)	
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	"g++ -static -static-libgcc -static-libstdc++ -flto -o ""sophia"" $(OBJS) $(USER_OBJS) $(LIBS)"
+	g++ -static -static-libgcc -static-libstdc++ -flto -o sophia $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 	

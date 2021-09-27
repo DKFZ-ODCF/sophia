@@ -20,6 +20,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include "ChrConverter.h"
+#include "HelperFunctions.h"
 
 int main(int argc, char** argv) {
 	std::ios_base::sync_with_stdio(false);
@@ -109,7 +110,7 @@ int main(int argc, char** argv) {
 	mrefGzHandle->push(*mrefInputHandle);
 	std::cerr << "m\n";
 	std::string line { };
-	while (std::getline(*mrefGzHandle, line)) {
+	while (sophia::error_terminating_getline(*mrefGzHandle, line)) {
 		if (line.front() == '#') {
 			continue;
 		};

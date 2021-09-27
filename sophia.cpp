@@ -15,6 +15,7 @@
 #include "Breakpoint.h"
 #include "SamSegmentMapper.h"
 #include "ChrConverter.h"
+#include "HelperFunctions.h"
 
 std::pair<double, double> getIsizeParameters(const std::string &ISIZEFILE);
 int main(int argc, char** argv) {
@@ -116,7 +117,7 @@ std::pair<double, double> getIsizeParameters(const std::string &ISIZEFILE) {
 	std::ifstream infile { ISIZEFILE };
 	std::string line;
 	auto i = 0;
-	while (std::getline(infile, line)) {
+	while (sophia::error_terminating_getline(infile, line)) {
 		boost::algorithm::trim_right(line);
 		switch (i) {
 		case 0:

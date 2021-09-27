@@ -12,6 +12,7 @@
 #include <vector>
 #include "MasterRefProcessor.h"
 #include "MrefEntry.h"
+#include "HelperFunctions.h"
 
 int main(int argc, char** argv) {
 	boost::program_options::options_description desc("Allowed options");
@@ -37,7 +38,7 @@ int main(int argc, char** argv) {
 	}
 	std::ifstream gzInFilesHandle { gzInFilesList };
 	std::vector<std::string> gzListIn;
-	for (std::string line; std::getline(gzInFilesHandle, line);) {
+	for (std::string line; error_terminating_getline(gzInFilesHandle, line);) {
 		gzListIn.push_back(line);
 	}
 	std::string version { };
