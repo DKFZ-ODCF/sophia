@@ -24,7 +24,9 @@
 
 namespace sophia {
 
-GermlineMatch::GermlineMatch(double clonalityIn, double conservativeClonalityIn, const std::vector<std::pair<SuppAlignmentAnno, double>>& suppMatchesIn) :
+    using namespace std;
+
+GermlineMatch::GermlineMatch(double clonalityIn, double conservativeClonalityIn, const vector<pair<SuppAlignmentAnno, double>>& suppMatchesIn) :
 				clonality { clonalityIn },
 				conservativeClonality { conservativeClonalityIn },
 				suppMatches { },

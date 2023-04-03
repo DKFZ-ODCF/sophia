@@ -27,25 +27,29 @@
 #include <boost/format.hpp>
 #include <BreakpointReduced.h>
 #include "SuppAlignmentAnno.h"
+
 namespace sophia {
 
+    using namespace std;
+
 class MrefEntryAnno {
+
 public:
 	static int PIDSINMREF;
 	static int DEFAULTREADLENGTH;
 	static boost::format doubleFormatter;
-	MrefEntryAnno(const std::string &mrefEntryIn);
+	MrefEntryAnno(const string &mrefEntryIn);
 	template<typename T>
 	bool operator<(const T& rhs) const {
 		return pos < rhs.getPos();
 	}
 	template<typename T>
 	int distanceTo(const T& rhs) const {
-		return std::abs(pos - rhs.getPos());
+		return abs(pos - rhs.getPos());
 	}
 	template<typename T>
 	int distanceToBp(const T &compIn) const {
-		return std::abs(pos - compIn.getPos());
+		return abs(pos - compIn.getPos());
 	}
 	bool operator==(const MrefEntryAnno& rhs) const {
 		return pos == rhs.getPos();
@@ -54,8 +58,8 @@ public:
 	int getPos() const {
 		return pos;
 	}
-	std::vector<SuppAlignmentAnno*> getSuppAlignmentsPtr() {
-		std::vector<SuppAlignmentAnno*> res { };
+	vector<SuppAlignmentAnno*> getSuppAlignmentsPtr() {
+		vector<SuppAlignmentAnno*> res { };
 		for (auto &sa : suppAlignments) {
 			res.push_back(&sa);
 		}
@@ -68,7 +72,7 @@ public:
 		}
 		for (auto saIt = suppAlignments.begin(); saIt != suppAlignments.end(); ++saIt) {
 			if (saIt->isToRemove()) {
-				std::swap(*saIt, suppAlignments.back());
+				swap(*saIt, suppAlignments.back());
 			}
 			while (!suppAlignments.empty() && suppAlignments.back().isToRemove()) {
 				suppAlignments.pop_back();
@@ -77,12 +81,12 @@ public:
 	}
 //	SuppAlignmentAnno* searchFuzzySa(const SuppAlignmentAnno& fuzzySa);
 
-	const std::vector<SuppAlignmentAnno>& getSuppAlignments() const {
+	const vector<SuppAlignmentAnno>& getSuppAlignments() const {
 		return suppAlignments;
 	}
 
-	std::vector<SuppAlignmentAnno*> getSupplementsPtr() {
-		std::vector<SuppAlignmentAnno*> res { };
+	vector<SuppAlignmentAnno*> getSupplementsPtr() {
+		vector<SuppAlignmentAnno*> res { };
 		for (auto &sa : suppAlignments) {
 			res.push_back(&sa);
 		}
@@ -93,7 +97,7 @@ public:
 			fuzziness = 2.5 * DEFAULTREADLENGTH;
 			return (pos - fuzziness) <= (compIn.getExtendedPos() + fuzziness) && (compIn.getPos() - fuzziness) <= (pos + fuzziness);
 		} else {
-			return std::abs(pos - compIn.getPos()) <= fuzziness;
+			return abs(pos - compIn.getPos()) <= fuzziness;
 		}
 	}
 	int distanceToSupp(const SuppAlignmentAnno &compIn) const {
@@ -108,7 +112,7 @@ public:
 				}
 			}
 		} else {
-			return std::abs(pos - compIn.getPos());
+			return abs(pos - compIn.getPos());
 		}
 	}
 	short getNumHits() const {
@@ -121,7 +125,7 @@ public:
 private:
 	int pos;
 	short numHits;
-	std::vector<SuppAlignmentAnno> suppAlignments;
+	vector<SuppAlignmentAnno> suppAlignments;
 };
 
 } /* namespace sophia */

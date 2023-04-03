@@ -29,7 +29,10 @@
 #include <boost/algorithm/string/join.hpp>
 #include "ChrConverter.h"
 namespace sophia {
-const std::string Breakpoint::COLUMNSSTR = boost::join(std::vector<std::string> { //
+
+    using namespace std;
+
+const string Breakpoint::COLUMNSSTR = boost::join(vector<string> { //
 		"#chr", "start", "end", //
 				"covTypes(pairedBreaksSoft,pairedBreaksHard,mateReadSupport,unpairedBreaksSoft,unpairedBreaksHard,shortIndelReads,normalSpans,lowQualSpansSoft,lowQualSpansHard,lowQualBreaksSoft,lowQualBreaksHard,repetitiveOverhangs)", //
 				"leftCoverage,rightCoverage", //
@@ -72,7 +75,7 @@ Breakpoint::Breakpoint(int chrIndexIn, int posIn) :
 				poolLowQualRight { } {
 }
 
-void Breakpoint::addSoftAlignment(std::shared_ptr<Alignment> alignmentIn) {
+void Breakpoint::addSoftAlignment(shared_ptr<Alignment> alignmentIn) {
 	if (!alignmentIn->isSupplementary()) {
 		if (supportingSoftAlignments.size() <= MAXPERMISSIBLESOFTCLIPS) {
 			supportingSoftAlignments.push_back(alignmentIn);
@@ -80,7 +83,7 @@ void Breakpoint::addSoftAlignment(std::shared_ptr<Alignment> alignmentIn) {
 	}
 }
 
-void Breakpoint::addHardAlignment(std::shared_ptr<Alignment> alignmentIn) {
+void Breakpoint::addHardAlignment(shared_ptr<Alignment> alignmentIn) {
 	if (alignmentIn->isSupplementary()) {
 		if (!(alignmentIn->isLowMapq() || alignmentIn->isNullMapq())) {
 			if (supportingHardAlignments.size() <= MAXPERMISSIBLEHARDCLIPS) {
@@ -97,8 +100,8 @@ void Breakpoint::addHardAlignment(std::shared_ptr<Alignment> alignmentIn) {
 	}
 }
 
-bool Breakpoint::finalizeBreakpoint(const std::deque<MateInfo>& discordantAlignmentsPool, const std::deque<MateInfo>& discordantLowQualAlignmentsPool, const std::deque<MateInfo>& discordantAlignmentCandidatesPool) {
-	auto overhangStr = std::string();
+bool Breakpoint::finalizeBreakpoint(const deque<MateInfo>& discordantAlignmentsPool, const deque<MateInfo>& discordantLowQualAlignmentsPool, const deque<MateInfo>& discordantAlignmentCandidatesPool) {
+	auto overhangStr = string();
 	auto eventTotal = unpairedBreaksSoft + unpairedBreaksHard + breaksShortIndel;
 	auto artifactTotal = lowQualBreaksSoft + lowQualSpansSoft + lowQualSpansHard;
 	if ((eventTotal + artifactTotal > 50) && (artifactTotal / (0.0 + eventTotal + artifactTotal)) > 0.85) {
@@ -139,8 +142,8 @@ bool Breakpoint::finalizeBreakpoint(const std::deque<MateInfo>& discordantAlignm
 	return true;
 }
 
-void Breakpoint::printBreakpointReport(const std::string& overhangStr) {
-	std::string res { };
+void Breakpoint::printBreakpointReport(const string& overhangStr) {
+	string res { };
 	res.reserve(350);
 	res.append(ChrConverter::indexToChr[chrIndex]).append("\t");
 	res.append(strtk::type_to_string<int>(pos)).append("\t");
@@ -176,10 +179,10 @@ void Breakpoint::printBreakpointReport(const std::string& overhangStr) {
 			res.append(overhangStr).append("\n");
 		}
 	}
-	std::cout << res;
+	cout << res;
 }
 
-void Breakpoint::collapseSuppRange(std::string &res, const std::vector<SuppAlignment>& vec) const {
+void Breakpoint::collapseSuppRange(string &res, const vector<SuppAlignment>& vec) const {
 	if (vec.empty()) {
 		res.append(".");
 	} else {
@@ -190,7 +193,7 @@ void Breakpoint::collapseSuppRange(std::string &res, const std::vector<SuppAlign
 	}
 }
 
-std::string Breakpoint::finalizeOverhangs() {
+string Breakpoint::finalizeOverhangs() {
 	++bpindex;
 	for (auto i = 0u; i < supportingSoftAlignments.size(); ++i) {
 		supportingSoftAlignments[i]->setChosenBp(pos, i);
@@ -212,9 +215,9 @@ std::string Breakpoint::finalizeOverhangs() {
 			}
 		}
 	}
-	std::vector<SuppAlignment> supplementsPrimaryTmp { };
-	std::sort(supportingSoftAlignments.begin(), supportingSoftAlignments.end(), [](const std::shared_ptr<Alignment>& a, const std::shared_ptr<Alignment>& b) {return a->getOverhangLength() < b->getOverhangLength();});
-	std::vector<std::shared_ptr<Alignment>> supportingSoftParentAlignments { };
+	vector<SuppAlignment> supplementsPrimaryTmp { };
+	sort(supportingSoftAlignments.begin(), supportingSoftAlignments.end(), [](const shared_ptr<Alignment>& a, const shared_ptr<Alignment>& b) {return a->getOverhangLength() < b->getOverhangLength();});
+	vector<shared_ptr<Alignment>> supportingSoftParentAlignments { };
 	while (!supportingSoftAlignments.empty()) {
 		auto substrCheck = false;
 		auto tmpSas = supportingSoftAlignments.back()->generateSuppAlignments(chrIndex, pos);
@@ -226,14 +229,14 @@ std::string Breakpoint::finalizeOverhangs() {
 			}
 		}
 		if (!substrCheck) {
-			auto allDistant = !tmpSas.empty() && std::all_of(std::cbegin(tmpSas), std::cend(tmpSas), [](const SuppAlignment &sa) {return sa.isDistant();});
+			auto allDistant = !tmpSas.empty() && all_of(cbegin(tmpSas), cend(tmpSas), [](const SuppAlignment &sa) {return sa.isDistant();});
 			if (allDistant || supportingSoftAlignments.back()->overhangComplexityMaskRatio() <= 0.5) {
 				if (supportingSoftAlignments.back()->getOverhangLength() >= 20) {
 					supportingSoftAlignments.back()->addSupplementaryAlignments(tmpSas);
 					supportingSoftParentAlignments.push_back(supportingSoftAlignments.back());
 				} else {
 					for (const auto &sa : tmpSas) {
-						auto it = std::find_if(supplementsPrimaryTmp.begin(), supplementsPrimaryTmp.end(), [&] (const SuppAlignment& suppAlignment) {return suppAlignment.saCloseness(sa,5);});
+						auto it = find_if(supplementsPrimaryTmp.begin(), supplementsPrimaryTmp.end(), [&] (const SuppAlignment& suppAlignment) {return suppAlignment.saCloseness(sa,5);});
 						if (it == supplementsPrimaryTmp.end()) {
 							supplementsPrimaryTmp.push_back(sa);
 						} else {
@@ -256,7 +259,7 @@ std::string Breakpoint::finalizeOverhangs() {
 		}
 		supportingSoftAlignments.pop_back();
 	}
-	std::string consensusOverhangsTmp { };
+	string consensusOverhangsTmp { };
 	consensusOverhangsTmp.reserve(250);
 	{
 		auto i = 1;
@@ -270,7 +273,7 @@ std::string Breakpoint::finalizeOverhangs() {
 				if (sa.isToRemove()) {
 					continue;
 				}
-				auto it = std::find_if(supplementsPrimary.begin(), supplementsPrimary.end(), [&] (const SuppAlignment& suppAlignment) {return suppAlignment.saCloseness(sa,5);});
+				auto it = find_if(supplementsPrimary.begin(), supplementsPrimary.end(), [&] (const SuppAlignment& suppAlignment) {return suppAlignment.saCloseness(sa,5);});
 				if (it == supplementsPrimary.end()) {
 					supplementsPrimary.push_back(sa);
 					supplementsPrimary.back().addSupportingIndices(overhangParent->getChildrenNodes());
@@ -291,11 +294,11 @@ std::string Breakpoint::finalizeOverhangs() {
 		if (!consensusOverhangsTmp.empty()) {
 			consensusOverhangsTmp.pop_back();
 		} else {
-			return std::string();
+			return string();
 		}
 	}
 	for (const auto &sa : supplementsPrimaryTmp) {
-		auto it = std::find_if(supplementsPrimary.begin(), supplementsPrimary.end(), [&] (const SuppAlignment& suppAlignment) {return suppAlignment.saCloseness(sa,5);});
+		auto it = find_if(supplementsPrimary.begin(), supplementsPrimary.end(), [&] (const SuppAlignment& suppAlignment) {return suppAlignment.saCloseness(sa,5);});
 		if (it == supplementsPrimary.end()) {
 			supplementsPrimary.push_back(sa);
 		} else {
@@ -313,7 +316,7 @@ std::string Breakpoint::finalizeOverhangs() {
 	return consensusOverhangsTmp;
 }
 
-bool Breakpoint::matchDetector(const std::shared_ptr<Alignment>& longAlignment, const std::shared_ptr<Alignment>& shortAlignment) const {
+bool Breakpoint::matchDetector(const shared_ptr<Alignment>& longAlignment, const shared_ptr<Alignment>& shortAlignment) const {
 	if (longAlignment->isOverhangEncounteredM() != shortAlignment->isOverhangEncounteredM()) {
 		return false;
 	}
@@ -355,7 +358,7 @@ bool Breakpoint::matchDetector(const std::shared_ptr<Alignment>& longAlignment, 
 }
 
 void Breakpoint::detectDoubleSupportSupps() {
-	std::vector<SuppAlignment> saHardTmpLowQual;
+	vector<SuppAlignment> saHardTmpLowQual;
 	{
 		auto i = 0u;
 		for (; i < supportingHardAlignments.size(); ++i) {
@@ -406,7 +409,7 @@ void Breakpoint::detectDoubleSupportSupps() {
 		supportingHardLowMapqAlignments.clear();
 	}
 	{
-		std::vector<int> lowMapqHardSupportWhitelistIndices { };
+		vector<int> lowMapqHardSupportWhitelistIndices { };
 		for (auto primarySupptIt = supplementsPrimary.begin(); primarySupptIt != supplementsPrimary.end(); ++primarySupptIt) {
 			auto foundMatch = false;
 			for (auto secondarySuppIt = supplementsSecondary.begin(); secondarySuppIt != supplementsSecondary.end(); ++secondarySuppIt) {
@@ -445,8 +448,8 @@ void Breakpoint::detectDoubleSupportSupps() {
 		cleanUpVector(supplementsSecondary);
 		cleanUpVector(saHardTmpLowQual);
 		supplementsSecondary.insert(supplementsSecondary.end(), saHardTmpLowQual.begin(), saHardTmpLowQual.end());
-		std::sort(lowMapqHardSupportWhitelistIndices.begin(), lowMapqHardSupportWhitelistIndices.end());
-		auto whitelistSize = std::distance(lowMapqHardSupportWhitelistIndices.begin(), std::unique(lowMapqHardSupportWhitelistIndices.begin(), lowMapqHardSupportWhitelistIndices.end()));
+		sort(lowMapqHardSupportWhitelistIndices.begin(), lowMapqHardSupportWhitelistIndices.end());
+		auto whitelistSize = distance(lowMapqHardSupportWhitelistIndices.begin(), unique(lowMapqHardSupportWhitelistIndices.begin(), lowMapqHardSupportWhitelistIndices.end()));
 		unpairedBreaksHard += whitelistSize;
 		lowQualBreaksHard -= whitelistSize;
 	}
@@ -472,25 +475,25 @@ void Breakpoint::detectDoubleSupportSupps() {
 	for (auto &sa : supplementsPrimary) {
 		sa.finalizeSupportingIndices();
 	}
-	std::vector<int> uniqueDoubleSupportPrimaryIndices { };
-	std::vector<int> uniqueDoubleSupportSecondaryIndices { };
+	vector<int> uniqueDoubleSupportPrimaryIndices { };
+	vector<int> uniqueDoubleSupportSecondaryIndices { };
 	for (auto &sa : doubleSidedMatches) {
 		sa.finalizeSupportingIndices();
 		uniqueDoubleSupportPrimaryIndices.insert(uniqueDoubleSupportPrimaryIndices.end(), sa.getSupportingIndices().cbegin(), sa.getSupportingIndices().cend());
 		uniqueDoubleSupportSecondaryIndices.insert(uniqueDoubleSupportSecondaryIndices.end(), sa.getSupportingIndicesSecondary().cbegin(), sa.getSupportingIndicesSecondary().cend());
 	}
-	std::sort(uniqueDoubleSupportPrimaryIndices.begin(), uniqueDoubleSupportPrimaryIndices.end());
-	std::sort(uniqueDoubleSupportSecondaryIndices.begin(), uniqueDoubleSupportSecondaryIndices.end());
-	auto priCompensation = std::distance(uniqueDoubleSupportPrimaryIndices.begin(), std::unique(uniqueDoubleSupportPrimaryIndices.begin(), uniqueDoubleSupportPrimaryIndices.end()));
-	auto secCompensation = std::distance(uniqueDoubleSupportSecondaryIndices.begin(), std::unique(uniqueDoubleSupportSecondaryIndices.begin(), uniqueDoubleSupportSecondaryIndices.end()));
+	sort(uniqueDoubleSupportPrimaryIndices.begin(), uniqueDoubleSupportPrimaryIndices.end());
+	sort(uniqueDoubleSupportSecondaryIndices.begin(), uniqueDoubleSupportSecondaryIndices.end());
+	auto priCompensation = distance(uniqueDoubleSupportPrimaryIndices.begin(), unique(uniqueDoubleSupportPrimaryIndices.begin(), uniqueDoubleSupportPrimaryIndices.end()));
+	auto secCompensation = distance(uniqueDoubleSupportSecondaryIndices.begin(), unique(uniqueDoubleSupportSecondaryIndices.begin(), uniqueDoubleSupportSecondaryIndices.end()));
 	unpairedBreaksSoft -= priCompensation;
 	unpairedBreaksHard -= secCompensation;
 	pairedBreaksSoft += priCompensation;
 	pairedBreaksHard += secCompensation;
 }
 void Breakpoint::collectMateSupport() {
-	std::sort(poolLeft.begin(), poolLeft.end());
-	std::sort(poolRight.begin(), poolRight.end());
+	sort(poolLeft.begin(), poolLeft.end());
+	sort(poolRight.begin(), poolRight.end());
 	compressMatePool(poolLeft);
 	compressMatePool(poolRight);
 	auto leftDiscordantsTotal = 0, rightDiscordantsTotal = 0;
@@ -505,8 +508,8 @@ void Breakpoint::collectMateSupport() {
 	if (PROPERPAIRCOMPENSATIONMODE) {
 		leftSideExpectedErrors = leftSideDiscordantCandidates * IMPROPERPAIRRATIO;
 		rightSideExpectedErrors = rightSideDiscordantCandidates * IMPROPERPAIRRATIO;
-		leftDiscordantsTotal = std::max(0, static_cast<int>(std::round(leftDiscordantsTotal - leftSideExpectedErrors)));
-		rightDiscordantsTotal = std::max(0, static_cast<int>(std::round(rightDiscordantsTotal - rightSideExpectedErrors)));
+		leftDiscordantsTotal = max(0, static_cast<int>(round(leftDiscordantsTotal - leftSideExpectedErrors)));
+		rightDiscordantsTotal = max(0, static_cast<int>(round(rightDiscordantsTotal - rightSideExpectedErrors)));
 		leftSideExpectedErrors *= 0.5;
 		rightSideExpectedErrors *= 0.5;
 	}
@@ -539,8 +542,8 @@ void Breakpoint::collectMateSupport() {
 			sa.setToRemove(true);
 		}
 	}
-	std::vector<SuppAlignment> candidateSupplementsSecondary { };
-	std::sort(supplementsSecondary.begin(), supplementsSecondary.end(), [](const SuppAlignment& a, const SuppAlignment& b) {return a.getMapq() < b.getMapq();});
+	vector<SuppAlignment> candidateSupplementsSecondary { };
+	sort(supplementsSecondary.begin(), supplementsSecondary.end(), [](const SuppAlignment& a, const SuppAlignment& b) {return a.getMapq() < b.getMapq();});
 	while (!supplementsSecondary.empty()) {
 		auto foundMatch = false;
 		for (auto &sa : candidateSupplementsSecondary) {
@@ -571,7 +574,7 @@ void Breakpoint::collectMateSupport() {
 	for (auto &sa : candidateSupplementsSecondary) {
 		sa.finalizeSupportingIndices();
 	}
-	std::vector<int> originIndices { };
+	vector<int> originIndices { };
 	for (auto &sa : candidateSupplementsSecondary) {
 		if (sa.isDistant()) {
 			if (sa.isEncounteredM()) {
@@ -592,9 +595,9 @@ void Breakpoint::collectMateSupport() {
 			}
 		}
 	}
-	std::sort(originIndices.begin(), originIndices.end());
-	int uniqueCount = std::unique(originIndices.begin(), originIndices.end()) - originIndices.begin();
-	uniqueCount = std::min(lowQualBreaksHard, uniqueCount);
+	sort(originIndices.begin(), originIndices.end());
+	int uniqueCount = unique(originIndices.begin(), originIndices.end()) - originIndices.begin();
+	uniqueCount = min(lowQualBreaksHard, uniqueCount);
 	lowQualBreaksHard -= uniqueCount;
 	lowQualBreaksSoft += uniqueCount;
 
@@ -674,7 +677,7 @@ void Breakpoint::collectMateSupport() {
 	cleanUpVector(supplementsPrimary);
 }
 
-void Breakpoint::compressMatePool(std::vector<MateInfo>& discordantAlignmentsPool) {
+void Breakpoint::compressMatePool(vector<MateInfo>& discordantAlignmentsPool) {
 	if (discordantAlignmentsPool.empty()) return;
 	auto lastIndex = 0;
 	for (auto i = 1; i < static_cast<int>(discordantAlignmentsPool.size()); ++i) {
@@ -682,23 +685,23 @@ void Breakpoint::compressMatePool(std::vector<MateInfo>& discordantAlignmentsPoo
 				discordantAlignmentsPool[i].mateStartPos - discordantAlignmentsPool[lastIndex].mateEndPos > 3.5 * DEFAULTREADLENGTH) {
 			lastIndex = i;
 		} else {
-			discordantAlignmentsPool[lastIndex].mateEndPos = std::max(discordantAlignmentsPool[lastIndex].mateEndPos, discordantAlignmentsPool[i].mateEndPos);
-			discordantAlignmentsPool[lastIndex].mateStartPos = std::min(discordantAlignmentsPool[lastIndex].mateStartPos, discordantAlignmentsPool[i].mateStartPos);
+			discordantAlignmentsPool[lastIndex].mateEndPos = max(discordantAlignmentsPool[lastIndex].mateEndPos, discordantAlignmentsPool[i].mateEndPos);
+			discordantAlignmentsPool[lastIndex].mateStartPos = min(discordantAlignmentsPool[lastIndex].mateStartPos, discordantAlignmentsPool[i].mateStartPos);
 			++discordantAlignmentsPool[lastIndex].matePower;
 			if (discordantAlignmentsPool[i].inverted) {
 				++discordantAlignmentsPool[lastIndex].inversionSupport;
 			} else {
 				++discordantAlignmentsPool[lastIndex].straightSupport;
 			}
-			if (std::abs(pos - discordantAlignmentsPool[i].readStartPos) <= std::abs(pos - discordantAlignmentsPool[i].readEndPos)) {
+			if (abs(pos - discordantAlignmentsPool[i].readStartPos) <= abs(pos - discordantAlignmentsPool[i].readEndPos)) {
 				//left side
-				if (std::abs(pos - discordantAlignmentsPool[lastIndex].readEndPos) > std::abs(pos - discordantAlignmentsPool[i].readEndPos)) {
+				if (abs(pos - discordantAlignmentsPool[lastIndex].readEndPos) > abs(pos - discordantAlignmentsPool[i].readEndPos)) {
 					discordantAlignmentsPool[lastIndex].readStartPos = discordantAlignmentsPool[i].readStartPos;
 					discordantAlignmentsPool[lastIndex].readEndPos = discordantAlignmentsPool[i].readEndPos;
 				}
 			} else {
 				//right side
-				if (std::abs(pos - discordantAlignmentsPool[lastIndex].readStartPos) > std::abs(pos - discordantAlignmentsPool[i].readStartPos)) {
+				if (abs(pos - discordantAlignmentsPool[lastIndex].readStartPos) > abs(pos - discordantAlignmentsPool[i].readStartPos)) {
 					discordantAlignmentsPool[lastIndex].readStartPos = discordantAlignmentsPool[i].readStartPos;
 					discordantAlignmentsPool[lastIndex].readEndPos = discordantAlignmentsPool[i].readEndPos;
 				}
@@ -723,7 +726,7 @@ void Breakpoint::compressMatePool(std::vector<MateInfo>& discordantAlignmentsPoo
 	cleanUpVector(discordantAlignmentsPool);
 }
 
-void Breakpoint::fillMatePool(const std::deque<MateInfo>& discordantAlignmentsPool, const std::deque<MateInfo>& discordantLowQualAlignmentsPool, const std::deque<MateInfo>& discordantAlignmentCandidatesPool) {
+void Breakpoint::fillMatePool(const deque<MateInfo>& discordantAlignmentsPool, const deque<MateInfo>& discordantLowQualAlignmentsPool, const deque<MateInfo>& discordantAlignmentCandidatesPool) {
 	poolLeft.reserve(discordantAlignmentsPool.size());
 	poolRight.reserve(discordantAlignmentsPool.size());
 	{
@@ -790,7 +793,7 @@ void Breakpoint::fillMatePool(const std::deque<MateInfo>& discordantAlignmentsPo
 	}
 }
 
-void Breakpoint::collectMateSupportHelper(SuppAlignment& sa, std::vector<MateInfo>& discordantAlignmentsPool, std::vector<MateInfo>& discordantLowQualAlignmentsPool) {
+void Breakpoint::collectMateSupportHelper(SuppAlignment& sa, vector<MateInfo>& discordantAlignmentsPool, vector<MateInfo>& discordantLowQualAlignmentsPool) {
 	auto maxEvidenceLevel = 0;
 	for (auto &mateInfo : discordantAlignmentsPool) {
 		if (mateInfo.suppAlignmentFuzzyMatch(sa)) {
@@ -830,7 +833,7 @@ void Breakpoint::collectMateSupportHelper(SuppAlignment& sa, std::vector<MateInf
 			}
 		}
 	}
-	auto lowQualDiscordantSupports = lowQualSupports + std::min(lowQualSupports, static_cast<int>(discordantLowQualAlignmentsPool.size()) - lowQualSupports);
+	auto lowQualDiscordantSupports = lowQualSupports + min(lowQualSupports, static_cast<int>(discordantLowQualAlignmentsPool.size()) - lowQualSupports);
 	sa.setExpectedDiscordants(sa.getExpectedDiscordants() + lowQualDiscordantSupports);
 	if (sa.getMateSupport() == 0) {
 		if (sa.getSecondarySupport() == 0 && sa.getSupport() < BPSUPPORTTHRESHOLD) {
@@ -852,7 +855,7 @@ void Breakpoint::collectMateSupportHelper(SuppAlignment& sa, std::vector<MateInf
 	}
 }
 
-Breakpoint::Breakpoint(const std::string& bpIn, bool ignoreOverhang) :
+Breakpoint::Breakpoint(const string& bpIn, bool ignoreOverhang) :
 				covFinalized { true },
 				missingInfoBp { false },
 				chrIndex { 0 },
@@ -874,7 +877,7 @@ Breakpoint::Breakpoint(const std::string& bpIn, bool ignoreOverhang) :
 				hitsInMref { 0 },
 				germline { false } {
 	auto index = 0;
-	std::vector<int> bpChunkPositions { };
+	vector<int> bpChunkPositions { };
 	bpChunkPositions.reserve(7);
 	for (auto it = bpIn.cbegin(); it != bpIn.cend(); ++it) {
 		if (*it == '\t') {
@@ -952,7 +955,7 @@ Breakpoint::Breakpoint(const std::string& bpIn, bool ignoreOverhang) :
 		}
 	}
 
-	auto shortClipTotal = normalSpans - std::min(leftCoverage, rightCoverage);
+	auto shortClipTotal = normalSpans - min(leftCoverage, rightCoverage);
 	if (shortClipTotal > 0) {
 		normalSpans -= shortClipTotal;
 		if (pairedBreaksSoft > 0) {
@@ -966,7 +969,7 @@ Breakpoint::Breakpoint(const std::string& bpIn, bool ignoreOverhang) :
 		missingInfoBp = true;
 	} else {
 		if (bpIn[bpChunkPositions[4] + 1] != '.') {
-			std::string saStr { };
+			string saStr { };
 			for (auto i = bpChunkPositions[4] + 1; i < bpChunkPositions[5]; ++i) {
 				if (bpIn[i] == ';') {
 					doubleSidedMatches.emplace_back(saStr);
@@ -981,7 +984,7 @@ Breakpoint::Breakpoint(const std::string& bpIn, bool ignoreOverhang) :
 			}
 		}
 		if (bpIn[bpChunkPositions[5] + 1] != '.') {
-			std::string saStr { };
+			string saStr { };
 			for (auto i = bpChunkPositions[5] + 1; i < bpChunkPositions[6]; ++i) {
 				if (bpIn[i] == ';') {
 					supplementsPrimary.emplace_back(saStr);
@@ -998,7 +1001,7 @@ Breakpoint::Breakpoint(const std::string& bpIn, bool ignoreOverhang) :
 		cleanUpVector(supplementsPrimary);
 		saHomologyClashSolver();
 		if (!ignoreOverhang && bpIn[bpChunkPositions[6] + 1] != '.') {
-			std::string overhang { };
+			string overhang { };
 			for (auto i = bpChunkPositions[6] + 1; i < static_cast<int>(bpIn.length()); ++i) {
 				if (bpIn[i] == ';') {
 					consensusOverhangs.emplace_back(overhang);

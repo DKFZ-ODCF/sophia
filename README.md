@@ -20,7 +20,7 @@ conda create -n sophia boost=1.70.0
 With Conda you can do
 
 ```bash
-conda create -n sophia gxx_linux-64 boost boost=1.70.0
+conda create -n sophia gxx_linux-64=8 boost=1.70.0
 ```
 
 to create an environment to build the `sophia` and `sophiaAnnotate` binaries.
@@ -41,7 +41,7 @@ Note that the build-scripts are for when you manage your dependencies with Conda
 
 ### Static Build
 
-If you want to compile statically you need to install glibc and boost static libraries (not possible with Conda in the moment) and do
+If you want to compile statically you need to install glibc and boost static libraries (not possible with Conda, in the moment) and do
 
 ```bash
 source activate sophia

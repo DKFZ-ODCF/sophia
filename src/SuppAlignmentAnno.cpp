@@ -29,10 +29,13 @@
 //#include <iostream>
 
 namespace sophia {
+
+    using namespace std;
+
 double SuppAlignmentAnno::ISIZEMAX { };
 int SuppAlignmentAnno::DEFAULTREADLENGTH { };
 
-SuppAlignmentAnno::SuppAlignmentAnno(const std::string& saStrIn) :
+SuppAlignmentAnno::SuppAlignmentAnno(const string& saStrIn) :
 				chrIndex { 0 },
 				pos { 0 },
 				extendedPos { 0 },
@@ -55,7 +58,7 @@ SuppAlignmentAnno::SuppAlignmentAnno(const std::string& saStrIn) :
 	if (encounteredM) {
 		++index;
 	}
-	chrIndex = ChrConverter::readChromosomeIndex(std::next(saStrIn.cbegin(), index), ':');
+	chrIndex = ChrConverter::readChromosomeIndex(next(saStrIn.cbegin(), index), ':');
 	if (chrIndex > 1001) {
 		return;
 	}
@@ -164,7 +167,7 @@ SuppAlignmentAnno::SuppAlignmentAnno(const SuppAlignmentAnno& saAnnoIn) :
 
 SuppAlignmentAnno::SuppAlignmentAnno(int emittingBpChrIndex, int emittingBpPos, const SuppAlignmentAnno& saAnnoIn) :
 				chrIndex { emittingBpChrIndex },
-				pos { saAnnoIn.isDistant() ? std::max(1, static_cast<int>(std::round(emittingBpPos - 1.5 * DEFAULTREADLENGTH))) : emittingBpPos },
+				pos { saAnnoIn.isDistant() ? max(1, static_cast<int>(round(emittingBpPos - 1.5 * DEFAULTREADLENGTH))) : emittingBpPos },
 				extendedPos { saAnnoIn.isDistant() ? static_cast<int>(emittingBpPos + 1.5 * DEFAULTREADLENGTH) : emittingBpPos },
 				support { 0 },
 				secondarySupport { 0 },
@@ -183,10 +186,10 @@ SuppAlignmentAnno::SuppAlignmentAnno(int emittingBpChrIndex, int emittingBpPos, 
 				supportingIndices { } {
 }
 
-std::string SuppAlignmentAnno::print() const {
-	std::string outStr;
+string SuppAlignmentAnno::print() const {
+	string outStr;
 	outStr.reserve(36);
-	std::string invStr { };
+	string invStr { };
 	if (inverted) {
 		invStr.append("_INV");
 	}
@@ -229,7 +232,7 @@ bool SuppAlignmentAnno::saCloseness(const SuppAlignmentAnno& rhs, int fuzziness)
 			return (pos - rhs.getExtendedPos()) <= fuzziness;
 //			return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) && (pos - fuzziness) <= (rhs.getExtendedPos() + fuzziness);
 		} else {
-			return std::abs(pos - rhs.getPos()) <= fuzziness;
+			return abs(pos - rhs.getPos()) <= fuzziness;
 		}
 	} else {
 		return false;
@@ -249,20 +252,20 @@ bool SuppAlignmentAnno::saClosenessDirectional(const SuppAlignmentAnno& rhs, int
 			}
 			return (pos - rhs.getExtendedPos()) <= fuzziness;
 		} else {
-			return std::abs(pos - rhs.getPos()) <= fuzziness;
+			return abs(pos - rhs.getPos()) <= fuzziness;
 		}
 	} else {
 		return false;
 	}
 }
 void SuppAlignmentAnno::mergeMrefSa(const SuppAlignmentAnno& mrefSa) {
-	support = std::max(support, mrefSa.getSupport());
-	secondarySupport = std::max(secondarySupport, mrefSa.getSecondarySupport());
+	support = max(support, mrefSa.getSupport());
+	secondarySupport = max(secondarySupport, mrefSa.getSecondarySupport());
 	for (auto index : mrefSa.getSupportingIndices()) {
 		supportingIndices.push_back(index);
 	}
-	std::sort(supportingIndices.begin(), supportingIndices.end());
-	supportingIndices.erase(std::unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
+	sort(supportingIndices.begin(), supportingIndices.end());
+	supportingIndices.erase(unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
 	if (mrefSa.getExpectedDiscordants() > 0 && expectedDiscordants > 0) {
 		if ((0.0 + mrefSa.getMateSupport()) / mrefSa.getExpectedDiscordants() > (0.0 + mateSupport) / expectedDiscordants) {
 			mateSupport = mrefSa.getMateSupport();
@@ -277,8 +280,8 @@ void SuppAlignmentAnno::mergeMrefSa(const SuppAlignmentAnno& mrefSa) {
 	}
 }
 void SuppAlignmentAnno::finalizeSupportingIndices() {
-	std::sort(supportingIndices.begin(), supportingIndices.end());
-	supportingIndices.erase(std::unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
+	sort(supportingIndices.begin(), supportingIndices.end());
+	supportingIndices.erase(unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
 	support = static_cast<int>(supportingIndices.size());
 	secondarySupport = 0;
 }

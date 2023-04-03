@@ -27,9 +27,11 @@
 
 namespace sophia {
 
+    using namespace std;
+
     const int EXITCODE_IOERROR = 1;
 
-    std::istream& error_terminating_getline(std::istream& is, std::string& str);
+    istream& error_terminating_getline(istream& is, string& str);
 
 } /* namespace sophia */
 

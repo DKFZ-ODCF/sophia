@@ -31,19 +31,22 @@
 #include "SuppAlignment.h"
 
 namespace sophia {
+    
+    using namespace std;
+
 class SuppAlignmentAnno {
 public:
-	SuppAlignmentAnno(const std::string& saStrIn);
+	SuppAlignmentAnno(const string& saStrIn);
 	SuppAlignmentAnno(const SuppAlignment& saIn);
 	SuppAlignmentAnno(const SuppAlignmentAnno& saAnnoIn);
 	SuppAlignmentAnno(int emittingBpChrIndex, int emittingBpPos, const SuppAlignmentAnno& saAnnoIn);
 	~SuppAlignmentAnno() = default;
 	static double ISIZEMAX;
 	static int DEFAULTREADLENGTH;
-	std::string print() const;
+	string print() const;
 	void extendSuppAlignment(int minPos, int maxPos) {
-		pos = std::min(pos, minPos);
-		extendedPos = std::max(extendedPos, maxPos);
+		pos = min(pos, minPos);
+		extendedPos = max(extendedPos, maxPos);
 	}
 	bool saCloseness(const SuppAlignmentAnno& rhs, int fuzziness) const;
 	bool saClosenessDirectional(const SuppAlignmentAnno& rhs, int fuzziness) const;
@@ -130,10 +133,10 @@ public:
 	bool isStrictFuzzyCandidate() const {
 		return strictFuzzyCandidate;
 	}
-	void addSupportingIndices(const std::vector<int>& supportingIndicesIn) {
+	void addSupportingIndices(const vector<int>& supportingIndicesIn) {
 		supportingIndices.insert(supportingIndices.end(), supportingIndicesIn.cbegin(), supportingIndicesIn.cend());
 	}
-	const std::vector<int>& getSupportingIndices() const {
+	const vector<int>& getSupportingIndices() const {
 		return supportingIndices;
 	}
 	void mergeMrefSa(const SuppAlignmentAnno& mrefSa);
@@ -142,7 +145,7 @@ public:
 		supportingIndices.clear();
 		supportingIndices.push_back(fileIndex);
 	}
-	void mrefSaConsensus(const std::unordered_set<short>& fileIndices) {
+	void mrefSaConsensus(const unordered_set<short>& fileIndices) {
 		supportingIndices.clear();
 		for (const auto &index : fileIndices) {
 			supportingIndices.push_back(index);
@@ -178,7 +181,7 @@ private:
 	bool suspicious;
 	bool semiSuspicious;
 	bool properPairErrorProne;
-	std::vector<int> supportingIndices;
+	vector<int> supportingIndices;
 };
 } /* namespace sophia */
 

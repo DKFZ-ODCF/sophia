@@ -31,12 +31,15 @@
 #include "GermlineMatch.h"
 #include <iostream>
 namespace sophia {
+
+    using namespace std;
+
 class BreakpointReduced {
 public:
 	static int DEFAULTREADLENGTH;
 	static double CLONALITYSTRICTLOWTHRESHOLD;
 	static double ARTIFACTFREQHIGHTHRESHOLD;
-	static std::string PIDSINMREFSTR;
+	static string PIDSINMREFSTR;
 	static boost::format doubleFormatter;
 	BreakpointReduced(const Breakpoint& tmpBp, int lineIndexIn, bool hasOverhangIn);
 	BreakpointReduced(const SuppAlignmentAnno& sa, const BreakpointReduced& emittingBp, bool fuzzySecondary);
@@ -59,13 +62,13 @@ public:
 		if (chrIndex != rhs.getChrIndex()) {
 			return 1000000;
 		} else {
-			return std::abs(pos - rhs.getPos());
+			return abs(pos - rhs.getPos());
 		}
 	}
 	template<typename T>
 	int distanceToBp(const T &compIn) const {
 		if (chrIndex == compIn.getChrIndex()) {
-			return std::abs(pos - compIn.getPos());
+			return abs(pos - compIn.getPos());
 		} else {
 			return -1;
 		}
@@ -129,7 +132,7 @@ public:
 	int getRightCoverage() const {
 		return rightCoverage;
 	}
-	const std::vector<SuppAlignmentAnno>& getSuppAlignments() const {
+	const vector<SuppAlignmentAnno>& getSuppAlignments() const {
 		return suppAlignments;
 	}
 
@@ -142,8 +145,8 @@ public:
 	int getLineIndex() const {
 		return lineIndex;
 	}
-	std::vector<SuppAlignmentAnno*> getSupplementsPtr() {
-		std::vector<SuppAlignmentAnno*> res { };
+	vector<SuppAlignmentAnno*> getSupplementsPtr() {
+		vector<SuppAlignmentAnno*> res { };
 		for (auto &sa : suppAlignments) {
 			res.push_back(&sa);
 		}
@@ -155,7 +158,7 @@ public:
 				fuzziness = 2.5 * DEFAULTREADLENGTH;
 				return (pos - fuzziness) <= (compIn.getExtendedPos() + fuzziness) && (compIn.getPos() - fuzziness) <= (pos + fuzziness);
 			} else {
-				return std::abs(pos - compIn.getPos()) <= fuzziness;
+				return abs(pos - compIn.getPos()) <= fuzziness;
 			}
 		} else {
 			return false;
@@ -174,7 +177,7 @@ public:
 					}
 				}
 			} else {
-				return std::abs(pos - compIn.getPos());
+				return abs(pos - compIn.getPos());
 			}
 		} else {
 			return 1000000;
@@ -191,7 +194,7 @@ public:
 	}
 
 	bool testOverhangBasedCandidacy() const;
-	std::string printOverhang(double germlineClonality, int numHits, const std::string &overhang) const;
+	string printOverhang(double germlineClonality, int numHits, const string &overhang) const;
 
 	const GermlineMatch& getGermlineInfo() const {
 		return germlineInfo;
@@ -216,7 +219,7 @@ private:
 	int leftCoverage, rightCoverage;
 	MrefMatch mrefHits;
 	GermlineMatch germlineInfo;
-	std::vector<SuppAlignmentAnno> suppAlignments;
+	vector<SuppAlignmentAnno> suppAlignments;
 };
 
 } /* namespace sophia */

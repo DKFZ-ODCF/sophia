@@ -25,12 +25,12 @@
 
 namespace sophia {
 
-MrefMatch::MrefMatch(short numHitsIn, short numConsevativeHitsIn, int offsetDistanceIn, const std::vector<SuppAlignmentAnno>& suppMatchesIn) :
-				numHits { numHitsIn },
-				numConsevativeHits { numConsevativeHitsIn },
-				offsetDistance { offsetDistanceIn },
-				suppMatches { suppMatchesIn } {
-}
+    MrefMatch::MrefMatch(short numHitsIn, short numConsevativeHitsIn, int offsetDistanceIn, const std::vector<SuppAlignmentAnno>& suppMatchesIn) :
+                    numHits { numHitsIn },
+                    numConsevativeHits { numConsevativeHitsIn },
+                    offsetDistance { offsetDistanceIn },
+                    suppMatches { suppMatchesIn } {
+    }
 
 }
 /* namespace sophia */

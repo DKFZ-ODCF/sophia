@@ -28,9 +28,11 @@
 //#include <iostream>
 
 namespace sophia {
+
+    using namespace std;
 double SuppAlignment::ISIZEMAX { };
 int SuppAlignment::DEFAULTREADLENGTH { };
-SuppAlignment::SuppAlignment(std::string::const_iterator saCbegin, std::string::const_iterator saCend, bool primaryIn, bool lowMapqSourceIn, bool nullMapqSourceIn, bool alignmentOnForwardStrand, bool bpEncounteredM, int originIndexIn, int bpChrIndex, int bpPos) :
+SuppAlignment::SuppAlignment(string::const_iterator saCbegin, string::const_iterator saCend, bool primaryIn, bool lowMapqSourceIn, bool nullMapqSourceIn, bool alignmentOnForwardStrand, bool bpEncounteredM, int originIndexIn, int bpChrIndex, int bpPos) :
 				matchFuzziness { 5 * DEFAULTREADLENGTH },
 				chrIndex { 0 },
 				pos { 0 },
@@ -63,11 +65,11 @@ SuppAlignment::SuppAlignment(std::string::const_iterator saCbegin, std::string::
 //	//"SA:Z:10,24753146,+,68S33M,48,1;X,135742083,-,47S22M32S,0,0;8,72637925,-,29S19M53S,0,0;"
 //	//"10,24753146,+,68S33M,48,1"
 //	for (auto cigarString_cit = saCbegin; cigarString_cit != saCend; ++cigarString_cit) {
-//		std::cerr << *cigarString_cit;
+//		cerr << *cigarString_cit;
 //	}
-//	std::cerr << std::endl;
-	std::vector<std::string::const_iterator> fieldBegins = { saCbegin };
-	std::vector<std::string::const_iterator> fieldEnds;
+//	cerr << endl;
+	vector<string::const_iterator> fieldBegins = { saCbegin };
+	vector<string::const_iterator> fieldEnds;
 	for (auto it = saCbegin; it != saCend; ++it) {
 		if (*it == ',') {
 			fieldEnds.push_back(it);
@@ -82,14 +84,14 @@ SuppAlignment::SuppAlignment(std::string::const_iterator saCbegin, std::string::
 	for (auto it = fieldBegins[1]; it != fieldEnds[1]; ++it) {
 		pos = 10 * pos + (*it - '0');
 	}
-//std::cerr << "guessSupplementOffset" << std::endl;
-	std::vector<CigarChunk> cigarChunks;
+//cerr << "guessSupplementOffset" << endl;
+	vector<CigarChunk> cigarChunks;
 	auto cigarEncounteredM = false;
 	auto cumulativeNucleotideCount = 0, currentNucleotideCount = 0, chunkIndex = 0, bestChunkIndex = 0, indelAdjustment = 0;
 	auto largestClip = 0;
 	auto leftClipAdjustment = 0;
 	for (auto cigarString_cit = fieldBegins[3]; cigarString_cit != fieldEnds[3]; ++cigarString_cit) {
-		if (std::isdigit(*cigarString_cit)) {
+		if (isdigit(*cigarString_cit)) {
 			currentNucleotideCount = currentNucleotideCount * 10 + (*cigarString_cit - '0');
 		} else {
 			switch (*cigarString_cit) {
@@ -134,7 +136,7 @@ SuppAlignment::SuppAlignment(std::string::const_iterator saCbegin, std::string::
 		pos += cigarChunks[bestChunkIndex].startPosOnRead;
 	}
 	extendedPos = pos;
-	//std::cerr << "done" << std::endl;
+	//cerr << "done" << endl;
 	for (auto it = fieldBegins[4]; it != fieldEnds[4]; ++it) {
 		mapq = 10 * mapq + (*it - '0');
 	}
@@ -143,17 +145,17 @@ SuppAlignment::SuppAlignment(std::string::const_iterator saCbegin, std::string::
 	} else {
 		inverted = ('-' != *fieldBegins[2]);
 	}
-	distant = (bpChrIndex != chrIndex || (std::abs(bpPos - pos) > ISIZEMAX));
+	distant = (bpChrIndex != chrIndex || (abs(bpPos - pos) > ISIZEMAX));
 	if (bpChrIndex == chrIndex) {
-		matchFuzziness = std::min(std::abs(bpPos - pos), matchFuzziness);
+		matchFuzziness = min(abs(bpPos - pos), matchFuzziness);
 	}
 	strictFuzzy = fuzzy || (support + secondarySupport) < 3;
 }
 void SuppAlignment::finalizeSupportingIndices() {
-	std::sort(supportingIndices.begin(), supportingIndices.end());
-	std::sort(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end());
-	supportingIndices.erase(std::unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
-	supportingIndicesSecondary.erase(std::unique(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end()), supportingIndicesSecondary.end());
+	sort(supportingIndices.begin(), supportingIndices.end());
+	sort(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end());
+	supportingIndices.erase(unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
+	supportingIndicesSecondary.erase(unique(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end()), supportingIndicesSecondary.end());
 	support = static_cast<int>(supportingIndices.size());
 	secondarySupport = static_cast<int>(supportingIndicesSecondary.size());
 }
@@ -195,10 +197,10 @@ SuppAlignment::SuppAlignment(int chrIndexIn, int posIn, int mateSupportIn, int e
 	strictFuzzy = fuzzy || (support + secondarySupport) < 3;
 }
 
-std::string SuppAlignment::print() const {
-	std::string outStr;
+string SuppAlignment::print() const {
+	string outStr;
 	outStr.reserve(36);
-	std::string invStr { };
+	string invStr { };
 	if (inverted) {
 		invStr.append("_INV");
 	}
@@ -228,7 +230,7 @@ std::string SuppAlignment::print() const {
 	return outStr;
 }
 
-SuppAlignment::SuppAlignment(const std::string& saIn) :
+SuppAlignment::SuppAlignment(const string& saIn) :
 				matchFuzziness { 5 * DEFAULTREADLENGTH },
 				chrIndex { 0 },
 				pos { 0 },
@@ -255,7 +257,7 @@ SuppAlignment::SuppAlignment(const std::string& saIn) :
 	if (encounteredM) {
 		++index;
 	}
-	chrIndex = ChrConverter::readChromosomeIndex(std::next(saIn.cbegin(), index), ':');
+	chrIndex = ChrConverter::readChromosomeIndex(next(saIn.cbegin(), index), ':');
 	if (chrIndex > 1001) {
 		return;
 	}
@@ -317,7 +319,7 @@ bool SuppAlignment::saCloseness(const SuppAlignment& rhs, int fuzziness) const {
 			fuzziness = 2.5 * DEFAULTREADLENGTH;
 			return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) && (pos - fuzziness) <= (rhs.getExtendedPos() + fuzziness);
 		} else {
-			return std::abs(pos - rhs.getPos()) <= fuzziness;
+			return abs(pos - rhs.getPos()) <= fuzziness;
 		}
 	} else {
 		return false;
@@ -332,7 +334,7 @@ bool SuppAlignment::saDistHomologyRescueCloseness(const SuppAlignment& rhs, int 
 		if (strictFuzzy || rhs.isStrictFuzzy()) {
 			return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) && (pos - fuzziness) <= (rhs.getExtendedPos() + fuzziness);
 		} else {
-			return std::abs(pos - rhs.getPos()) <= fuzziness;
+			return abs(pos - rhs.getPos()) <= fuzziness;
 		}
 	} else {
 		return false;

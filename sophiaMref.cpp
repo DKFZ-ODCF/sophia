@@ -14,52 +14,55 @@
 #include "MrefEntry.h"
 #include "HelperFunctions.h"
 
+
 int main(int argc, char** argv) {
+    using namespace std;
+
 	boost::program_options::options_description desc("Allowed options");
 	desc.add_options() //
 	("help", "produce help message") //
-	("gzins", boost::program_options::value<std::string>(), "list of all gzipped control beds") //
-	("version", boost::program_options::value<std::string>(), "version") //
+	("gzins", boost::program_options::value<string>(), "list of all gzipped control beds") //
+	("version", boost::program_options::value<string>(), "version") //
 	("defaultreadlength", boost::program_options::value<int>(), "Default read length for the technology used in sequencing 101,151 etc.") //
-	("outputrootname", boost::program_options::value<std::string>(), "outputrootname");
+	("outputrootname", boost::program_options::value<string>(), "outputrootname");
 	boost::program_options::variables_map inputVariables { };
 	boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), inputVariables);
 	boost::program_options::notify(inputVariables);
 	if (inputVariables.count("help")) {
-		std::cout << desc << std::endl;
+		cout << desc << endl;
 		return 0;
 	}
-	std::string gzInFilesList;
+	string gzInFilesList;
 	if (inputVariables.count("gzins")) {
-		gzInFilesList = inputVariables["gzins"].as<std::string>();
+		gzInFilesList = inputVariables["gzins"].as<string>();
 	} else {
-		std::cerr << "No gzipped control bed list file given, exiting" << std::endl;
+		cerr << "No gzipped control bed list file given, exiting" << endl;
 		return 1;
 	}
-	std::ifstream gzInFilesHandle { gzInFilesList };
-	std::vector<std::string> gzListIn;
-	for (std::string line; error_terminating_getline(gzInFilesHandle, line);) {
+	ifstream gzInFilesHandle { gzInFilesList };
+	vector<string> gzListIn;
+	for (string line; error_terminating_getline(gzInFilesHandle, line);) {
 		gzListIn.push_back(line);
 	}
-	std::string version { };
+	string version { };
 	if (inputVariables.count("version")) {
-		version = inputVariables["version"].as<std::string>();
+		version = inputVariables["version"].as<string>();
 	} else {
-		std::cerr << "No input version given, exiting" << std::endl;
+		cerr << "No input version given, exiting" << endl;
 		return 1;
 	}
 	int defaultReadLength { 0 };
 	if (inputVariables.count("defaultreadlength")) {
 		defaultReadLength = inputVariables["defaultreadlength"].as<int>();
 	} else {
-		std::cerr << "Default read Length not given, exiting" << std::endl;
+		cerr << "Default read Length not given, exiting" << endl;
 		return 1;
 	}
-	std::string outputRoot { };
+	string outputRoot { };
 	if (inputVariables.count("outputrootname")) {
-		outputRoot = inputVariables["outputrootname"].as<std::string>();
+		outputRoot = inputVariables["outputrootname"].as<string>();
 	} else {
-		std::cerr << "No output file root name given, exiting" << std::endl;
+		cerr << "No output file root name given, exiting" << endl;
 		return 1;
 	}
 	sophia::SuppAlignment::DEFAULTREADLENGTH = defaultReadLength;

@@ -28,16 +28,17 @@
 #include "ChrConverter.h"
 
 namespace sophia {
+    using namespace std;
 boost::format MrefEntryAnno::doubleFormatter { "%.5f" };
 int MrefEntryAnno::DEFAULTREADLENGTH { };
 int MrefEntryAnno::PIDSINMREF { };
 
-MrefEntryAnno::MrefEntryAnno(const std::string& mrefEntryIn) :
+MrefEntryAnno::MrefEntryAnno(const string& mrefEntryIn) :
 				pos { 0 },
 				numHits { 0 },
 				suppAlignments { } {
 	auto index = 0;
-	std::vector<int> bpChunkPositions { };
+	vector<int> bpChunkPositions { };
 	bpChunkPositions.reserve(7);
 	auto cit = mrefEntryIn.cbegin();
 	if (mrefEntryIn.back() != '.') {
@@ -48,7 +49,7 @@ MrefEntryAnno::MrefEntryAnno(const std::string& mrefEntryIn) :
 			++index;
 			++cit;
 		}
-		std::string saStr { };
+		string saStr { };
 		for (auto i = bpChunkPositions[7] + 1; i < static_cast<int>(mrefEntryIn.length()); ++i) {
 			if (mrefEntryIn[i] == ';') {
 				suppAlignments.emplace_back(saStr);
@@ -75,7 +76,7 @@ MrefEntryAnno::MrefEntryAnno(const std::string& mrefEntryIn) :
 		numHits = numHits * 10 + (mrefEntryIn[i] - '0');
 	}
 	if (mrefEntryIn[0] == 'Y') {
-		numHits = std::min(PIDSINMREF, 2 * numHits);
+		numHits = min(PIDSINMREF, 2 * numHits);
 	}
 	for (auto &sa : suppAlignments) {
 		sa.setSecondarySupport(numHits);

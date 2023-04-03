@@ -38,18 +38,21 @@
 #include <BreakpointReduced.h>
 
 namespace sophia {
+
+    using namespace std;
+    
 class MasterRefProcessor {
 public:
-	MasterRefProcessor(const std::vector<std::string> &filesIn, const std::string &outputRootName, const std::string &version, const int defaultReadLengthIn);
+	MasterRefProcessor(const vector<string> &filesIn, const string &outputRootName, const string &version, const int defaultReadLengthIn);
 	~MasterRefProcessor() = default;
 private:
 
-	unsigned long long processFile(const std::string &gzPath, short fileIndex);
+	unsigned long long processFile(const string &gzPath, short fileIndex);
 	bool processBp(BreakpointReduced &bp, int chrIndex,  short fileIndex);
 	const int NUMPIDS;
 	const int DEFAULTREADLENGTH;
-	std::unique_ptr<std::ofstream> mergedBpsOutput;
-	std::vector<std::vector<MrefEntry>> mrefDb;
+	unique_ptr<ofstream> mergedBpsOutput;
+	vector<vector<MrefEntry>> mrefDb;
 };
 
 }

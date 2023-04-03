@@ -25,6 +25,8 @@
 #include "ChrConverter.h"
 
 namespace sophia {
+    using namespace std;
+
 int SvEvent::GERMLINEOFFSETTHRESHOLD { };
 double SvEvent::RELAXEDBPFREQTHRESHOLD { };
 double SvEvent::BPFREQTHRESHOLD { };
@@ -35,13 +37,13 @@ double SvEvent::CLONALITYSTRICTLOWTHRESHOLD { };
 double SvEvent::CLONALITYHIGHTHRESHOLD { };
 int SvEvent::HALFDEFAULTREADLENGTH { };
 int SvEvent::GERMLINEDBLIMIT { };
-std::string SvEvent::PIDSINMREFSTR { };
+string SvEvent::PIDSINMREFSTR { };
 boost::format SvEvent::doubleFormatter { "%.3f" };
 bool SvEvent::ABRIDGEDOUTPUT { true };
 bool SvEvent::NOCONTROLMODE { false };
 bool SvEvent::DEBUGMODE { false };
-const std::vector<std::string> SvEvent::EVENTTYPES { "UNKNOWN", "DEL", "DUP", "TRA", "INV", "CONTAMINATION" };
-SvEvent::SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In, const SuppAlignmentAnno& sa1In, const SuppAlignmentAnno& sa2In, const std::vector<std::pair<int, std::string>>& overhangDb) :
+const vector<string> SvEvent::EVENTTYPES { "UNKNOWN", "DEL", "DUP", "TRA", "INV", "CONTAMINATION" };
+SvEvent::SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In, const SuppAlignmentAnno& sa1In, const SuppAlignmentAnno& sa2In, const vector<pair<int, string>>& overhangDb) :
 				toRemove { false },
 				contaminationCandidate { 0 },
 				chrIndex1 { bp1In.getChrIndex() },
@@ -194,7 +196,7 @@ SvEvent::SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In,
 //		auto messageMode = selectedSa1.getChrIndex() == 21 && selectedSa1.getPos() == 48119076;
 		auto score1 = filterMatch(bp1In, bp2In);
 		auto score2 = filterMatchUnknown(bp1In);
-//		if (messageMode) std::cerr << score1 << " " << score2 << "\n";
+//		if (messageMode) cerr << score1 << " " << score2 << "\n";
 		if (score2 == 0 && score1 != 0) {
 			suspicious = score2;
 			semiSuspicious = false;
@@ -210,7 +212,7 @@ SvEvent::SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In,
 	}
 }
 
-SvEvent::SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In, const SuppAlignmentAnno& sa1In, const std::vector<std::pair<int, std::string>>& overhangDb, const SuppAlignmentAnno& dummySaIn) :
+SvEvent::SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In, const SuppAlignmentAnno& sa1In, const vector<pair<int, string>>& overhangDb, const SuppAlignmentAnno& dummySaIn) :
 				toRemove { false },
 				contaminationCandidate { 0 },
 				chrIndex1 { bp1In.getChrIndex() },
@@ -363,7 +365,7 @@ SvEvent::SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In,
 	}
 }
 
-SvEvent::SvEvent(const BreakpointReduced& bp1In, const SuppAlignmentAnno& sa1In, GermlineMatch germlineInfo2, MrefMatch hitsInMref2In, const std::vector<std::pair<int, std::string>>& overhangDb, const SuppAlignmentAnno& dummySaIn) :
+SvEvent::SvEvent(const BreakpointReduced& bp1In, const SuppAlignmentAnno& sa1In, GermlineMatch germlineInfo2, MrefMatch hitsInMref2In, const vector<pair<int, string>>& overhangDb, const SuppAlignmentAnno& dummySaIn) :
 				toRemove { false },
 				contaminationCandidate { 0 },
 				chrIndex1 { bp1In.getChrIndex() },
@@ -406,7 +408,7 @@ SvEvent::SvEvent(const BreakpointReduced& bp1In, const SuppAlignmentAnno& sa1In,
 				semiSuspicious { sa1In.isSemiSuspicious() } {
 	auto truePos2 = pos2;
 	if (chrIndex1 == chrIndex2) {
-		if (std::abs(pos1 - pos2) > std::abs(pos1 - sa1In.getExtendedPos())) {
+		if (abs(pos1 - pos2) > abs(pos1 - sa1In.getExtendedPos())) {
 			truePos2 = sa1In.getExtendedPos();
 		}
 	}
@@ -421,7 +423,7 @@ SvEvent::SvEvent(const BreakpointReduced& bp1In, const SuppAlignmentAnno& sa1In,
 	}
 	if (distant && selectedSa1.isFuzzy() && bp1In.getChrIndex() == selectedSa1.getChrIndex() && selectedSa1.isStrictFuzzyCandidate()) {
 		auto fuzDiff = selectedSa1.getExtendedPos() - selectedSa1.getPos();
-		if (std::max(0, pos1 - fuzDiff) <= selectedSa1.getExtendedPos() && selectedSa1.getPos() <= (pos1 + fuzDiff)) {
+		if (max(0, pos1 - fuzDiff) <= selectedSa1.getExtendedPos() && selectedSa1.getPos() <= (pos1 + fuzDiff)) {
 			distant = false;
 		} else if (eventSize < 5000) {
 			distant = false;
@@ -511,12 +513,12 @@ SvEvent::SvEvent(const BreakpointReduced& bp1In, const SuppAlignmentAnno& sa1In,
 	}
 }
 void SvEvent::determineEventTypeAndSize(int posDifferential, bool matchEncounteredM) {
-	//	static std::vector<std::string> EVENTTYPES { "UNKNOWN", "DEL", "DUP", "TRA", "INV", "CONTAMINATION" };
+	//	static vector<string> EVENTTYPES { "UNKNOWN", "DEL", "DUP", "TRA", "INV", "CONTAMINATION" };
 	if (chrIndex1 != chrIndex2) {
 		eventType = 3;
 		eventSize = -1;
 	} else {
-		eventSize = std::abs(posDifferential);
+		eventSize = abs(posDifferential);
 		if (posDifferential < 0) {
 			if (inverted) {
 				eventType = 4;
@@ -548,7 +550,7 @@ void SvEvent::determineEventTypeAndSize(int posDifferential, bool matchEncounter
 	}
 }
 
-std::pair<int, double> SvEvent::mateQualityConditions(const SuppAlignmentAnno &sa) {
+pair<int, double> SvEvent::mateQualityConditions(const SuppAlignmentAnno &sa) {
 //	auto messageMode = sa.getChrIndex() == 11 && (sa.getPos() == 2261373 || sa.getPos() == 2148480);
 	auto doubleSemiSuspicious = (selectedSa1.isSemiSuspicious() && selectedSa2.isSemiSuspicious()) || (selectedSa1.isSemiSuspicious() && selectedSa2.isProperPairErrorProne()) || (selectedSa1.isProperPairErrorProne() && selectedSa2.isSemiSuspicious());
 	auto mateLowQualityCriteriaTier1 = sa.isProperPairErrorProne() || doubleSemiSuspicious || (mateRatio1 + mateRatio2) < 1.1;
@@ -571,19 +573,19 @@ std::pair<int, double> SvEvent::mateQualityConditions(const SuppAlignmentAnno &s
 		return {0,0.33};
 	}
 }
-std::pair<bool, int> SvEvent::assessOverhangQualityCompensation(int lineIndex, const std::vector<std::pair<int, std::string>>& overhangDb) const {
+pair<bool, int> SvEvent::assessOverhangQualityCompensation(int lineIndex, const vector<pair<int, string>>& overhangDb) const {
 	auto overhangIndex = -1;
 	auto compensation = false;
-	std::pair<int, std::string> dummy { lineIndex, "" };
-	auto lower = std::lower_bound(overhangDb.cbegin(), overhangDb.cend(), dummy);
+	pair<int, string> dummy { lineIndex, "" };
+	auto lower = lower_bound(overhangDb.cbegin(), overhangDb.cend(), dummy);
 	auto it = overhangDb.cend();
 	if (lower != overhangDb.cend()) {
 		if (lower->first == lineIndex) {
 			it = lower;
-		} else if (std::next(lower) != overhangDb.cend() && std::next(lower)->first == lineIndex) {
-			it = std::next(lower);
-		} else if (lower != overhangDb.cbegin() && std::prev(lower)->first == lineIndex) {
-			it = std::prev(lower);
+		} else if (next(lower) != overhangDb.cend() && next(lower)->first == lineIndex) {
+			it = next(lower);
+		} else if (lower != overhangDb.cbegin() && prev(lower)->first == lineIndex) {
+			it = prev(lower);
 		}
 	}
 	if (it != overhangDb.cend()) {
@@ -594,7 +596,7 @@ std::pair<bool, int> SvEvent::assessOverhangQualityCompensation(int lineIndex, c
 		for (const auto c : it->second) {
 			switch (c) {
 			case '(':
-				maxOverhangLength = std::max(maxOverhangLength, overhangLength);
+				maxOverhangLength = max(maxOverhangLength, overhangLength);
 				overhangLength = 0;
 				break;
 			case ':':
@@ -614,7 +616,7 @@ std::pair<bool, int> SvEvent::assessOverhangQualityCompensation(int lineIndex, c
 	}
 	return {compensation, overhangIndex};
 }
-std::pair<bool, short> SvEvent::processMrefHits(const MrefMatch& hitsInMref, const SuppAlignmentAnno& sa, int evidenceLevelIn) const {
+pair<bool, short> SvEvent::processMrefHits(const MrefMatch& hitsInMref, const SuppAlignmentAnno& sa, int evidenceLevelIn) const {
 	auto initScore = hitsInMref.getNumConsevativeHits();
 	auto distantHit = false;
 	auto saMatch = false;
@@ -722,7 +724,7 @@ int SvEvent::filterMatch(const BreakpointReduced& bp1, const BreakpointReduced& 
 		if (selectedSa1.isFuzzy() || selectedSa2.isFuzzy()) {
 			if (bp1.getChrIndex() == bp2.getChrIndex()) {
 				if (selectedSa1.isStrictFuzzy() || selectedSa2.isStrictFuzzy()) {
-					if (std::abs(bp1.getPos() - bp2.getPos()) < 5000) {
+					if (abs(bp1.getPos() - bp2.getPos()) < 5000) {
 						return 14;
 					}
 				}
@@ -743,7 +745,7 @@ int SvEvent::filterMatch(const BreakpointReduced& bp1, const BreakpointReduced& 
 			}
 		}
 	}
-	if (bp1.getChrIndex() != bp2.getChrIndex() || std::abs(bp1.getPos() - bp2.getPos()) > 150) {
+	if (bp1.getChrIndex() != bp2.getChrIndex() || abs(bp1.getPos() - bp2.getPos()) > 150) {
 		auto eventTotal1 = bp1.getPairedBreaksSoft() + bp1.getPairedBreaksHard() + bp1.getUnpairedBreaksSoft();
 		auto eventTotal2 = bp2.getPairedBreaksSoft() + bp2.getPairedBreaksHard() + bp2.getUnpairedBreaksSoft();
 		if (bp1.getBreaksShortIndel() > eventTotal1 || bp2.getBreaksShortIndel() > eventTotal2) {
@@ -852,10 +854,10 @@ int SvEvent::filterMatchSingle(const BreakpointReduced& bp1, const BreakpointRed
 		}
 		if (selectedSa1.isFuzzy() || (selectedSa1.getSupport() + selectedSa1.getSecondarySupport()) < 3) {
 			if (bp1.getChrIndex() == bp2.getChrIndex()) {
-				if (std::abs(bp1.getPos() - bp2.getPos()) < 5000) {
+				if (abs(bp1.getPos() - bp2.getPos()) < 5000) {
 					return 26;
 				}
-				if (inverted && std::abs(bp1.getPos() - bp2.getPos()) < 10000) {
+				if (inverted && abs(bp1.getPos() - bp2.getPos()) < 10000) {
 					return 27;
 				}
 			}
@@ -997,7 +999,7 @@ int SvEvent::filterMatchUnknown(const BreakpointReduced& bp1) {
 	return suspicious;
 }
 
-std::pair<double, double> SvEvent::assessSvClonality(const BreakpointReduced& bp, int eventSupportTotal) const {
+pair<double, double> SvEvent::assessSvClonality(const BreakpointReduced& bp, int eventSupportTotal) const {
 	auto artifactTotal1 = bp.getLowQualSpansSoft() + bp.getLowQualBreaksSoft() + bp.getRepetitiveOverhangBreaks();
 	auto eventTotal1 = eventSupportTotal + bp.getUnpairedBreaksSoft();
 	auto artifactRatio = (artifactTotal1 + 0.0) / (artifactTotal1 + eventTotal1);
@@ -1322,7 +1324,7 @@ int SvEvent::assessEventScore(bool hardClipSuspiciousCall, int inputScoreCategor
 	}
 	return 0;
 }
-void SvEvent::assessContamination(const std::vector<std::pair<int, std::string>>& overhangDb) {
+void SvEvent::assessContamination(const vector<pair<int, string>>& overhangDb) {
 	if (eventType == 5) {
 		contaminationCandidate = 2;
 		return;
@@ -1354,13 +1356,13 @@ void SvEvent::assessContamination(const std::vector<std::pair<int, std::string>>
 	}
 }
 
-std::pair<int, double> SvEvent::assessContaminationSingleBp(int overhangIndex, const std::vector<std::pair<int, std::string>>& overhangDb, const SuppAlignmentAnno &selectedSa) {
+pair<int, double> SvEvent::assessContaminationSingleBp(int overhangIndex, const vector<pair<int, string>>& overhangDb, const SuppAlignmentAnno &selectedSa) {
 	auto overhangLengthMax = 0;
 	auto overhangLength = 0;
 	for (auto cit = overhangDb[overhangIndex].second.cbegin(); cit != overhangDb[overhangIndex].second.cend(); ++cit) {
 		switch (*cit) {
 		case '(':
-			overhangLengthMax = std::max(overhangLengthMax, overhangLength);
+			overhangLengthMax = max(overhangLengthMax, overhangLength);
 			overhangLength = 0;
 			break;
 		case ':':
@@ -1390,8 +1392,8 @@ std::pair<int, double> SvEvent::assessContaminationSingleBp(int overhangIndex, c
 	return {0,maxOverhangLengthRatio};
 }
 
-std::string SvEvent::printMatch(const std::vector<std::pair<int, std::string>>& overhangDb) const {
-	std::vector<std::string> outputFields;
+string SvEvent::printMatch(const vector<pair<int, string>>& overhangDb) const {
+	vector<string> outputFields;
 	outputFields.reserve(20);
 	outputFields.emplace_back(ChrConverter::indexToChr[chrIndex1]);
 	outputFields.emplace_back(strtk::type_to_string<int>(pos1 - 1));
@@ -1448,7 +1450,7 @@ std::string SvEvent::printMatch(const std::vector<std::pair<int, std::string>>& 
 
 	return collapseRange(outputFields, "\t").append("\n");
 }
-//std::vector<int> SvEvent::getKey() const {
+//vector<int> SvEvent::getKey() const {
 //	if (!DEBUGMODE && (suspicious != 0 || eventScore == 0)) {
 //		return {};
 //	}
@@ -1459,15 +1461,15 @@ std::string SvEvent::printMatch(const std::vector<std::pair<int, std::string>>& 
 //		return {chrIndex2,pos2,chrIndex1,pos1,keyScore};
 //	}
 //}
-std::string SvEvent::getKey() const {
+string SvEvent::getKey() const {
 	if (!DEBUGMODE && (suspicious != 0 || eventScore == 0)) {
 		return {};
 	}
 	auto keyScore = (suspicious == 0) ? eventScore : suspicious;
 	if (chrIndex1 < chrIndex2 || (chrIndex1 == chrIndex2 && pos1 < pos2)) {
-		return collapseRange( { std::to_string(chrIndex1), std::to_string(pos1), std::to_string(chrIndex2), std::to_string(pos2), std::to_string(keyScore) }, "_");
+		return collapseRange( { to_string(chrIndex1), to_string(pos1), to_string(chrIndex2), to_string(pos2), to_string(keyScore) }, "_");
 	} else {
-		return collapseRange( { std::to_string(chrIndex2), std::to_string(pos2), std::to_string(chrIndex1), std::to_string(pos1), std::to_string(keyScore) }, "_");
+		return collapseRange( { to_string(chrIndex2), to_string(pos2), to_string(chrIndex1), to_string(pos1), to_string(keyScore) }, "_");
 	}
 }
 } /* namespace sophia */

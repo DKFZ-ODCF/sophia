@@ -24,18 +24,21 @@
 #include <iterator>
 
 namespace sophia {
-Sdust::Sdust(const std::vector<int>& overhangIn) :
+
+    using namespace std;
+
+Sdust::Sdust(const vector<int>& overhangIn) :
 				res { },
 				P { },
 				w { },
 				L { 0 },
 				rW { 0 },
 				rV { 0 },
-				cW { std::vector<int>(WINDOWSIZE, 0) },
-				cV { std::vector<int>(WINDOWSIZE, 0) } {
+				cW { vector<int>(WINDOWSIZE, 0) },
+				cV { vector<int>(WINDOWSIZE, 0) } {
 	auto wStart = 0;
 	for (auto wFinish = 2; wFinish < static_cast<int>(overhangIn.size()); ++wFinish) {
-		wStart = std::max(wFinish - WINDOWSIZE + 1, 0);
+		wStart = max(wFinish - WINDOWSIZE + 1, 0);
 		saveMaskedRegions(wStart);
 		auto t = triplet(overhangIn, wFinish - 2);
 		shiftWindow(t);
@@ -43,7 +46,7 @@ Sdust::Sdust(const std::vector<int>& overhangIn) :
 			findPerfectRegions(wStart, rV, cV);
 		}
 	}
-	wStart = std::max(0, static_cast<int>(overhangIn.size()) - WINDOWSIZE + 1);
+	wStart = max(0, static_cast<int>(overhangIn.size()) - WINDOWSIZE + 1);
 	while (!P.empty()) {
 		saveMaskedRegions(wStart);
 		++wStart;
@@ -55,7 +58,7 @@ void Sdust::saveMaskedRegions(int wStart) {
 		if (!res.empty()) {
 			auto interval = res.back();
 			if (P.rbegin()->startIndex <= (interval.endIndex + 1)) {
-				res[res.size() - 1].endIndex = std::max(P.rbegin()->endIndex, interval.endIndex);
+				res[res.size() - 1].endIndex = max(P.rbegin()->endIndex, interval.endIndex);
 			} else {
 				res.push_back(PerfectInterval { P.rbegin()->startIndex, P.rbegin()->endIndex, 0.0 });
 			}
@@ -64,7 +67,7 @@ void Sdust::saveMaskedRegions(int wStart) {
 		}
 		for (;;) {
 			if (!P.empty() && P.rbegin()->startIndex < wStart) {
-				P.erase(std::prev(P.end()));
+				P.erase(prev(P.end()));
 			} else {
 				break;
 			}
@@ -72,7 +75,7 @@ void Sdust::saveMaskedRegions(int wStart) {
 	}
 }
 
-void Sdust::findPerfectRegions(int wStart, int r, std::vector<int> c) {
+void Sdust::findPerfectRegions(int wStart, int r, vector<int> c) {
 	auto maxScore = 0.0;
 	for (auto i = static_cast<int>(w.size()) - L - 1; i >= 0; --i) {
 		auto t = w[i];
@@ -84,7 +87,7 @@ void Sdust::findPerfectRegions(int wStart, int r, std::vector<int> c) {
 				if (cit->startIndex < i + wStart) {
 					break;
 				}
-				maxScore = std::max(maxScore, cit->score);
+				maxScore = max(maxScore, cit->score);
 				++cit;
 			}
 			if (newScore >= maxScore) {
@@ -118,17 +121,17 @@ void Sdust::shiftWindow(int t) {
 	}
 }
 
-void Sdust::addTripletInfo(int& r, std::vector<int>& c, int t) {
+void Sdust::addTripletInfo(int& r, vector<int>& c, int t) {
 	r += c[t];
 	++c[t];
 }
 
-void Sdust::removeTripletInfo(int& r, std::vector<int>& c, int t) {
+void Sdust::removeTripletInfo(int& r, vector<int>& c, int t) {
 	--c[t];
 	r -= c[t];
 }
 
-int Sdust::triplet(const std::vector<int>&overhangIn, int indexPos) {
+int Sdust::triplet(const vector<int>&overhangIn, int indexPos) {
 	return 16 * overhangIn[indexPos] + 4 * overhangIn[indexPos + 1] + overhangIn[indexPos + 2];
 }
 

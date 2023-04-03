@@ -30,6 +30,9 @@
 #include "HelperFunctions.h"
 
 namespace sophia {
+
+    using namespace std;
+    
 int Alignment::LOWQUALCLIPTHRESHOLD { }, Alignment::BASEQUALITYTHRESHOLD { }, Alignment::BASEQUALITYTHRESHOLDLOW { }, //
 		Alignment::CLIPPEDNUCLEOTIDECOUNTTHRESHOLD { }, Alignment::INDELNUCLEOTIDECOUNTTHRESHOLD { };
 double Alignment::ISIZEMAX { };
@@ -45,7 +48,7 @@ Alignment::Alignment() :
 				mateChrIndex { 0 },
 				matePos { 0 },
 				samLine { },
-				validLine { error_terminating_getline(std::cin, samLine) },
+				validLine { error_terminating_getline(cin, samLine) },
 				samChunkPositions { },
 				saCbegin { },
 				saCend { },
@@ -62,7 +65,7 @@ Alignment::Alignment() :
 			}
 			++index;
 		}
-		chrIndex = ChrConverter::readChromosomeIndex(std::next(samLine.cbegin(), samChunkPositions[1] + 1), '\t');
+		chrIndex = ChrConverter::readChromosomeIndex(next(samLine.cbegin(), samChunkPositions[1] + 1), '\t');
 	}
 }
 void Alignment::continueConstruction() {
@@ -77,7 +80,7 @@ void Alignment::continueConstruction() {
 	for (auto flag_cit = samLine.cbegin() + 1 + samChunkPositions[0]; flag_cit != samLine.cbegin() + samChunkPositions[1]; ++flag_cit) {
 		flag = flag * 10 + (*flag_cit - '0');
 	}
-	auto flags = std::bitset<12>(flag);
+	auto flags = bitset<12>(flag);
 	supplementary = (flags[11] == true);
 	fwdStrand = (flags[4] == false);
 	auto mateFwdStrand = (flags[5] == false);
@@ -88,9 +91,9 @@ void Alignment::continueConstruction() {
 		createCigarChunks();
 		assignBreakpointsAndOverhangs();
 		if (supplementary) {
-			auto startCit = std::next(samLine.cbegin(), 1 + samChunkPositions[9]);
-			auto endCit = std::next(samLine.cbegin(), samChunkPositions[10]);
-			std::vector<int> overhangPerBaseQuality { };
+			auto startCit = next(samLine.cbegin(), 1 + samChunkPositions[9]);
+			auto endCit = next(samLine.cbegin(), samChunkPositions[10]);
+			vector<int> overhangPerBaseQuality { };
 			fullMedianQuality(startCit, endCit, overhangPerBaseQuality);
 			if (overhangPerBaseQuality.empty() || getMedian(overhangPerBaseQuality.begin(), overhangPerBaseQuality.end()) < BASEQUALITYTHRESHOLD) {
 				readType = 5;
@@ -152,7 +155,7 @@ void Alignment::continueConstruction() {
 	if (samLine[1 + samChunkPositions[5]] == '=') {
 		mateChrIndex = chrIndex;
 	} else {
-		mateChrIndex = ChrConverter::readChromosomeIndex(std::next(samLine.cbegin(), 1 + samChunkPositions[5]), '\t');
+		mateChrIndex = ChrConverter::readChromosomeIndex(next(samLine.cbegin(), 1 + samChunkPositions[5]), '\t');
 	}
 }
 
@@ -200,7 +203,7 @@ void Alignment::createCigarChunks() {
 	auto encounteredM = false;
 	auto cumulativeNucleotideCount = 0, currentNucleotideCount = 0, indelAdjustment = 0, leftClipAdjustment = 0, rightClipAdjustment = 0;
 	for (auto cigarString_cit = samLine.cbegin() + 1 + samChunkPositions[4]; cigarString_cit != samLine.cbegin() + samChunkPositions[5]; ++cigarString_cit) {
-		if (std::isdigit(*cigarString_cit)) {
+		if (isdigit(*cigarString_cit)) {
 			currentNucleotideCount = currentNucleotideCount * 10 + (*cigarString_cit - '0');
 		} else {
 			switch (*cigarString_cit) {
@@ -286,17 +289,17 @@ void Alignment::assignBreakpointsAndOverhangs() {
 }
 
 void Alignment::qualityCheckCascade() {
-	//std::cerr << "a\n";
+	//cerr << "a\n";
 	if (!clipCountCheck()) {
 		readType = 5;
 		return;
 	}
-	//std::cerr << "b\n";
+	//cerr << "b\n";
 	if (!uniqueSuppCheck()) {
 		readType = 5;
 		return;
 	}
-	//std::cerr << "c\n";
+	//cerr << "c\n";
 	if (!qualChecked) {
 		for (const auto &cigarChunk : cigarChunks) {
 			if (cigarChunk.chunkType == 'S' && cigarChunk.length > LOWQUALCLIPTHRESHOLD && overhangMedianQuality(cigarChunk) < BASEQUALITYTHRESHOLD) {
@@ -305,9 +308,9 @@ void Alignment::qualityCheckCascade() {
 			}
 		}
 	}
-	//std::cerr << "d\n";
+	//cerr << "d\n";
 	assessReadType();
-	//std::cerr << "e\n";
+	//cerr << "e\n";
 }
 
 bool Alignment::clipCountCheck() {
@@ -402,14 +405,14 @@ bool Alignment::uniqueSuppCheck() {
 }
 
 double Alignment::overhangMedianQuality(const CigarChunk& cigarChunk) const {
-	std::vector<int> overhangPerBaseQuality { };
+	vector<int> overhangPerBaseQuality { };
 	if (!cigarChunk.encounteredM) {
-		auto startCit = std::next(samLine.cbegin(), 1 + samChunkPositions[9] + cigarChunk.startPosOnRead - cigarChunk.indelAdjustment);
-		auto endCit = std::next(samLine.cbegin(), 1 + samChunkPositions[9] + cigarChunk.startPosOnRead - cigarChunk.indelAdjustment + cigarChunk.length);
+		auto startCit = next(samLine.cbegin(), 1 + samChunkPositions[9] + cigarChunk.startPosOnRead - cigarChunk.indelAdjustment);
+		auto endCit = next(samLine.cbegin(), 1 + samChunkPositions[9] + cigarChunk.startPosOnRead - cigarChunk.indelAdjustment + cigarChunk.length);
 		fullMedianQuality(startCit, endCit, overhangPerBaseQuality);
 	} else {
-		std::string::const_reverse_iterator startCrit { std::next(samLine.cbegin(), 1 + samChunkPositions[9] + cigarChunk.startPosOnRead - cigarChunk.indelAdjustment + cigarChunk.length) };
-		std::string::const_reverse_iterator endCrit { std::next(samLine.cbegin(), 1 + samChunkPositions[9] + cigarChunk.startPosOnRead - cigarChunk.indelAdjustment) };
+		string::const_reverse_iterator startCrit { next(samLine.cbegin(), 1 + samChunkPositions[9] + cigarChunk.startPosOnRead - cigarChunk.indelAdjustment + cigarChunk.length) };
+		string::const_reverse_iterator endCrit { next(samLine.cbegin(), 1 + samChunkPositions[9] + cigarChunk.startPosOnRead - cigarChunk.indelAdjustment) };
 		fullMedianQuality(startCrit, endCrit, overhangPerBaseQuality);
 	}
 	if (overhangPerBaseQuality.empty()) {
@@ -518,13 +521,13 @@ void Alignment::setChosenBp(int chosenBpLoc, int alignmentIndex) {
 		}
 	}
 	chosenBp.reset();
-	chosenBp = std::make_unique<ChosenBp>(bpType, bpSize, bpEncounteredM, overhangStartIndex, overhangLength, alignmentIndex);
+	chosenBp = make_unique<ChosenBp>(bpType, bpSize, bpEncounteredM, overhangStartIndex, overhangLength, alignmentIndex);
 }
-std::vector<SuppAlignment> Alignment::generateSuppAlignments(int bpChrIndex, int bpPos) {
-	std::vector<SuppAlignment> suppAlignmentsTmp;
+vector<SuppAlignment> Alignment::generateSuppAlignments(int bpChrIndex, int bpPos) {
+	vector<SuppAlignment> suppAlignmentsTmp;
 	if (hasSa) {
-		std::vector<std::string::const_iterator> saBegins = { saCbegin };
-		std::vector<std::string::const_iterator> saEnds;
+		vector<string::const_iterator> saBegins = { saCbegin };
+		vector<string::const_iterator> saEnds;
 		for (auto it = saCbegin; it != saCend; ++it) {
 			if (*it == ';') {
 				saEnds.push_back(it);
@@ -557,8 +560,8 @@ std::vector<SuppAlignment> Alignment::generateSuppAlignments(int bpChrIndex, int
 	}
 	return suppAlignmentsTmp;
 }
-std::string Alignment::printOverhang() const {
-	std::string res { };
+string Alignment::printOverhang() const {
+	string res { };
 	res.reserve(chosenBp->overhangLength + 9);
 	if (chosenBp->bpEncounteredM) {
 		res.append("|").append(samLine.substr(chosenBp->overhangStartIndex, chosenBp->overhangLength));
@@ -572,7 +575,7 @@ std::string Alignment::printOverhang() const {
 double Alignment::overhangComplexityMaskRatio() const {
 	auto fullSizesTotal = 0.0;
 	auto maskedIntervalsTotal = 0.0;
-	std::vector<int> overhang;
+	vector<int> overhang;
 	for (auto i = 0; i < chosenBp->overhangLength; ++i) {
 		switch (samLine[chosenBp->overhangStartIndex + i]) {
 		case 'A':

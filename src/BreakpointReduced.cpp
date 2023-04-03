@@ -28,11 +28,14 @@
 #include "ChrConverter.h"
 
 namespace sophia {
+
+    using namespace std;
+
 boost::format BreakpointReduced::doubleFormatter { "%.3f" };
 int BreakpointReduced::DEFAULTREADLENGTH { };
 double BreakpointReduced::CLONALITYSTRICTLOWTHRESHOLD { };
 double BreakpointReduced::ARTIFACTFREQHIGHTHRESHOLD { };
-std::string BreakpointReduced::PIDSINMREFSTR { };
+string BreakpointReduced::PIDSINMREFSTR { };
 
 sophia::BreakpointReduced::BreakpointReduced(const Breakpoint& tmpBp, int lineIndexIn, bool hasOverhangIn) :
 				hasOverhang { hasOverhangIn },
@@ -82,7 +85,7 @@ void BreakpointReduced::complexRearrangementMateRatioRescue(bool encounteredM) {
 				return;
 			}
 			cumulativeMateSupport += sa.getMateSupport();
-			maxExpectedDiscordants = std::max(maxExpectedDiscordants, sa.getExpectedDiscordants());
+			maxExpectedDiscordants = max(maxExpectedDiscordants, sa.getExpectedDiscordants());
 		}
 	}
 	if (candidateCount == 2 && cumulativeMateSupport / maxExpectedDiscordants > 0.7) {
@@ -157,8 +160,8 @@ bool BreakpointReduced::testOverhangBasedCandidacy() const {
 	}
 	return true;
 }
-std::string BreakpointReduced::printOverhang(double germlineClonality, int numHits, const std::string& overhang) const {
-	std::string res { "##" };
+string BreakpointReduced::printOverhang(double germlineClonality, int numHits, const string& overhang) const {
+	string res { "##" };
 	res.append(ChrConverter::indexToChr[chrIndex]).append("\t");
 	res.append(strtk::type_to_string<int>(pos - 1)).append("\t");
 	res.append(strtk::type_to_string<int>(pos)).append("\t");
@@ -173,7 +176,7 @@ std::string BreakpointReduced::printOverhang(double germlineClonality, int numHi
 	return res;
 }
 void BreakpointReduced::removeMarkedFuzzies() {
-	suppAlignments.erase(std::remove_if(suppAlignments.begin(), suppAlignments.end(), [](const SuppAlignmentAnno& sa) {return sa.isToRemove();}), suppAlignments.end());
+	suppAlignments.erase(remove_if(suppAlignments.begin(), suppAlignments.end(), [](const SuppAlignmentAnno& sa) {return sa.isToRemove();}), suppAlignments.end());
 }
 } /* namespace sophia */
 

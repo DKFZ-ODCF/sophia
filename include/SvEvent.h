@@ -37,6 +37,8 @@
 
 namespace sophia {
 
+    using namespace std;
+
 enum ArtifactStatus {
 	ARTIFACT, BORDERLINE, CLEAN, UNKNOWN_a
 };
@@ -56,19 +58,19 @@ public:
 	static double CLONALITYLOWTHRESHOLD;
 	static double CLONALITYSTRICTLOWTHRESHOLD;
 	static double CLONALITYHIGHTHRESHOLD;
-	static std::string PIDSINMREFSTR;
+	static string PIDSINMREFSTR;
 	static int HALFDEFAULTREADLENGTH;
 	static int GERMLINEDBLIMIT;
 	static bool ABRIDGEDOUTPUT;
 	static bool NOCONTROLMODE;
 	static bool DEBUGMODE;
-	const static std::vector<std::string> EVENTTYPES;
-	SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In, const SuppAlignmentAnno& sa1In, const SuppAlignmentAnno& sa2In, const std::vector<std::pair<int, std::string>>& overhangDb);
-	SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In, const SuppAlignmentAnno& sa1In, const std::vector<std::pair<int, std::string>>& overhangDb, const SuppAlignmentAnno& dummySaIn);
-	SvEvent(const BreakpointReduced& bp1In, const SuppAlignmentAnno& sa1In, GermlineMatch germlineInfo2, MrefMatch hitsInMref2In, const std::vector<std::pair<int, std::string>>& overhangDb, const SuppAlignmentAnno& dummySaIn);
+	const static vector<string> EVENTTYPES;
+	SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In, const SuppAlignmentAnno& sa1In, const SuppAlignmentAnno& sa2In, const vector<pair<int, string>>& overhangDb);
+	SvEvent(const BreakpointReduced& bp1In, const BreakpointReduced& bp2In, const SuppAlignmentAnno& sa1In, const vector<pair<int, string>>& overhangDb, const SuppAlignmentAnno& dummySaIn);
+	SvEvent(const BreakpointReduced& bp1In, const SuppAlignmentAnno& sa1In, GermlineMatch germlineInfo2, MrefMatch hitsInMref2In, const vector<pair<int, string>>& overhangDb, const SuppAlignmentAnno& dummySaIn);
 
-//	std::vector<int> getKey() const;
-	std::string getKey() const;
+//	vector<int> getKey() const;
+	string getKey() const;
 
 	bool isGermline() const {
 		return germline;
@@ -129,7 +131,7 @@ public:
 	const SuppAlignmentAnno& getSelectedSa2() const {
 		return selectedSa2;
 	}
-	std::string printMatch(const std::vector<std::pair<int, std::string>>& overhangDb) const;
+	string printMatch(const vector<pair<int, string>>& overhangDb) const;
 
 	bool isToRemove() const {
 		return toRemove;
@@ -163,9 +165,9 @@ public:
 	}
 
 private:
-	std::pair<int, double> mateQualityConditions(const SuppAlignmentAnno &sa);
-	std::pair<bool, int> assessOverhangQualityCompensation(int lineIndex, const std::vector<std::pair<int, std::string>>& overhangDb) const;
-	std::pair<bool, short> processMrefHits(const MrefMatch& hitsInMref, const SuppAlignmentAnno& sa, int evidenceLevelIn) const;
+	pair<int, double> mateQualityConditions(const SuppAlignmentAnno &sa);
+	pair<bool, int> assessOverhangQualityCompensation(int lineIndex, const vector<pair<int, string>>& overhangDb) const;
+	pair<bool, short> processMrefHits(const MrefMatch& hitsInMref, const SuppAlignmentAnno& sa, int evidenceLevelIn) const;
 	double determineGermlineClonalityBp(const BreakpointReduced& bp1, const SuppAlignmentAnno& sa, double clonalityInit) const;
 
 	void determineEventTypeAndSize(int posDifferential, bool matchEncounteredM);
@@ -174,7 +176,7 @@ private:
 	int filterMatchSingle(const BreakpointReduced& bp1, const BreakpointReduced& bp2);
 	int filterMatchUnknown(const BreakpointReduced& bp1);
 
-	std::pair<double, double> assessSvClonality(const BreakpointReduced& bp, int eventSupportTotal) const;
+	pair<double, double> assessSvClonality(const BreakpointReduced& bp, int eventSupportTotal) const;
 
 	ClonalityStatus assessBreakpointClonalityStatus(double clonalityRatioIn, const BreakpointReduced& bp1, const BreakpointReduced& bp2) const;
 	ClonalityStatus assessBreakpointClonalityStatusSingle(double clonalityRatioIn, const BreakpointReduced& bp1, const BreakpointReduced& bp2) const;
@@ -184,9 +186,9 @@ private:
 	void assessSvArtifactStatusUnknown();
 
 	int assessEventScore(bool hardClipSuspiciousCall, int inputScoreCategory);
-	void assessContamination(const std::vector<std::pair<int, std::string>>& overhangDb);
-	std::pair<int,double> assessContaminationSingleBp(int overhangIndex, const std::vector<std::pair<int, std::string>>& overhangDb, const SuppAlignmentAnno &selectedSa);
-	std::string collapseRange(const std::vector<std::string>& vec, const std::string& delimiter) const {
+	void assessContamination(const vector<pair<int, string>>& overhangDb);
+	pair<int,double> assessContaminationSingleBp(int overhangIndex, const vector<pair<int, string>>& overhangDb, const SuppAlignmentAnno &selectedSa);
+	string collapseRange(const vector<string>& vec, const string& delimiter) const {
 		if (vec.empty()) {
 			return "_";
 		} else {

@@ -24,6 +24,7 @@
 #define CIGARCHUNK_H_
 
 namespace sophia {
+
 struct CigarChunk {
 	char chunkType;
 	bool encounteredM;

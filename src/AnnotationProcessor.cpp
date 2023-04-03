@@ -33,22 +33,25 @@
 #include "HelperFunctions.h"
 
 namespace sophia {
+
+    using namespace std;
+    
 bool AnnotationProcessor::ABRIDGEDOUTPUT { false };
 
-AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std::vector<std::vector<MrefEntryAnno>> &mref, int defaultReadLengthTumorIn, bool controlCheckMode, int germlineDbLimit) :
+AnnotationProcessor::AnnotationProcessor(const string& tumorResultsIn, vector<vector<MrefEntryAnno>> &mref, int defaultReadLengthTumorIn, bool controlCheckMode, int germlineDbLimit) :
 				NOCONTROLMODE { true },
 				GERMLINEDBLIMIT { germlineDbLimit },
 				contaminationObserved { false },
 				massiveInvFilteringLevel { 0 },
 				filteredResults { },
-				tumorResults { 85, std::vector<BreakpointReduced> { } },
-				controlResults { 85, std::vector<BreakpointReduced> { } },
+				tumorResults { 85, vector<BreakpointReduced> { } },
+				controlResults { 85, vector<BreakpointReduced> { } },
 				visitedLineIndices { } {
-	std::unique_ptr<std::ifstream> tumorInputHandle { std::make_unique<std::ifstream>(tumorResultsIn, std::ios_base::in | std::ios_base::binary) };
-	std::unique_ptr<boost::iostreams::filtering_istream> tumorGzHandle { std::make_unique<boost::iostreams::filtering_istream>() };
+	unique_ptr<ifstream> tumorInputHandle { make_unique<ifstream>(tumorResultsIn, ios_base::in | ios_base::binary) };
+	unique_ptr<boost::iostreams::filtering_istream> tumorGzHandle { make_unique<boost::iostreams::filtering_istream>() };
 	tumorGzHandle->push(boost::iostreams::gzip_decompressor());
 	tumorGzHandle->push(*tumorInputHandle);
-	std::string line;
+	string line;
 	auto lineIndex = 0;
 	while (error_terminating_getline(*tumorGzHandle, line)) {
 		if (line.front() == '#') {
@@ -62,7 +65,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 		auto hasOverhang = line.back() != '.' && line.back() != '#';
 		tumorResults[chrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
 		if (hasOverhang) {
-			std::string overhang { };
+			string overhang { };
 			for (auto it = line.rbegin(); it != line.rend(); ++it) {
 				if (*it == '\t') {
 					break;
@@ -70,7 +73,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 					overhang.push_back(*it);
 				}
 			}
-			std::reverse(overhang.begin(), overhang.end());
+			reverse(overhang.begin(), overhang.end());
 			overhangs.emplace_back(lineIndex, overhang);
 		} else {
 			visitedLineIndices.push_back(lineIndex);
@@ -96,19 +99,19 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 	}
 }
 
-AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std::vector<std::vector<MrefEntryAnno>> &mref, const std::string& controlResultsIn, int defaultReadLengthTumorIn, int defaultReadLengthControlIn, int germlineDbLimit, int lowQualControlIn, bool pathogenInControlIn) :
+AnnotationProcessor::AnnotationProcessor(const string& tumorResultsIn, vector<vector<MrefEntryAnno>> &mref, const string& controlResultsIn, int defaultReadLengthTumorIn, int defaultReadLengthControlIn, int germlineDbLimit, int lowQualControlIn, bool pathogenInControlIn) :
 				NOCONTROLMODE { false },
 				GERMLINEDBLIMIT { germlineDbLimit },
 				contaminationObserved { false },
 				massiveInvFilteringLevel { 0 },
 				filteredResults { },
-				tumorResults { 85, std::vector<BreakpointReduced> { } },
-				controlResults { 85, std::vector<BreakpointReduced> { } } {
-	std::unique_ptr<std::ifstream> controlInputHandle { std::make_unique<std::ifstream>(controlResultsIn, std::ios_base::in | std::ios_base::binary) };
-	std::unique_ptr<boost::iostreams::filtering_istream> controlGzHandle { std::make_unique<boost::iostreams::filtering_istream>() };
+				tumorResults { 85, vector<BreakpointReduced> { } },
+				controlResults { 85, vector<BreakpointReduced> { } } {
+	unique_ptr<ifstream> controlInputHandle { make_unique<ifstream>(controlResultsIn, ios_base::in | ios_base::binary) };
+	unique_ptr<boost::iostreams::filtering_istream> controlGzHandle { make_unique<boost::iostreams::filtering_istream>() };
 	controlGzHandle->push(boost::iostreams::gzip_decompressor());
 	controlGzHandle->push(*controlInputHandle);
-	std::string line;
+	string line;
 	auto lineIndex = 0;
 	while (error_terminating_getline(*controlGzHandle, line)) {
 		if (line.front() == '#') {
@@ -122,7 +125,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 		if (pathogenInControlIn) {
 			if ((tmpBp.getPairedBreaksSoft() + tmpBp.getUnpairedBreaksSoft()) > 19 && (tmpBp.getPairedBreaksHard() + tmpBp.getUnpairedBreaksHard() < 3)) {
 				if (line.back() != '.' && line.back() != '#') {
-					std::string overhang { };
+					string overhang { };
 					auto overhangLength = 0;
 					auto maxOverhangLength = 0;
 					for (auto it = line.rbegin(); *it != '\t'; ++it) {
@@ -131,7 +134,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 							overhangLength = 0;
 							break;
 						case ':':
-							maxOverhangLength = std::max(maxOverhangLength, overhangLength);
+							maxOverhangLength = max(maxOverhangLength, overhangLength);
 							overhangLength = 0;
 							break;
 						default:
@@ -202,8 +205,8 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 		DeFuzzier deFuzzierControl { defaultReadLengthControlIn * 6, false };
 		deFuzzierControl.deFuzzyDb(cres);
 	}
-	std::unique_ptr<std::ifstream> tumorInputHandle { std::make_unique<std::ifstream>(tumorResultsIn, std::ios_base::in | std::ios_base::binary) };
-	std::unique_ptr<boost::iostreams::filtering_istream> tumorGzHandle { std::make_unique<boost::iostreams::filtering_istream>() };
+	unique_ptr<ifstream> tumorInputHandle { make_unique<ifstream>(tumorResultsIn, ios_base::in | ios_base::binary) };
+	unique_ptr<boost::iostreams::filtering_istream> tumorGzHandle { make_unique<boost::iostreams::filtering_istream>() };
 	tumorGzHandle->push(boost::iostreams::gzip_decompressor());
 	tumorGzHandle->push(*tumorInputHandle);
 	lineIndex = 0;
@@ -219,7 +222,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 		auto hasOverhang = line.back() != '.' && line.back() != '#';
 		tumorResults[chrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
 		if (line.back() != '.' && line.back() != '#') {
-			std::string overhang { };
+			string overhang { };
 			for (auto it = line.rbegin(); it != line.rend(); ++it) {
 				if (*it == '\t') {
 					break;
@@ -227,7 +230,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 					overhang.push_back(*it);
 				}
 			}
-			std::reverse(overhang.begin(), overhang.end());
+			reverse(overhang.begin(), overhang.end());
 			overhangs.emplace_back(lineIndex, overhang);
 		} else {
 			visitedLineIndices.push_back(lineIndex);
@@ -253,7 +256,7 @@ AnnotationProcessor::AnnotationProcessor(const std::string& tumorResultsIn, std:
 	}
 }
 
-void AnnotationProcessor::searchMatches(std::vector<std::vector<MrefEntryAnno>> &mref) {
+void AnnotationProcessor::searchMatches(vector<vector<MrefEntryAnno>> &mref) {
 	for (auto j = 0; j < 85; ++j) {
 		for (auto i = 0u; i < tumorResults[j].size(); ++i) {
 			for (const auto &sa : tumorResults[j][i].getSuppAlignments()) {
@@ -270,7 +273,7 @@ void AnnotationProcessor::searchMatches(std::vector<std::vector<MrefEntryAnno>> 
 
 }
 
-void AnnotationProcessor::searchSa(int chrIndex, int dbIndex, const SuppAlignmentAnno& sa, bool doubleSupportSa, std::vector<std::vector<MrefEntryAnno>> &mref) {
+void AnnotationProcessor::searchSa(int chrIndex, int dbIndex, const SuppAlignmentAnno& sa, bool doubleSupportSa, vector<vector<MrefEntryAnno>> &mref) {
 	if (sa.getSupport() + sa.getSecondarySupport() + sa.getMateSupport() < 3) {
 		return;
 	}
@@ -285,10 +288,10 @@ void AnnotationProcessor::searchSa(int chrIndex, int dbIndex, const SuppAlignmen
 		return;
 	}
 	auto fuzziness = 3 * SuppAlignmentAnno::DEFAULTREADLENGTH;
-	std::vector<std::pair<int, std::vector<BreakpointReduced>::iterator>> dbHits { };
+	vector<pair<int, vector<BreakpointReduced>::iterator>> dbHits { };
 
 	if (!tumorResults[saChrIndex].empty()) {
-		auto itStart = std::lower_bound(tumorResults[saChrIndex].begin(), tumorResults[saChrIndex].end(), sa);
+		auto itStart = lower_bound(tumorResults[saChrIndex].begin(), tumorResults[saChrIndex].end(), sa);
 		if (itStart == tumorResults[saChrIndex].end()) {
 			--itStart;
 		}
@@ -313,7 +316,7 @@ void AnnotationProcessor::searchSa(int chrIndex, int dbIndex, const SuppAlignmen
 			}
 		}
 		if (itStart != tumorResults[saChrIndex].end()) {
-			auto it = std::next(itStart);
+			auto it = next(itStart);
 			while (it != tumorResults[saChrIndex].end()) {
 				auto distance = it->distanceToSupp(sa);
 				if (distance <= fuzziness) {
@@ -324,7 +327,7 @@ void AnnotationProcessor::searchSa(int chrIndex, int dbIndex, const SuppAlignmen
 				}
 			}
 		}
-		std::sort(dbHits.begin(), dbHits.end());
+		sort(dbHits.begin(), dbHits.end());
 	}
 	if (dbHits.empty()) {
 		if (createUnknownMatchSvPreCheck(sa, doubleSupportSa)) {
@@ -358,7 +361,7 @@ void AnnotationProcessor::searchSa(int chrIndex, int dbIndex, const SuppAlignmen
 	}
 }
 
-void AnnotationProcessor::createDoubleMatchSv(BreakpointReduced& sourceBp, BreakpointReduced& targetBp, const SuppAlignmentAnno& sa, const SuppAlignmentAnno& saMatch, bool checkOrder, std::vector<std::vector<MrefEntryAnno>>& mref) {
+void AnnotationProcessor::createDoubleMatchSv(BreakpointReduced& sourceBp, BreakpointReduced& targetBp, const SuppAlignmentAnno& sa, const SuppAlignmentAnno& saMatch, bool checkOrder, vector<vector<MrefEntryAnno>>& mref) {
 	if (checkOrder) {
 		if (sourceBp.getMrefHits().getNumConsevativeHits() == -1) {
 			auto germlineInfo = searchGermlineHitsNew(sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6, SvEvent::GERMLINEOFFSETTHRESHOLD);
@@ -387,7 +390,7 @@ bool AnnotationProcessor::createDoubleMatchSvPreCheck(const SuppAlignmentAnno& s
 	}
 	return false;
 }
-void AnnotationProcessor::createUnmatchedSaSv(BreakpointReduced& sourceBp, BreakpointReduced& targetBp, const SuppAlignmentAnno& sa, std::vector<std::vector<MrefEntryAnno>>& mref) {
+void AnnotationProcessor::createUnmatchedSaSv(BreakpointReduced& sourceBp, BreakpointReduced& targetBp, const SuppAlignmentAnno& sa, vector<vector<MrefEntryAnno>>& mref) {
 	if (sourceBp.getMrefHits().getNumConsevativeHits() == -1) {
 		auto germlineInfo = searchGermlineHitsNew(sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6, SvEvent::GERMLINEOFFSETTHRESHOLD);
 		sourceBp.setGermlineInfo(germlineInfo);
@@ -413,7 +416,7 @@ bool AnnotationProcessor::createUnknownMatchSvPreCheck(const SuppAlignmentAnno& 
 	}
 	return false;
 }
-void AnnotationProcessor::createUnknownMatchSv(BreakpointReduced& sourceBp, const SuppAlignmentAnno& sa, std::vector<std::vector<MrefEntryAnno>>& mref, bool doubleSupportSa) {
+void AnnotationProcessor::createUnknownMatchSv(BreakpointReduced& sourceBp, const SuppAlignmentAnno& sa, vector<vector<MrefEntryAnno>>& mref, bool doubleSupportSa) {
 	auto germlineInfo = searchGermlineHitsNew(sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6, SvEvent::GERMLINEOFFSETTHRESHOLD);
 	sourceBp.setGermlineInfo(germlineInfo);
 	auto mrefInfo = searchMrefHitsNew(sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6, SvEvent::GERMLINEOFFSETTHRESHOLD, mref);
@@ -445,23 +448,23 @@ void AnnotationProcessor::checkSvQuality() {
 	filteredResults.pop_back();
 }
 
-MrefMatch AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced& bpIn, int distanceThreshold, int conservativeDistanceThreshold, std::vector<std::vector<MrefEntryAnno> >& mref) {
+MrefMatch AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced& bpIn, int distanceThreshold, int conservativeDistanceThreshold, vector<vector<MrefEntryAnno> >& mref) {
 	auto convertedChrIndex = ChrConverter::indexConverter[bpIn.getChrIndex()];
-	std::vector<SuppAlignmentAnno> suppMatches { };
+	vector<SuppAlignmentAnno> suppMatches { };
 	if (convertedChrIndex < 0) {
 		return MrefMatch { 0, 0, 10000, suppMatches };
 	}
-	auto itStart = std::lower_bound(mref[convertedChrIndex].begin(), mref[convertedChrIndex].end(), bpIn);
+	auto itStart = lower_bound(mref[convertedChrIndex].begin(), mref[convertedChrIndex].end(), bpIn);
 	if (itStart == mref[convertedChrIndex].end()) {
 		return MrefMatch { 0, 0, 10000, suppMatches };
 	}
-	if (itStart != mref[convertedChrIndex].begin() && !(itStart->distanceTo(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) && std::prev(itStart)->distanceTo(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) {
+	if (itStart != mref[convertedChrIndex].begin() && !(itStart->distanceTo(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) && prev(itStart)->distanceTo(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) {
 		--itStart;
 	}
 	auto it = itStart;
 
-	std::vector<std::vector<MrefEntryAnno>::iterator> dbHits { };
-	std::vector<std::vector<MrefEntryAnno>::iterator> dbHitsConservative { };
+	vector<vector<MrefEntryAnno>::iterator> dbHits { };
+	vector<vector<MrefEntryAnno>::iterator> dbHitsConservative { };
 	while (true) {
 		auto tmpDistance = it->distanceTo(bpIn);
 		if (tmpDistance < SvEvent::GERMLINEOFFSETTHRESHOLD) {
@@ -478,7 +481,7 @@ MrefMatch AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced& bpIn, 
 		--it;
 	}
 	if (itStart != mref[convertedChrIndex].end()) {
-		it = std::next(itStart);
+		it = next(itStart);
 		while (true) {
 			if (it == mref[convertedChrIndex].end()) {
 				break;
@@ -557,12 +560,12 @@ MrefMatch AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced& bpIn, 
 			conservativeScore = tmpScore;
 		}
 	}
-	return MrefMatch { std::max(score, conservativeScore), conservativeScore, offset, suppMatches };
+	return MrefMatch { max(score, conservativeScore), conservativeScore, offset, suppMatches };
 }
 
 GermlineMatch AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced& bpIn, int distanceThreshold, int conservativeDistanceThreshold) {
-	GermlineMatch dummyMatchTrue { 1.0, 1.0, std::vector<std::pair<SuppAlignmentAnno, double>> { } };
-	GermlineMatch dummyMatchFalse { 0.0, 0.0, std::vector<std::pair<SuppAlignmentAnno, double>> { } };
+	GermlineMatch dummyMatchTrue { 1.0, 1.0, vector<pair<SuppAlignmentAnno, double>> { } };
+	GermlineMatch dummyMatchFalse { 0.0, 0.0, vector<pair<SuppAlignmentAnno, double>> { } };
 	if (NOCONTROLMODE) {
 		return dummyMatchTrue;
 	}
@@ -573,16 +576,16 @@ GermlineMatch AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced
 	if (controlResults[convertedChrIndex].empty()) {
 		return dummyMatchFalse;
 	}
-	auto itStart = std::lower_bound(controlResults[convertedChrIndex].begin(), controlResults[convertedChrIndex].end(), bpIn);
+	auto itStart = lower_bound(controlResults[convertedChrIndex].begin(), controlResults[convertedChrIndex].end(), bpIn);
 	if (itStart == controlResults[convertedChrIndex].end()) {
 		return dummyMatchFalse;
 	}
-	if (itStart != controlResults[convertedChrIndex].cbegin() && !(itStart->distanceToBp(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) && std::prev(itStart)->distanceToBp(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) {
+	if (itStart != controlResults[convertedChrIndex].cbegin() && !(itStart->distanceToBp(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) && prev(itStart)->distanceToBp(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) {
 		--itStart;
 	}
 	auto it = itStart;
-	std::vector<std::vector<BreakpointReduced>::iterator> dbHits { };
-	std::vector<std::vector<BreakpointReduced>::iterator> dbHitsConservative { };
+	vector<vector<BreakpointReduced>::iterator> dbHits { };
+	vector<vector<BreakpointReduced>::iterator> dbHitsConservative { };
 
 	while (true) {
 		auto tmpDistance = it->distanceToBp(bpIn);
@@ -603,7 +606,7 @@ GermlineMatch AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced
 		--it;
 	}
 	if (itStart != controlResults[convertedChrIndex].end()) {
-		it = std::next(itStart);
+		it = next(itStart);
 		while (true) {
 			if (it == controlResults[convertedChrIndex].end()) {
 				break;
@@ -649,7 +652,7 @@ GermlineMatch AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced
 		}
 	}
 	auto clonality = conservativeClonality;
-	std::vector<std::pair<SuppAlignmentAnno, double>> suppMatches { };
+	vector<pair<SuppAlignmentAnno, double>> suppMatches { };
 	for (auto res : dbHits) {
 		auto breakSupportSoft = res->getPairedBreaksSoft() + res->getUnpairedBreaksSoft();
 		auto breakSupportHard = res->getPairedBreaksHard() + res->getUnpairedBreaksHard();
@@ -677,16 +680,16 @@ GermlineMatch AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced
 								saTmp.first.setMateSupport(saRef.getMateSupport());
 								saTmp.first.setExpectedDiscordants(saRef.getExpectedDiscordants());
 							}
-							auto currentSoftSupport = std::max(saTmp.first.getSupport(), breakSupportSoft);
-							auto currentHardSupport = std::max(saTmp.first.getSecondarySupport(), breakSupportHard);
+							auto currentSoftSupport = max(saTmp.first.getSupport(), breakSupportSoft);
+							auto currentHardSupport = max(saTmp.first.getSecondarySupport(), breakSupportHard);
 							auto breakSupport = currentSoftSupport + currentHardSupport + 0.0;
 							auto currentClonality = (breakSupport + saTmp.first.getMateSupport()) / (breakSupport + saTmp.first.getMateSupport() + res->getNormalSpans());
-							saTmp.second = std::max(currentClonality, saTmp.second);
+							saTmp.second = max(currentClonality, saTmp.second);
 						}
 					}
 					if (!previouslyRecorded) {
-						auto currentSoftSupport = std::max(saRef.getSupport(), breakSupportSoft);
-						auto currentHardSupport = std::max(saRef.getSecondarySupport(), breakSupportHard);
+						auto currentSoftSupport = max(saRef.getSupport(), breakSupportSoft);
+						auto currentHardSupport = max(saRef.getSecondarySupport(), breakSupportHard);
 						auto breakSupport = currentSoftSupport + currentHardSupport + 0.0;
 						auto currentClonality = (breakSupport + saRef.getMateSupport()) / (breakSupport + saRef.getMateSupport() + res->getNormalSpans());
 						suppMatches.push_back( { saRef, currentClonality });
@@ -961,30 +964,30 @@ bool AnnotationProcessor::applyPathogenContaminationFiltering() {
 }
 void AnnotationProcessor::printFilteredResults(bool contaminationInControl, int controlPrefilteringLevel) const {
 	if (controlPrefilteringLevel > 0) {
-		std::cout << "#controlMassiveInvPrefilteringLevel\t" << controlPrefilteringLevel << std::endl;
+		cout << "#controlMassiveInvPrefilteringLevel\t" << controlPrefilteringLevel << endl;
 	}
 	if (massiveInvFilteringLevel > 0) {
-		std::cout << "#tumorMassiveInvFilteringLevel\t" << massiveInvFilteringLevel << std::endl;
+		cout << "#tumorMassiveInvFilteringLevel\t" << massiveInvFilteringLevel << endl;
 	}
 	if (contaminationInControl) {
-		std::cout << "#likelyPathogenInControl\tTRUE" << std::endl;
+		cout << "#likelyPathogenInControl\tTRUE" << endl;
 	}
 	if (contaminationObserved) {
-		std::cout << "#likelyPathogenInTumor\tTRUE" << std::endl;
+		cout << "#likelyPathogenInTumor\tTRUE" << endl;
 	}
 	for (const auto &sv : filteredResults) {
 		if (!sv.isToRemove()) {
-			std::cout << sv.printMatch(overhangs);
+			cout << sv.printMatch(overhangs);
 		}
 	}
 }
 
-void AnnotationProcessor::printUnresolvedRareOverhangs(std::vector<std::vector<MrefEntryAnno>> &mref) {
+void AnnotationProcessor::printUnresolvedRareOverhangs(vector<vector<MrefEntryAnno>> &mref) {
 	if (massiveInvFilteringLevel != 0) {
 		return;
 	}
-	std::sort(visitedLineIndices.begin(), visitedLineIndices.end());
-	std::unordered_set<int> visitedLineIndicesSet { visitedLineIndices.begin(), visitedLineIndices.end() };
+	sort(visitedLineIndices.begin(), visitedLineIndices.end());
+	unordered_set<int> visitedLineIndicesSet { visitedLineIndices.begin(), visitedLineIndices.end() };
 	for (const auto &tumorChromosome : tumorResults) {
 		for (const auto &bp : tumorChromosome) {
 			if (visitedLineIndicesSet.count(bp.getLineIndex())) {
@@ -997,22 +1000,22 @@ void AnnotationProcessor::printUnresolvedRareOverhangs(std::vector<std::vector<M
 					if (!NOCONTROLMODE) {
 						germlineClonality = searchGermlineHitsNew(bp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6, SvEvent::GERMLINEOFFSETTHRESHOLD).getClonality();
 					}
-					std::string overhang { "" };
+					string overhang { "" };
 					{
-						std::pair<int, std::string> dummy { bp.getLineIndex(), "" };
-						auto lower = std::lower_bound(overhangs.cbegin(), overhangs.cend(), dummy);
+						pair<int, string> dummy { bp.getLineIndex(), "" };
+						auto lower = lower_bound(overhangs.cbegin(), overhangs.cend(), dummy);
 						if (lower != overhangs.cend()) {
 							if (lower->first == bp.getLineIndex()) {
 								overhang = lower->second;
-							} else if (std::next(lower) != overhangs.cend() && std::next(lower)->first == bp.getLineIndex()) {
-								overhang = std::next(lower)->second;
-							} else if (lower != overhangs.cbegin() && std::prev(lower)->first == bp.getLineIndex()) {
-								overhang = std::prev(lower)->second;
+							} else if (next(lower) != overhangs.cend() && next(lower)->first == bp.getLineIndex()) {
+								overhang = next(lower)->second;
+							} else if (lower != overhangs.cbegin() && prev(lower)->first == bp.getLineIndex()) {
+								overhang = prev(lower)->second;
 							}
 						}
 					}
 					if (!overhang.empty()) {
-						std::cout << bp.printOverhang(germlineClonality, mrefHits.getNumHits(), overhang);
+						cout << bp.printOverhang(germlineClonality, mrefHits.getNumHits(), overhang);
 					}
 				}
 			}

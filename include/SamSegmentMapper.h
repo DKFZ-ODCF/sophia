@@ -33,6 +33,9 @@
 #include "MateInfo.h"
 
 namespace sophia {
+    
+    using namespace std;
+
 class SamSegmentMapper {
 public:
 	SamSegmentMapper(int defaultReadLengthIn);
@@ -42,7 +45,7 @@ private:
 	void printBps(int alignmentStart);
 	void switchChromosome(const Alignment& alignment);
 	void incrementCoverages(const Alignment& alignment);
-	void assignBps(std::shared_ptr<Alignment>& alignment);
+	void assignBps(shared_ptr<Alignment>& alignment);
 	const time_t STARTTIME;
 	const bool PROPERPARIRCOMPENSATIONMODE;
 	const int DISCORDANTLEFTRANGE;
@@ -50,11 +53,11 @@ private:
 	unsigned int printedBps;
 	int chrIndexCurrent;
 	int minPos, maxPos;
-	std::map<int, Breakpoint> breakpointsCurrent;
-	std::deque<CoverageAtBase> coverageProfiles;
-	std::deque<MateInfo> discordantAlignmentsPool;
-	std::deque<MateInfo> discordantAlignmentCandidatesPool;
-	std::deque<MateInfo> discordantLowQualAlignmentsPool;
+	map<int, Breakpoint> breakpointsCurrent;
+	deque<CoverageAtBase> coverageProfiles;
+	deque<MateInfo> discordantAlignmentsPool;
+	deque<MateInfo> discordantAlignmentCandidatesPool;
+	deque<MateInfo> discordantLowQualAlignmentsPool;
 };
 
 } /* namespace sophia */

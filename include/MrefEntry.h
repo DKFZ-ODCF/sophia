@@ -29,6 +29,8 @@
 #include "BreakpointReduced.h"
 namespace sophia {
 
+    using namespace std;
+
 class MrefEntry {
 public:
 	static int NUMPIDS;
@@ -43,11 +45,11 @@ public:
 		return pos;
 	}
 
-	const std::vector<float>& getArtifactRatios() const {
+	const vector<float>& getArtifactRatios() const {
 		return artifactRatios;
 	}
 
-	const std::vector<short>& getFileIndices() const {
+	const vector<short>& getFileIndices() const {
 		return fileIndices;
 	}
 
@@ -55,22 +57,22 @@ public:
 		return validity;
 	}
 	void removeMarkedFuzzies() {
-		suppAlignments.erase(std::remove_if(suppAlignments.begin(), suppAlignments.end(), [](const SuppAlignmentAnno& sa) {return sa.isToRemove();}), suppAlignments.end());
+		suppAlignments.erase(remove_if(suppAlignments.begin(), suppAlignments.end(), [](const SuppAlignmentAnno& sa) {return sa.isToRemove();}), suppAlignments.end());
 	}
-	std::string printBpInfo(const std::string& chromosome);
-	std::string printArtifactRatios(const std::string& chromosome);
+	string printBpInfo(const string& chromosome);
+	string printArtifactRatios(const string& chromosome);
 	SuppAlignmentAnno* searchFuzzySa(const SuppAlignmentAnno& fuzzySa);
-	std::vector<SuppAlignmentAnno*> getSupplementsPtr() {
-		std::vector<SuppAlignmentAnno*> res { };
+	vector<SuppAlignmentAnno*> getSupplementsPtr() {
+		vector<SuppAlignmentAnno*> res { };
 		for (auto &sa : suppAlignments) {
 			res.push_back(&sa);
 		}
 		return res;
 	}
-	const std::vector<short>& getFileIndicesWithArtifactRatios() const {
+	const vector<short>& getFileIndicesWithArtifactRatios() const {
 		return fileIndicesWithArtifactRatios;
 	}
-	const std::vector<SuppAlignmentAnno>& getSuppAlignments() const {
+	const vector<SuppAlignmentAnno>& getSuppAlignments() const {
 		return suppAlignments;
 	}
 
@@ -84,10 +86,10 @@ private:
 	void finalizeFileIndices();
 	short validity; //-1 nothing, 0 only sa, 1 sa and support
 	int pos;
-	std::vector<short> fileIndices;
-	std::vector<short> fileIndicesWithArtifactRatios;
-	std::vector<float> artifactRatios;
-	std::vector<SuppAlignmentAnno> suppAlignments;
+	vector<short> fileIndices;
+	vector<short> fileIndicesWithArtifactRatios;
+	vector<float> artifactRatios;
+	vector<SuppAlignmentAnno> suppAlignments;
 };
 
 } /* namespace sophia */

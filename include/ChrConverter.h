@@ -28,11 +28,13 @@
 #include <iterator>
 namespace sophia {
 
+    using namespace std;
+
 class ChrConverter {
 public:
-	static inline int readChromosomeIndex(std::string::const_iterator startIt, char stopChar) {
+	static inline int readChromosomeIndex(string::const_iterator startIt, char stopChar) {
 		int chrIndex { 0 };
-		if (std::isdigit(*startIt)) {
+		if (isdigit(*startIt)) {
 			for (auto chr_cit = startIt; *chr_cit != stopChar; ++chr_cit) {
 				chrIndex = chrIndex * 10 + (*chr_cit - '0');
 			}
@@ -44,7 +46,7 @@ public:
 			case 'X':
 				return 40;
 			case 'G':
-				for (auto cit = std::next(startIt, 2); *cit != '.'; ++cit) {
+				for (auto cit = next(startIt, 2); *cit != '.'; ++cit) {
 					chrIndex = 10 * chrIndex + *cit - '0';
 				}
 				return chrIndex;
@@ -67,9 +69,9 @@ public:
 		}
 		return 0;
 	}
-	static const std::array<std::string, 1004> indexToChr;
-	static const std::array<int, 1004> indexConverter;
-	static const std::array<std::string, 85> indexToChrCompressedMref;
+	static const array<string, 1004> indexToChr;
+	static const array<int, 1004> indexConverter;
+	static const array<string, 85> indexToChrCompressedMref;
 
 };
 

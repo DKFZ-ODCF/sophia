@@ -30,18 +30,21 @@
 #include "CigarChunk.h"
 
 namespace sophia {
+    
+    using namespace std;
+
 class SuppAlignment {
 public:
-	SuppAlignment(std::string::const_iterator saCbegin, std::string::const_iterator saCend, bool primaryIn, bool lowMapqSourceIn, bool nullMapqSourceIn, bool alignmentOnForwardStrand, bool bpEncounteredM, int originIndexIn, int bpChrIndex, int bpPos);
+	SuppAlignment(string::const_iterator saCbegin, string::const_iterator saCend, bool primaryIn, bool lowMapqSourceIn, bool nullMapqSourceIn, bool alignmentOnForwardStrand, bool bpEncounteredM, int originIndexIn, int bpChrIndex, int bpPos);
 	SuppAlignment(int chrIndexIn, int posIn, int mateSupportIn, int expectedDiscordantsIn, bool encounteredMIn, bool invertedIn, int extendedPosIn, bool primaryIn, bool lowMapqSourceIn, bool nullMapqSourceIn, int originIndexIn);
-	SuppAlignment(const std::string& saIn);
+	SuppAlignment(const string& saIn);
 	~SuppAlignment() = default;
 	static double ISIZEMAX;
 	static int DEFAULTREADLENGTH;
-	std::string print() const;
+	string print() const;
 	void extendSuppAlignment(int minPos, int maxPos) {
-		pos = std::min(pos, minPos);
-		extendedPos = std::max(extendedPos, maxPos);
+		pos = min(pos, minPos);
+		extendedPos = max(extendedPos, maxPos);
 	}
 	bool saCloseness(const SuppAlignment& rhs, int fuzziness) const;
 	bool saDistHomologyRescueCloseness(const SuppAlignment& rhs, int fuzziness) const;
@@ -86,13 +89,13 @@ public:
 	int getSupport() const {
 		return support;
 	}
-	void addSupportingIndices(const std::vector<int>& supportingIndicesIn) {
+	void addSupportingIndices(const vector<int>& supportingIndicesIn) {
 		supportingIndices.insert(supportingIndices.end(), supportingIndicesIn.cbegin(), supportingIndicesIn.cend());
 	}
 	void addSecondarySupportIndices(int supportingIndicesSecondaryIn) {
 		supportingIndicesSecondary.push_back(supportingIndicesSecondaryIn);
 	}
-	void addSecondarySupportIndices(const std::vector<int>& supportingIndicesSecondaryIn) {
+	void addSecondarySupportIndices(const vector<int>& supportingIndicesSecondaryIn) {
 		supportingIndicesSecondary.insert(supportingIndicesSecondary.end(), supportingIndicesSecondaryIn.cbegin(), supportingIndicesSecondaryIn.cend());
 	}
 	void finalizeSupportingIndices();
@@ -120,10 +123,10 @@ public:
 	bool isDistant() const {
 		return distant;
 	}
-	const std::vector<int>& getSupportingIndices() const {
+	const vector<int>& getSupportingIndices() const {
 		return supportingIndices;
 	}
-	const std::vector<int>& getSupportingIndicesSecondary() const {
+	const vector<int>& getSupportingIndicesSecondary() const {
 		return supportingIndicesSecondary;
 	}
 
@@ -162,15 +165,15 @@ public:
 		supportingIndices.clear();
 		supportingIndices.push_back(fileIndex);
 	}
-	void mrefSaConsensus(const std::unordered_set<short>& fileIndices) {
+	void mrefSaConsensus(const unordered_set<short>& fileIndices) {
 		supportingIndices.clear();
 		for (const auto &index : fileIndices) {
 			supportingIndices.push_back(index);
 		}
 	}
 	void mergeSa(const SuppAlignment& rhs) {
-		support = std::max(support, rhs.getSupport());
-		secondarySupport = std::max(secondarySupport, rhs.getSecondarySupport());
+		support = max(support, rhs.getSupport());
+		secondarySupport = max(secondarySupport, rhs.getSecondarySupport());
 		if (rhs.getExpectedDiscordants() > 0 && expectedDiscordants > 0) {
 			if ((0.0 + rhs.getMateSupport()) / rhs.getExpectedDiscordants() > (0.0 + mateSupport) / expectedDiscordants) {
 				mateSupport = rhs.getMateSupport();
@@ -185,9 +188,9 @@ public:
 		for (auto index : mrefSa.getSupportingIndices()) {
 			supportingIndices.push_back(index);
 		}
-		std::sort(supportingIndices.begin(), supportingIndices.end());
-		std::sort(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end());
-		supportingIndices.erase(std::unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
+		sort(supportingIndices.begin(), supportingIndices.end());
+		sort(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end());
+		supportingIndices.erase(unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
 		if (mrefSa.getExpectedDiscordants() > 0 && expectedDiscordants > 0) {
 			if ((0.0 + mrefSa.getMateSupport()) / mrefSa.getExpectedDiscordants() > (0.0 + mateSupport) / expectedDiscordants) {
 				mateSupport = mrefSa.getMateSupport();
@@ -232,8 +235,8 @@ private:
 	int pos;
 	int extendedPos;
 	int mapq;
-	std::vector<int> supportingIndices;
-	std::vector<int> supportingIndicesSecondary;
+	vector<int> supportingIndices;
+	vector<int> supportingIndicesSecondary;
 	int distinctReads;
 	int support;
 	int secondarySupport;

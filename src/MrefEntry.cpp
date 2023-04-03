@@ -29,6 +29,8 @@
 #include "BreakpointReduced.h"
 
 namespace sophia {
+
+    using namespace std;
 boost::format MrefEntry::doubleFormatter { "%.5f" };
 int MrefEntry::NUMPIDS { };
 int MrefEntry::DEFAULTREADLENGTH { };
@@ -123,12 +125,12 @@ void MrefEntry::mergeMrefEntries(MrefEntry& entry2) {
 			suppAlignments.push_back(*saPtr);
 		}
 	}
-	validity = std::max(validity, entry2.getValidityScore());
+	validity = max(validity, entry2.getValidityScore());
 }
 
-std::string MrefEntry::printBpInfo(const std::string& chromosome) {
+string MrefEntry::printBpInfo(const string& chromosome) {
 	finalizeFileIndices();
-	std::vector<std::string> outputFields { };
+	vector<string> outputFields { };
 	outputFields.emplace_back(chromosome);
 	outputFields.emplace_back(strtk::type_to_string<int>(pos));
 	outputFields.emplace_back(strtk::type_to_string<int>(pos + 1));
@@ -137,14 +139,14 @@ std::string MrefEntry::printBpInfo(const std::string& chromosome) {
 	outputFields.emplace_back(boost::str(doubleFormatter % ((fileIndices.size() + 0.0) / NUMPIDS)));
 	outputFields.emplace_back(boost::str(doubleFormatter % ((fileIndicesWithArtifactRatios.size() + 0.0) / NUMPIDS)));
 	if (!artifactRatios.empty()) {
-		outputFields.emplace_back(boost::str(doubleFormatter % (std::accumulate(artifactRatios.cbegin(), artifactRatios.cend(), 0.0) / artifactRatios.size())));
+		outputFields.emplace_back(boost::str(doubleFormatter % (accumulate(artifactRatios.cbegin(), artifactRatios.cend(), 0.0) / artifactRatios.size())));
 	} else {
 		outputFields.emplace_back("NA");
 	}
 	if (suppAlignments.empty()) {
 		outputFields.emplace_back(".");
 	} else {
-		std::vector<std::string> saFields { };
+		vector<string> saFields { };
 		saFields.reserve(suppAlignments.size());
 		for (auto &sa : suppAlignments) {
 			sa.finalizeSupportingIndices();
@@ -158,19 +160,19 @@ std::string MrefEntry::printBpInfo(const std::string& chromosome) {
 			outputFields.emplace_back(boost::join(saFields, ";"));
 		}
 	}
-	std::vector<std::string> fileIndicesStr { };
-	std::transform(fileIndices.begin(), fileIndices.end(), std::back_inserter(fileIndicesStr), [](int fileIndex) {return strtk::type_to_string<int>(fileIndex);});
+	vector<string> fileIndicesStr { };
+	transform(fileIndices.begin(), fileIndices.end(), back_inserter(fileIndicesStr), [](int fileIndex) {return strtk::type_to_string<int>(fileIndex);});
 	outputFields.emplace_back(boost::join(fileIndicesStr, ","));
 	return boost::join(outputFields, "\t").append("\n");
 }
 
-std::string MrefEntry::printArtifactRatios(const std::string& chromosome) {
-	std::vector<std::string> outputFields { };
+string MrefEntry::printArtifactRatios(const string& chromosome) {
+	vector<string> outputFields { };
 	outputFields.reserve(NUMPIDS + 3);
 	outputFields.emplace_back(chromosome);
 	outputFields.emplace_back(strtk::type_to_string<int>(pos));
 	outputFields.emplace_back(strtk::type_to_string<int>(pos + 1));
-	std::vector<std::string> artifactRatiosOutput(NUMPIDS, ".");
+	vector<string> artifactRatiosOutput(NUMPIDS, ".");
 	for (auto i = 0; i < static_cast<int>(fileIndicesWithArtifactRatios.size()); ++i) {
 		artifactRatiosOutput[fileIndicesWithArtifactRatios[i]] = boost::str(doubleFormatter % artifactRatios[i]);
 	}
@@ -218,10 +220,10 @@ bool MrefEntry::saMatcher(SuppAlignmentAnno* saPtr) {
 void MrefEntry::finalizeFileIndices() {
 	for (const auto &sa : suppAlignments) {
 		auto tmpIndices = sa.getSupportingIndices();
-		std::copy(tmpIndices.begin(), tmpIndices.end(), std::inserter(fileIndices, fileIndices.end()));
+		copy(tmpIndices.begin(), tmpIndices.end(), inserter(fileIndices, fileIndices.end()));
 	}
-	std::sort(fileIndices.begin(), fileIndices.end());
-	auto last = std::unique(fileIndices.begin(), fileIndices.end());
+	sort(fileIndices.begin(), fileIndices.end());
+	auto last = unique(fileIndices.begin(), fileIndices.end());
 	fileIndices.erase(last, fileIndices.end());
 }
 

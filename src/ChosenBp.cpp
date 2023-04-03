@@ -24,14 +24,17 @@
 #include <algorithm>
 
 namespace sophia {
+
+    using namespace std;
+
 int ChosenBp::BPSUPPORTTHRESHOLD { };
 void ChosenBp::addChildNode(int indexIn) {
 	childrenNodes.push_back(indexIn);
 }
 
-void ChosenBp::addSupplementaryAlignments(const std::vector<SuppAlignment>& suppAlignments) {
+void ChosenBp::addSupplementaryAlignments(const vector<SuppAlignment>& suppAlignments) {
 	for (const auto &sa : suppAlignments) {
-		auto it = std::find_if(supplementaryAlignments.begin(), supplementaryAlignments.end(), [&] (const SuppAlignment& suppAlignment) {return suppAlignment.saCloseness(sa,5);});
+		auto it = find_if(supplementaryAlignments.begin(), supplementaryAlignments.end(), [&] (const SuppAlignment& suppAlignment) {return suppAlignment.saCloseness(sa,5);});
 		if (it == supplementaryAlignments.end()) {
 			supplementaryAlignments.push_back(sa);
 		} else {

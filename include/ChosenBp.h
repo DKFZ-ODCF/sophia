@@ -26,6 +26,9 @@
 #include <string>
 #include "SuppAlignment.h"
 namespace sophia {
+
+    using namespace std;
+
 class ChosenBp {
 	friend class Alignment;
 public:
@@ -46,11 +49,11 @@ private:
 	int bpSize;
 	bool bpEncounteredM;
 	int overhangStartIndex, overhangLength;
-	std::vector<SuppAlignment> supplementaryAlignments;
-	std::vector<int> childrenNodes;
+	vector<SuppAlignment> supplementaryAlignments;
+	vector<int> childrenNodes;
 	int selfNodeIndex;
 	void addChildNode(int indexIn);
-	void addSupplementaryAlignments(const std::vector<SuppAlignment>& suppAlignments);
+	void addSupplementaryAlignments(const vector<SuppAlignment>& suppAlignments);
 };
 }
 
