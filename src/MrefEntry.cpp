@@ -31,6 +31,7 @@
 namespace sophia {
 
     using namespace std;
+
 boost::format MrefEntry::doubleFormatter { "%.5f" };
 int MrefEntry::NUMPIDS { };
 int MrefEntry::DEFAULTREADLENGTH { };
@@ -44,6 +45,7 @@ MrefEntry::MrefEntry() :
 				suppAlignments { } {
 
 }
+
 void MrefEntry::addEntry(BreakpointReduced& tmpBreakpoint, int fileIndex) {
 	pos = tmpBreakpoint.getPos();
 	auto artifactBreakTotal = tmpBreakpoint.getLowQualBreaksSoft() + tmpBreakpoint.getLowQualBreaksHard() + tmpBreakpoint.getRepetitiveOverhangBreaks();
@@ -195,6 +197,7 @@ SuppAlignmentAnno* MrefEntry::searchFuzzySa(const SuppAlignmentAnno& fuzzySa) {
 	}
 	return nullptr;
 }
+
 bool MrefEntry::saMatcher(SuppAlignmentAnno* saPtr) {
 	if (saPtr->isToRemove() || saPtr->isSuspicious() || (saPtr->getExpectedDiscordants() > 0 && !(saPtr->getMateSupport() / (saPtr->getExpectedDiscordants() + 0.0) > 0.1))) {
 		return true;

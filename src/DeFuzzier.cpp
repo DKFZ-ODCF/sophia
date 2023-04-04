@@ -24,12 +24,14 @@
 #include <algorithm>
 
 namespace sophia {
+    
     using namespace std;
 
 DeFuzzier::DeFuzzier(int maxDistanceIn, bool mrefModeIn) :
 				MAXDISTANCE { maxDistanceIn },
 				MREFMODE { mrefModeIn } {
 }
+
 void DeFuzzier::deFuzzyDb(vector<BreakpointReduced>& bps) const {
 	for (auto it = bps.begin(); it != bps.end(); ++it) {
 		for (auto &sa : it->getSupplementsPtr()) {

@@ -28,7 +28,7 @@
 namespace sophia {
 
     using namespace std;
-    
+   
 
 class GermlineMatch {
 public:

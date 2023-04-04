@@ -30,8 +30,11 @@
 namespace sophia {
 
     using namespace std;
+
 double SuppAlignment::ISIZEMAX { };
+
 int SuppAlignment::DEFAULTREADLENGTH { };
+
 SuppAlignment::SuppAlignment(string::const_iterator saCbegin, string::const_iterator saCend, bool primaryIn, bool lowMapqSourceIn, bool nullMapqSourceIn, bool alignmentOnForwardStrand, bool bpEncounteredM, int originIndexIn, int bpChrIndex, int bpPos) :
 				matchFuzziness { 5 * DEFAULTREADLENGTH },
 				chrIndex { 0 },
@@ -151,6 +154,7 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin, string::const_iter
 	}
 	strictFuzzy = fuzzy || (support + secondarySupport) < 3;
 }
+
 void SuppAlignment::finalizeSupportingIndices() {
 	sort(supportingIndices.begin(), supportingIndices.end());
 	sort(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end());
@@ -313,6 +317,7 @@ SuppAlignment::SuppAlignment(const string& saIn) :
 	distant = expectedDiscordants > 0 || suspicious;
 	strictFuzzy = fuzzy || (support + secondarySupport) < 3;
 }
+
 bool SuppAlignment::saCloseness(const SuppAlignment& rhs, int fuzziness) const {
 	if (inverted == rhs.isInverted() && chrIndex == rhs.getChrIndex() && encounteredM == rhs.isEncounteredM()) {
 		if (strictFuzzy || rhs.isStrictFuzzy()) {
@@ -325,6 +330,7 @@ bool SuppAlignment::saCloseness(const SuppAlignment& rhs, int fuzziness) const {
 		return false;
 	}
 }
+
 
 bool SuppAlignment::saDistHomologyRescueCloseness(const SuppAlignment& rhs, int fuzziness) const {
 	if (!distant || !rhs.isDistant()) {
