@@ -2,7 +2,8 @@
  * HelperFunctions.h
  *
  *  Created on: 23 May 2019
- *      Author: Philip R. Kensche, DKFZ Heidelberg (Omics IT and Data Management Core Facility)
+ *      Author: Philip R. Kensche, DKFZ Heidelberg (Omics IT and Data Management
+ * Core Facility)
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -23,18 +24,18 @@
 
 namespace sophia {
 
-    using namespace std;
+using namespace std;
 
-    istream& error_terminating_getline(istream& is, string& str) {
-        getline(is, str);
+istream &
+error_terminating_getline(istream &is, string &str) {
+    getline(is, str);
 
-        if (is.bad()) {
-            perror("Error reading line from file");
-            exit(EXITCODE_IOERROR);
-        }
-
-        return is;
+    if (is.bad()) {
+        perror("Error reading line from file");
+        exit(EXITCODE_IOERROR);
     }
 
-} /* namespace sophia */
+    return is;
+}
 
+} /* namespace sophia */

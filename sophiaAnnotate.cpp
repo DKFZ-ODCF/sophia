@@ -22,15 +22,18 @@
 #include "ChrConverter.h"
 #include "HelperFunctions.h"
 
+
 int main(int argc, char** argv) {
-	std::ios_base::sync_with_stdio(false);
-	std::cin.tie(nullptr);
+    using namespace std;
+
+	ios_base::sync_with_stdio(false);
+	cin.tie(nullptr);
 	cxxopts::Options options("SophiaAnnotate", "Annotates SOPHIA output");
 	options.add_options() //
 	("help", "produce help message") //
-	("mref", "mref file", cxxopts::value<std::string>()) //
-	("tumorresults", "_bps.bed.gz file from sophia for the tumor, or control for a no-tumor analysis", cxxopts::value<std::string>()) //
-	("controlresults", "_bps.bed.gz file from sophia for the control", cxxopts::value<std::string>()) //
+	("mref", "mref file", cxxopts::value<string>()) //
+	("tumorresults", "_bps.bed.gz file from sophia for the tumor, or control for a no-tumor analysis", cxxopts::value<string>()) //
+	("controlresults", "_bps.bed.gz file from sophia for the control", cxxopts::value<string>()) //
 	("defaultreadlengthtumor", "Default read length for the technology used in sequencing 101,151 etc., tumor", cxxopts::value<int>()) //
 	("defaultreadlengthcontrol", "Default read length for the technology used in sequencing 101,151 etc., tumor", cxxopts::value<int>()) //
 	("pidsinmref", "Number of PIDs in the MREF", cxxopts::value<int>()) //
@@ -44,31 +47,31 @@ int main(int argc, char** argv) {
 	("germlinedblimit", "Maximum occurrence of germline variants in the db. (5)", cxxopts::value<int>()) //
 	("debugmode", "debugmode");
 	options.parse(argc, argv);
-	std::vector<std::vector<sophia::MrefEntryAnno>> mref { 85, std::vector<sophia::MrefEntryAnno> { } };
+	vector<vector<sophia::MrefEntryAnno>> mref { 85, vector<sophia::MrefEntryAnno> { } };
 	if (!options.count("mref")) {
-		std::cerr << "No mref file given, exiting" << std::endl;
+		cerr << "No mref file given, exiting" << endl;
 		return 1;
 	}
 
-	std::string tumorResults;
+	string tumorResults;
 	if (options.count("tumorresults")) {
-		tumorResults = options["tumorresults"].as<std::string>();
+		tumorResults = options["tumorresults"].as<string>();
 	} else {
-		std::cerr << "No input file given, exiting" << std::endl;
+		cerr << "No input file given, exiting" << endl;
 		return 1;
 	}
 	int pidsInMref { 0 };
 	if (options.count("pidsinmref")) {
 		pidsInMref = options["pidsinmref"].as<int>();
 	} else {
-		std::cerr << "number of PIDS in the MREF not given, exiting" << std::endl;
+		cerr << "number of PIDS in the MREF not given, exiting" << endl;
 		return 1;
 	}
 	int defaultReadLengthTumor { 0 };
 	if (options.count("defaultreadlengthtumor")) {
 		defaultReadLengthTumor = options["defaultreadlengthtumor"].as<int>();
 	} else {
-		std::cerr << "Default read Length not given, exiting" << std::endl;
+		cerr << "Default read Length not given, exiting" << endl;
 		return 1;
 	}
 	int artifactlofreq { 33 };
@@ -104,12 +107,12 @@ int main(int argc, char** argv) {
 		germlineDbLimit = options["germlinedblimit"].as<int>();
 	}
 	sophia::MrefEntryAnno::PIDSINMREF = pidsInMref;
-	std::unique_ptr<std::ifstream> mrefInputHandle { std::make_unique<std::ifstream>(options["mref"].as<std::string>(), std::ios_base::in | std::ios_base::binary) };
-	std::unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle { std::make_unique<boost::iostreams::filtering_istream>() };
+	unique_ptr<ifstream> mrefInputHandle { make_unique<ifstream>(options["mref"].as<string>(), ios_base::in | ios_base::binary) };
+	unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle { make_unique<boost::iostreams::filtering_istream>() };
 	mrefGzHandle->push(boost::iostreams::gzip_decompressor());
 	mrefGzHandle->push(*mrefInputHandle);
-	std::cerr << "m\n";
-	std::string line { };
+	cerr << "m\n";
+	string line { };
 	while (sophia::error_terminating_getline(*mrefGzHandle, line)) {
 		if (line.front() == '#') {
 			continue;
@@ -135,7 +138,7 @@ int main(int argc, char** argv) {
 	sophia::Breakpoint::DEFAULTREADLENGTH = defaultReadLengthTumor;
 	sophia::SuppAlignment::DEFAULTREADLENGTH = defaultReadLengthTumor;
 	sophia::SuppAlignmentAnno::DEFAULTREADLENGTH = defaultReadLengthTumor;
-	sophia::SvEvent::HALFDEFAULTREADLENGTH = std::round(defaultReadLengthTumor / 2.0);
+	sophia::SvEvent::HALFDEFAULTREADLENGTH = round(defaultReadLengthTumor / 2.0);
 	sophia::SvEvent::GERMLINEOFFSETTHRESHOLD = germlineOffset;
 	sophia::SvEvent::GERMLINEDBLIMIT = germlineDbLimit;
 	sophia::SvEvent::ABRIDGEDOUTPUT = true;
@@ -147,12 +150,12 @@ int main(int argc, char** argv) {
 	sophia::AnnotationProcessor::ABRIDGEDOUTPUT = true;
 	sophia::Breakpoint::BPSUPPORTTHRESHOLD = 3;
 	if (options.count("controlresults")) {
-		std::string controlResults { options["controlresults"].as<std::string>() };
+		string controlResults { options["controlresults"].as<string>() };
 		int defaultReadLengthControl { 0 };
 		if (options.count("defaultreadlengthcontrol")) {
 			defaultReadLengthControl = options["defaultreadlengthtumor"].as<int>();
 		} else {
-			std::cerr << "Default read Length not given, exiting" << std::endl;
+			cerr << "Default read Length not given, exiting" << endl;
 			return 1;
 		}
 		auto lowQualControl = 0;

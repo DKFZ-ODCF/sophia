@@ -2,7 +2,8 @@
  * HelperFunctions.h
  *
  *  Created on: 23 May 2019
- *      Author: Philip R. Kensche, DKFZ Heidelberg (Omics IT and Data Management Core Facility)
+ *      Author: Philip R. Kensche, DKFZ Heidelberg (Omics IT and Data Management
+ * Core Facility)
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -27,9 +28,11 @@
 
 namespace sophia {
 
-    const int EXITCODE_IOERROR = 1;
+using namespace std;
 
-    std::istream& error_terminating_getline(std::istream& is, std::string& str);
+const int EXITCODE_IOERROR = 1;
+
+istream &error_terminating_getline(istream &is, string &str);
 
 } /* namespace sophia */
 
