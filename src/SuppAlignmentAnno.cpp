@@ -23,6 +23,7 @@
  */
 
 #include "SuppAlignmentAnno.h"
+#include "GlobalAppConfig.h"
 #include "ChrConverter.h"
 #include "strtk.hpp"
 #include <algorithm>
@@ -49,7 +50,8 @@ SuppAlignmentAnno::SuppAlignmentAnno(const string &saStrIn)
         ++index;
     }
     chrIndex =
-        ChrConverter::readChromosomeIndex(next(saStrIn.cbegin(), index), ':');
+        GlobalAppConfig::getInstance().
+            getChrConverter().readChromosomeIndex(next(saStrIn.cbegin(), index), ':');
     if (chrIndex > 1001) {
         return;
     }
@@ -178,12 +180,13 @@ SuppAlignmentAnno::print() const {
     } else {
         invStr.append("|");
     }
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     if (!fuzzy || pos == extendedPos) {
-        outStr.append(ChrConverter::indexToChr[chrIndex])
+        outStr.append(chrConverter.indexToChr[chrIndex])
             .append(":")
             .append(strtk::type_to_string<int>(pos));
     } else {
-        outStr.append(ChrConverter::indexToChr[chrIndex])
+        outStr.append(chrConverter.indexToChr[chrIndex])
             .append(":")
             .append(strtk::type_to_string<int>(pos))
             .append("-")

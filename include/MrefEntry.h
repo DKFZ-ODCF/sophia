@@ -27,6 +27,7 @@
 
 #include "BreakpointReduced.h"
 #include "SuppAlignment.h"
+#include "ChrConverter.h"
 #include <boost/format.hpp>
 #include <string>
 
@@ -39,6 +40,7 @@ class MrefEntry {
     static int NUMPIDS;
     static int DEFAULTREADLENGTH;
     static boost::format doubleFormatter;
+
     MrefEntry();
     void addEntry(Breakpoint &tmpBreakpoint, int fileIndex);
     void addEntry(BreakpointReduced &tmpBreakpoint, int fileIndex);

@@ -1,9 +1,5 @@
 /*
- * HelperFunctions.h
- *
- *  Created on: 23 May 2019
- *      Author: Philip R. Kensche, DKFZ Heidelberg (Omics IT and Data Management
- * Core Facility)
+ *     Author: Philip R. Kensche, DKFZ Heidelberg (Omics IT and Data Management Core Facility)
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -17,25 +13,32 @@
  *
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *      LICENSE: GPL
+ *     LICENSE: GPL
  */
 
-#include "HelperFunctions.h"
+#ifndef HG38CHRCONVERTER_H_
+#define HG38CHRCONVERTER_H_
+
+#include "ChrConverter.h"
+#include <string>
+#include <vector>
+
 
 namespace sophia {
 
     using namespace std;
 
-    istream &
-    error_terminating_getline(istream &is, string &str) {
-        getline(is, str);
+    class Hg38ChrConverter: public ChrConverter {
+      public:
 
-        if (is.bad()) {
-            perror("Error reading line from file");
-            exit(EXITCODE_IOERROR);
-        }
+        static const string assembly_name;
 
-        return is;
-    }
+        Hg38ChrConverter();
 
-} /* namespace sophia */
+        int readChromosomeIndex(string::const_iterator startIt, char stopChar) const;
+
+    };
+
+}
+
+#endif /* HG38CHRCONVERTER_H_ */

@@ -24,6 +24,7 @@
 
 #include "Alignment.h"
 #include "ChrConverter.h"
+#include "GlobalAppConfig.h"
 #include "HelperFunctions.h"
 #include "MateInfo.h"
 #include "Sdust.h"
@@ -35,19 +36,34 @@ namespace sophia {
 
 using namespace std;
 
-int Alignment::LOWQUALCLIPTHRESHOLD{}, Alignment::BASEQUALITYTHRESHOLD{},
-    Alignment::BASEQUALITYTHRESHOLDLOW{},   //
+int Alignment::LOWQUALCLIPTHRESHOLD{},
+    Alignment::BASEQUALITYTHRESHOLD{},
+    Alignment::BASEQUALITYTHRESHOLDLOW{},
     Alignment::CLIPPEDNUCLEOTIDECOUNTTHRESHOLD{},
     Alignment::INDELNUCLEOTIDECOUNTTHRESHOLD{};
 
 double Alignment::ISIZEMAX{};
 Alignment::Alignment()
-    : lowMapq{false}, nullMapq{true}, distantMate{0}, chosenBp{nullptr},
-      chrIndex{0}, readType{0}, startPos{0}, endPos{0}, mateChrIndex{0},
-      matePos{0}, samLine{}, validLine{error_terminating_getline(cin, samLine)},
-      samChunkPositions{}, saCbegin{}, saCend{}, hasSa{false},
-      supplementary{false}, fwdStrand{true}, invertedMate{false}, qualChecked{
-                                                                      false} {
+    : lowMapq(false),
+      nullMapq(true),
+      distantMate(0),
+      chosenBp(nullptr),
+      chrIndex(0),
+      readType(0),
+      startPos(0),
+      endPos(0),
+      mateChrIndex(0),
+      matePos(0),
+      samLine(),
+      validLine(error_terminating_getline(cin, samLine)),
+      samChunkPositions(),
+      saCbegin(),
+      saCend(),
+      hasSa(false),
+      supplementary(false),
+      fwdStrand(true),
+      invertedMate(false),
+      qualChecked(false) {
     if (validLine) {
         auto index = 0;
         for (auto it = samLine.cbegin(); it != samLine.cend(); ++it) {
@@ -56,7 +72,7 @@ Alignment::Alignment()
             }
             ++index;
         }
-        chrIndex = ChrConverter::readChromosomeIndex(
+        chrIndex = GlobalAppConfig::getInstance().getChrConverter().readChromosomeIndex(
             next(samLine.cbegin(), samChunkPositions[1] + 1), '\t');
     }
 }
@@ -157,7 +173,7 @@ Alignment::continueConstruction() {
     if (samLine[1 + samChunkPositions[5]] == '=') {
         mateChrIndex = chrIndex;
     } else {
-        mateChrIndex = ChrConverter::readChromosomeIndex(
+        mateChrIndex = GlobalAppConfig::getInstance().getChrConverter().readChromosomeIndex(
             next(samLine.cbegin(), 1 + samChunkPositions[5]), '\t');
     }
 }
@@ -707,6 +723,44 @@ Alignment::overhangComplexityMaskRatio() const {
         }
     }
     return maskedIntervalsTotal / fullSizesTotal;
+}
+
+
+template <typename Iterator>
+void
+Alignment::fullMedianQuality(Iterator qualBegin, Iterator qualEnd,
+                             vector<int> &overhangPerBaseQuality) const {
+    overhangPerBaseQuality.reserve(distance(qualBegin, qualEnd));
+    auto consecutiveLowQuals = 0;
+    for (auto cit = qualBegin; cit != qualEnd; ++cit) {
+        if (*cit < BASEQUALITYTHRESHOLDLOW) {   // 33 + phred 11
+            if (consecutiveLowQuals == 5) {
+                overhangPerBaseQuality.clear();
+                return;
+            }
+            ++consecutiveLowQuals;
+        } else {
+            consecutiveLowQuals = 0;
+        }
+        overhangPerBaseQuality.push_back(*cit);
+    }
+}
+
+// Median Code taken from http://rosettacode.org/wiki/Averages/Median#C.2B.2B
+template <typename Iterator>
+double
+Alignment::getMedian(Iterator begin, Iterator end) const {
+    // this is middle for odd-length, and "upper-middle" for even length
+    Iterator middle = begin + (end - begin) / 2;
+    // This function runs in O(n) on average, according to the standard
+    nth_element(begin, middle, end);
+    if ((end - begin) % 2 != 0) {   // odd length
+        return *middle;
+    } else {   // even length
+        // the "lower middle" is the max of the lower half
+        Iterator lower_middle = max_element(begin, middle);
+        return (*middle + *lower_middle) / 2.0;
+    }
 }
 
 } /* namespace sophia */

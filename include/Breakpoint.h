@@ -28,6 +28,7 @@
 #include "MateInfo.h"
 #include "SuppAlignment.h"
 #include "SuppAlignmentAnno.h"
+#include "ChrConverter.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -231,24 +232,6 @@ class Breakpoint {
     vector<MateInfo> poolLeft, poolRight, poolLowQualLeft, poolLowQualRight;
     vector<SuppAlignment> supplementsSecondary;
 };
-
-template <typename T>
-inline void
-Breakpoint::cleanUpVector(vector<T> &objectPool) {
-    // cerr << "cleaning up" << endl;
-    while (!objectPool.empty() && objectPool.back().isToRemove()) {
-        objectPool.pop_back();
-    }
-    for (auto saIt = objectPool.begin(); saIt != objectPool.end(); ++saIt) {
-        if (saIt->isToRemove()) {
-            swap(*saIt, objectPool.back());
-        }
-        while (!objectPool.empty() && objectPool.back().isToRemove()) {
-            objectPool.pop_back();
-        }
-    }
-    // cerr << "done" << endl;
-}
 
 } /* namespace sophia */
 

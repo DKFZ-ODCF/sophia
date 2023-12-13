@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cmath>
 #include <string>
+#include <memory>
 #include "cxxopts.hpp"
 #include "BreakpointReduced.h"
 #include "AnnotationProcessor.h"
@@ -19,12 +20,16 @@
 #include "MrefEntryAnno.h"
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
-#include "ChrConverter.h"
 #include "HelperFunctions.h"
+#include "ChrConverter.h"
+#include "Hg37ChrConverter.h"
+#include "Hg38ChrConverter.h"
+#include "GlobalAppConfig.h"
 
 
 int main(int argc, char** argv) {
     using namespace std;
+    using namespace sophia;
 
 	ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
@@ -32,6 +37,7 @@ int main(int argc, char** argv) {
 	options.add_options() //
 	("help", "produce help message") //
 	("mref", "mref file", cxxopts::value<string>()) //
+	("assemblyname", "assembly name", cxxopts::value<string>()) //
 	("tumorresults", "_bps.bed.gz file from sophia for the tumor, or control for a no-tumor analysis", cxxopts::value<string>()) //
 	("controlresults", "_bps.bed.gz file from sophia for the control", cxxopts::value<string>()) //
 	("defaultreadlengthtumor", "Default read length for the technology used in sequencing 101,151 etc., tumor", cxxopts::value<int>()) //
@@ -46,8 +52,10 @@ int main(int argc, char** argv) {
 	("germlineoffset", "Minimum offset a germline bp and a control bp. (5)", cxxopts::value<int>()) //
 	("germlinedblimit", "Maximum occurrence of germline variants in the db. (5)", cxxopts::value<int>()) //
 	("debugmode", "debugmode");
+
 	options.parse(argc, argv);
-	vector<vector<sophia::MrefEntryAnno>> mref { 85, vector<sophia::MrefEntryAnno> { } };
+
+	vector<vector<MrefEntryAnno>> mref { 85, vector<MrefEntryAnno> { } };
 	if (!options.count("mref")) {
 		cerr << "No mref file given, exiting" << endl;
 		return 1;
@@ -60,13 +68,16 @@ int main(int argc, char** argv) {
 		cerr << "No input file given, exiting" << endl;
 		return 1;
 	}
+
 	int pidsInMref { 0 };
+
 	if (options.count("pidsinmref")) {
 		pidsInMref = options["pidsinmref"].as<int>();
 	} else {
 		cerr << "number of PIDS in the MREF not given, exiting" << endl;
 		return 1;
 	}
+
 	int defaultReadLengthTumor { 0 };
 	if (options.count("defaultreadlengthtumor")) {
 		defaultReadLengthTumor = options["defaultreadlengthtumor"].as<int>();
@@ -74,81 +85,109 @@ int main(int argc, char** argv) {
 		cerr << "Default read Length not given, exiting" << endl;
 		return 1;
 	}
+
 	int artifactlofreq { 33 };
 	if (options.count("artifactlofreq")) {
 		artifactlofreq = options["artifactlofreq"].as<int>();
 	}
+
 	int artifacthifreq { 50 };
 	if (options.count("artifacthifreq")) {
 		artifacthifreq = options["artifacthifreq"].as<int>();
 	}
+
 	int clonalitylofreq { 5 };
 	if (options.count("clonalitylofreq")) {
 		clonalitylofreq = options["clonalitylofreq"].as<int>();
 	}
+
 	int clonalitystrictlofreq { 20 };
 	if (options.count("clonalitystrictlofreq")) {
 		clonalitystrictlofreq = options["clonalitystrictlofreq"].as<int>();
 	}
+
 	int clonalityhifreq { 85 };
 	if (options.count("clonalityhifreq")) {
 		clonalityhifreq = options["clonalityhifreq"].as<int>();
 	}
+
 	int bpFreq { 3 };
 	if (options.count("bpfreq")) {
 		bpFreq = options["bpfreq"].as<int>();
 	}
+
 	int germlineOffset { 5 };
 	if (options.count("germlineoffset")) {
 		germlineOffset = options["germlineoffset"].as<int>();
 	}
+
 	int germlineDbLimit { 5 };
 	if (options.count("germlinedblimit")) {
 		germlineDbLimit = options["germlinedblimit"].as<int>();
 	}
-	sophia::MrefEntryAnno::PIDSINMREF = pidsInMref;
+
+	unique_ptr<ChrConverter> chrConverter;
+	if (!options.count("assemblyname") ||
+	      options["assemblyname"].as<string>() == Hg37ChrConverter::assembly_name) {
+	    chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
+    } else if (options["assemblyname"].as<string>() == Hg38ChrConverter::assembly_name) {
+        chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
+    } else {
+        cerr << "Unknown assembly name " << options["assemblyname"].as<string>() << ". I know "
+             << Hg37ChrConverter::assembly_name << " and "
+             << Hg38ChrConverter::assembly_name << endl;
+        return 1;
+    }
+
+    // Initialize global application config.
+    const GlobalAppConfig &config = GlobalAppConfig::init(move(chrConverter));
+
+	MrefEntryAnno::PIDSINMREF = pidsInMref;
 	unique_ptr<ifstream> mrefInputHandle { make_unique<ifstream>(options["mref"].as<string>(), ios_base::in | ios_base::binary) };
 	unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle { make_unique<boost::iostreams::filtering_istream>() };
 	mrefGzHandle->push(boost::iostreams::gzip_decompressor());
 	mrefGzHandle->push(*mrefInputHandle);
 	cerr << "m\n";
 	string line { };
-	while (sophia::error_terminating_getline(*mrefGzHandle, line)) {
+
+    const ChrConverter &chrConverterTmp = config.getChrConverter();
+	while (error_terminating_getline(*mrefGzHandle, line)) {
 		if (line.front() == '#') {
 			continue;
 		};
-		auto chrIndex = sophia::ChrConverter::indexConverter[sophia::ChrConverter::readChromosomeIndex(line.cbegin(), '\t')];
+		auto chrIndex =
+		    chrConverterTmp.indexConverter[chrConverterTmp.readChromosomeIndex(line.cbegin(), '\t')];
 		if (chrIndex < 0) {
 			continue;
 		}
 		mref[chrIndex].emplace_back(line);
 	}
-	sophia::SvEvent::ARTIFACTFREQLOWTHRESHOLD = (artifactlofreq + 0.0) / 100;
-	sophia::SvEvent::ARTIFACTFREQHIGHTHRESHOLD = (artifacthifreq + 0.0) / 100;
-	sophia::BreakpointReduced::ARTIFACTFREQHIGHTHRESHOLD = sophia::SvEvent::ARTIFACTFREQHIGHTHRESHOLD;
-	sophia::SvEvent::CLONALITYLOWTHRESHOLD = (clonalitylofreq + 0.0) / 100;
-	sophia::SvEvent::CLONALITYSTRICTLOWTHRESHOLD = (clonalitystrictlofreq + 0.0) / 100;
-	sophia::BreakpointReduced::CLONALITYSTRICTLOWTHRESHOLD = sophia::SvEvent::CLONALITYSTRICTLOWTHRESHOLD;
-	sophia::SvEvent::CLONALITYHIGHTHRESHOLD = (clonalityhifreq + 0.0) / 100;
-	sophia::SvEvent::BPFREQTHRESHOLD = pidsInMref * (bpFreq + 0.0) / 100;
-	sophia::SvEvent::RELAXEDBPFREQTHRESHOLD = 3 * sophia::SvEvent::BPFREQTHRESHOLD;
-	sophia::SvEvent::PIDSINMREFSTR = strtk::type_to_string<int>(pidsInMref);
-	sophia::BreakpointReduced::PIDSINMREFSTR = sophia::SvEvent::PIDSINMREFSTR;
-	sophia::BreakpointReduced::DEFAULTREADLENGTH = defaultReadLengthTumor;
-	sophia::Breakpoint::DEFAULTREADLENGTH = defaultReadLengthTumor;
-	sophia::SuppAlignment::DEFAULTREADLENGTH = defaultReadLengthTumor;
-	sophia::SuppAlignmentAnno::DEFAULTREADLENGTH = defaultReadLengthTumor;
-	sophia::SvEvent::HALFDEFAULTREADLENGTH = round(defaultReadLengthTumor / 2.0);
-	sophia::SvEvent::GERMLINEOFFSETTHRESHOLD = germlineOffset;
-	sophia::SvEvent::GERMLINEDBLIMIT = germlineDbLimit;
-	sophia::SvEvent::ABRIDGEDOUTPUT = true;
+	SvEvent::ARTIFACTFREQLOWTHRESHOLD = (artifactlofreq + 0.0) / 100;
+	SvEvent::ARTIFACTFREQHIGHTHRESHOLD = (artifacthifreq + 0.0) / 100;
+	BreakpointReduced::ARTIFACTFREQHIGHTHRESHOLD = SvEvent::ARTIFACTFREQHIGHTHRESHOLD;
+	SvEvent::CLONALITYLOWTHRESHOLD = (clonalitylofreq + 0.0) / 100;
+	SvEvent::CLONALITYSTRICTLOWTHRESHOLD = (clonalitystrictlofreq + 0.0) / 100;
+	BreakpointReduced::CLONALITYSTRICTLOWTHRESHOLD = SvEvent::CLONALITYSTRICTLOWTHRESHOLD;
+	SvEvent::CLONALITYHIGHTHRESHOLD = (clonalityhifreq + 0.0) / 100;
+	SvEvent::BPFREQTHRESHOLD = pidsInMref * (bpFreq + 0.0) / 100;
+	SvEvent::RELAXEDBPFREQTHRESHOLD = 3 * SvEvent::BPFREQTHRESHOLD;
+	SvEvent::PIDSINMREFSTR = strtk::type_to_string<int>(pidsInMref);
+	BreakpointReduced::PIDSINMREFSTR = SvEvent::PIDSINMREFSTR;
+	BreakpointReduced::DEFAULTREADLENGTH = defaultReadLengthTumor;
+	Breakpoint::DEFAULTREADLENGTH = defaultReadLengthTumor;
+	SuppAlignment::DEFAULTREADLENGTH = defaultReadLengthTumor;
+	SuppAlignmentAnno::DEFAULTREADLENGTH = defaultReadLengthTumor;
+	SvEvent::HALFDEFAULTREADLENGTH = round(defaultReadLengthTumor / 2.0);
+	SvEvent::GERMLINEOFFSETTHRESHOLD = germlineOffset;
+	SvEvent::GERMLINEDBLIMIT = germlineDbLimit;
+	SvEvent::ABRIDGEDOUTPUT = true;
 	if (options.count("debugmode")) {
-		sophia::SvEvent::DEBUGMODE = true;
+		SvEvent::DEBUGMODE = true;
 	} else {
-		sophia::SvEvent::DEBUGMODE = false;
+		SvEvent::DEBUGMODE = false;
 	}
-	sophia::AnnotationProcessor::ABRIDGEDOUTPUT = true;
-	sophia::Breakpoint::BPSUPPORTTHRESHOLD = 3;
+	AnnotationProcessor::ABRIDGEDOUTPUT = true;
+	Breakpoint::BPSUPPORTTHRESHOLD = 3;
 	if (options.count("controlresults")) {
 		string controlResults { options["controlresults"].as<string>() };
 		int defaultReadLengthControl { 0 };
@@ -161,18 +200,19 @@ int main(int argc, char** argv) {
 		auto lowQualControl = 0;
 		auto pathogenInControl = false;
 		{
-			sophia::SvEvent::NOCONTROLMODE = true;
-			sophia::AnnotationProcessor annotationProcessorControlCheck { controlResults, mref, defaultReadLengthControl, true, germlineDbLimit };
+			SvEvent::NOCONTROLMODE = true;
+			AnnotationProcessor annotationProcessorControlCheck { controlResults, mref, defaultReadLengthControl, true, germlineDbLimit };
 			lowQualControl = annotationProcessorControlCheck.getMassiveInvFilteringLevel();
 			pathogenInControl = annotationProcessorControlCheck.isContaminationObserved();
-			sophia::SvEvent::NOCONTROLMODE = false;
+			SvEvent::NOCONTROLMODE = false;
 		}
-		sophia::AnnotationProcessor annotationProcessor { tumorResults, mref, controlResults, defaultReadLengthTumor, defaultReadLengthControl, germlineDbLimit, lowQualControl, pathogenInControl };
+		AnnotationProcessor annotationProcessor { tumorResults, mref, controlResults, defaultReadLengthTumor, defaultReadLengthControl, germlineDbLimit, lowQualControl, pathogenInControl };
 		annotationProcessor.printFilteredResults(pathogenInControl, lowQualControl);
 	} else {
-		sophia::SvEvent::NOCONTROLMODE = true;
-		sophia::AnnotationProcessor annotationProcessor { tumorResults, mref, defaultReadLengthTumor, false, germlineDbLimit };
+		SvEvent::NOCONTROLMODE = true;
+		AnnotationProcessor annotationProcessor { tumorResults, mref, defaultReadLengthTumor, false, germlineDbLimit };
 		annotationProcessor.printFilteredResults(false, 0);
 	}
+
 	return 0;
 }

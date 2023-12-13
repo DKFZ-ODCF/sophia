@@ -23,6 +23,7 @@
  */
 
 #include "ChrConverter.h"
+#include "GlobalAppConfig.h"
 #include "DeFuzzier.h"
 #include "HelperFunctions.h"
 #include "strtk.hpp"
@@ -42,26 +43,14 @@ MasterRefProcessor::MasterRefProcessor(const vector<string> &filesIn,
                                        const string &version,
                                        const int defaultReadLengthIn)
     : NUMPIDS{static_cast<int>(filesIn.size())},
-      DEFAULTREADLENGTH{defaultReadLengthIn}, mrefDb{} {
-    const vector<int> CHRSIZES{
-        249250622, 243199374, 198022431, 191154277, 180915261, 171115068,
-        159138664, 146364023, 141213432, 135534748, 135006517, 133851896,
-        115169879, 107349541, 102531393, 90354754,  81195211,  78077249,
-        59128984,  63025521,  48129896,  51304567,  155270561, 59373567,
-        106434,    547497,    189790,    191470,    182897,    38915,
-        37176,     90086,     169875,    187036,    36149,     40104,
-        37499,     81311,     174589,    41002,     4263,      92690,
-        159170,    27683,     166567,    186859,    164240,    137719,
-        172546,    172295,    172150,    161148,    179199,    161803,
-        155398,    186862,    180456,    179694,    211174,    15009,
-        128375,    129121,    19914,     43692,     27387,     40653,
-        45942,     40532,     34475,     41935,     45868,     39940,
-        33825,     41934,     42153,     43524,     43342,     39930,
-        36652,     38155,     36423,     39787,     38503,     35477944,
-        171824};
-    for (auto i = 0; i < 85; ++i) {
-        //		mrefDbPtrs.emplace_back(CHRSIZES[i] + 1, nullptr);
-        mrefDb.emplace_back(CHRSIZES[i] + 1, MrefEntry{});
+      DEFAULTREADLENGTH{defaultReadLengthIn},
+      mrefDb{} {
+
+    const vector<int> &chrSizes =
+        GlobalAppConfig::getInstance().getChrConverter().chrSizesCompressedMref;
+    for (std::vector<int>::size_type i = 0; i < chrSizes.size(); ++i) {
+        //		mrefDbPtrs.emplace_back(chrSizes[i] + 1, nullptr);
+        mrefDb.emplace_back(chrSizes[i] + 1, MrefEntry{});
     }
     vector<string> header{"#chr", "start", "end"};
     for (const auto &gzFile : filesIn) {
@@ -108,6 +97,7 @@ MasterRefProcessor::MasterRefProcessor(const vector<string> &filesIn,
     }
     auto defuzzier = DeFuzzier{DEFAULTREADLENGTH * 3, true};
     auto i = 84;
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     while (!mrefDb.empty()) {
         mrefDb.back().erase(
             remove_if(mrefDb.back().begin(), mrefDb.back().end(),
@@ -118,7 +108,7 @@ MasterRefProcessor::MasterRefProcessor(const vector<string> &filesIn,
             remove_if(mrefDb.back().begin(), mrefDb.back().end(),
                       [](const MrefEntry &bp) { return bp.getPos() == -1; }),
             mrefDb.back().end());
-        auto chromosome = ChrConverter::indexToChrCompressedMref[i];
+        auto chromosome = chrConverter.indexToChrCompressedMref[i];
         --i;
         for (auto &bp : mrefDb.back()) {
             if (bp.getPos() != -1 && bp.getValidityScore() != -1) {
@@ -141,11 +131,12 @@ MasterRefProcessor::processFile(const string &gzPath, short fileIndex) {
     string sophiaLine{};
     vector<vector<BreakpointReduced>> fileBps{85, vector<BreakpointReduced>{}};
     auto lineIndex = 0;
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     while (error_terminating_getline(gzStream, sophiaLine)) {
         if (sophiaLine[0] != '#') {
             auto chrIndex =
-                ChrConverter::indexConverter[ChrConverter::readChromosomeIndex(
-                    sophiaLine.cbegin(), '\t')];
+                chrConverter.indexConverter[chrConverter.readChromosomeIndex(
+                        sophiaLine.cbegin(), '\t')];
             if (chrIndex < 0) {
                 continue;
             }

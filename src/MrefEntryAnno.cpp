@@ -25,7 +25,6 @@
 #include <boost/algorithm/string/join.hpp>
 #include <MrefEntryAnno.h>
 #include <unordered_set>
-#include "ChrConverter.h"
 
 namespace sophia {
     using namespace std;

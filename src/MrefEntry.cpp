@@ -22,6 +22,7 @@
 
 #include "Breakpoint.h"
 #include "strtk.hpp"
+#include "GlobalAppConfig.h"
 #include <boost/algorithm/string/join.hpp>
 #include <MrefEntry.h>
 #include <unordered_set>
@@ -30,7 +31,7 @@
 
 namespace sophia {
 
-    using namespace std;
+using namespace std;
 
 boost::format MrefEntry::doubleFormatter { "%.5f" };
 int MrefEntry::NUMPIDS { };
@@ -52,8 +53,12 @@ void MrefEntry::addEntry(BreakpointReduced& tmpBreakpoint, int fileIndex) {
 	auto eventTotal = tmpBreakpoint.getPairedBreaksSoft() + tmpBreakpoint.getPairedBreaksHard() + tmpBreakpoint.getUnpairedBreaksSoft() + tmpBreakpoint.getUnpairedBreaksHard() + tmpBreakpoint.getBreaksShortIndel();
 	auto breakTotal = eventTotal + artifactBreakTotal;
 	if (breakTotal < 200) {
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 		for (auto saPtr : tmpBreakpoint.getSupplementsPtr()) {
-			if (saPtr->isSuspicious() || saPtr->isToRemove() || (saPtr->getChrIndex() != 1001 && ChrConverter::indexConverter[saPtr->getChrIndex()] < 0)) {
+			if (saPtr->isSuspicious()
+			    || saPtr->isToRemove()
+			    || (saPtr->getChrIndex() != 1001
+			        && chrConverter.indexConverter[saPtr->getChrIndex()] < 0)) {
 				continue;
 			}
 			auto qualCheck = false;

@@ -25,6 +25,7 @@
 #include "Breakpoint.h"
 #include "HelperFunctions.h"
 #include "SuppAlignment.h"
+#include "GlobalAppConfig.h"
 #include <AnnotationProcessor.h>
 #include <DeFuzzier.h>
 #include <algorithm>
@@ -57,12 +58,13 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
     tumorGzHandle->push(*tumorInputHandle);
     string line;
     auto lineIndex = 0;
+    const ChrConverter& chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     while (error_terminating_getline(*tumorGzHandle, line)) {
         if (line.front() == '#') {
             continue;
         };
         Breakpoint tmpBp{line, true};
-        auto chrIndex = ChrConverter::indexConverter[tmpBp.getChrIndex()];
+        auto chrIndex = chrConverter.indexConverter[tmpBp.getChrIndex()];
         if (chrIndex < 0) {
             continue;
         }
@@ -121,6 +123,7 @@ AnnotationProcessor::AnnotationProcessor(
     controlGzHandle->push(*controlInputHandle);
     string line;
     auto lineIndex = 0;
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     while (error_terminating_getline(*controlGzHandle, line)) {
         if (line.front() == '#') {
             continue;
@@ -217,7 +220,7 @@ AnnotationProcessor::AnnotationProcessor(
                 }
             }
         }
-        auto chrIndex = ChrConverter::indexConverter[tmpBp.getChrIndex()];
+        auto chrIndex = chrConverter.indexConverter[tmpBp.getChrIndex()];
         controlResults[chrIndex].push_back(tmpBp);
         ++lineIndex;
     }
@@ -237,7 +240,7 @@ AnnotationProcessor::AnnotationProcessor(
             continue;
         };
         Breakpoint tmpBp{line, true};
-        auto chrIndex = ChrConverter::indexConverter[tmpBp.getChrIndex()];
+        auto chrIndex = chrConverter.indexConverter[tmpBp.getChrIndex()];
         if (chrIndex < 0) {
             continue;
         }
@@ -310,7 +313,8 @@ AnnotationProcessor::searchSa(int chrIndex, int dbIndex,
         }
         return;
     }
-    auto saChrIndex = ChrConverter::indexConverter[sa.getChrIndex()];
+    auto saChrIndex = GlobalAppConfig::getInstance().getChrConverter().
+        indexConverter[sa.getChrIndex()];
     if (saChrIndex < 0) {
         return;
     }
@@ -544,7 +548,8 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
                                        int distanceThreshold,
                                        int conservativeDistanceThreshold,
                                        vector<vector<MrefEntryAnno>> &mref) {
-    auto convertedChrIndex = ChrConverter::indexConverter[bpIn.getChrIndex()];
+    auto convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
+        indexConverter[bpIn.getChrIndex()];
     vector<SuppAlignmentAnno> suppMatches{};
     if (convertedChrIndex < 0) {
         return MrefMatch{0, 0, 10000, suppMatches};
@@ -680,7 +685,8 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
     if (NOCONTROLMODE) {
         return dummyMatchTrue;
     }
-    auto convertedChrIndex = ChrConverter::indexConverter[bpIn.getChrIndex()];
+    auto convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
+        indexConverter[bpIn.getChrIndex()];
     if (convertedChrIndex < 0) {
         return dummyMatchFalse;
     }

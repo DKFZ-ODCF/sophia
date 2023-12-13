@@ -25,17 +25,27 @@
 #include <algorithm>
 #include "strtk.hpp"
 #include "ChrConverter.h"
+#include "GlobalAppConfig.h"
 //#include <iostream>
 
 namespace sophia {
 
-    using namespace std;
+using namespace std;
 
 double SuppAlignment::ISIZEMAX { };
 
 int SuppAlignment::DEFAULTREADLENGTH { };
 
-SuppAlignment::SuppAlignment(string::const_iterator saCbegin, string::const_iterator saCend, bool primaryIn, bool lowMapqSourceIn, bool nullMapqSourceIn, bool alignmentOnForwardStrand, bool bpEncounteredM, int originIndexIn, int bpChrIndex, int bpPos) :
+SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
+                             string::const_iterator saCend,
+                             bool primaryIn,
+                             bool lowMapqSourceIn,
+                             bool nullMapqSourceIn,
+                             bool alignmentOnForwardStrand,
+                             bool bpEncounteredM,
+                             int originIndexIn,
+                             int bpChrIndex,
+                             int bpPos) :
 				matchFuzziness { 5 * DEFAULTREADLENGTH },
 				chrIndex { 0 },
 				pos { 0 },
@@ -71,6 +81,7 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin, string::const_iter
 //		cerr << *cigarString_cit;
 //	}
 //	cerr << endl;
+
 	vector<string::const_iterator> fieldBegins = { saCbegin };
 	vector<string::const_iterator> fieldEnds;
 	for (auto it = saCbegin; it != saCend; ++it) {
@@ -80,14 +91,17 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin, string::const_iter
 		}
 	}
 	fieldEnds.push_back(saCend);
-	chrIndex = ChrConverter::readChromosomeIndex(fieldBegins[0], ',');
+
+	chrIndex = GlobalAppConfig::getInstance().
+	    getChrConverter().readChromosomeIndex(fieldBegins[0], ',');
 	if (chrIndex > 1001) {
 		return;
 	}
 	for (auto it = fieldBegins[1]; it != fieldEnds[1]; ++it) {
 		pos = 10 * pos + (*it - '0');
 	}
-//cerr << "guessSupplementOffset" << endl;
+
+    //cerr << "guessSupplementOffset" << endl;
 	vector<CigarChunk> cigarChunks;
 	auto cigarEncounteredM = false;
 	auto cumulativeNucleotideCount = 0, currentNucleotideCount = 0, chunkIndex = 0, bestChunkIndex = 0, indelAdjustment = 0;
@@ -106,7 +120,10 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin, string::const_iter
 				if (!cigarEncounteredM) {
 					leftClipAdjustment = currentNucleotideCount;
 				}
-				cigarChunks.emplace_back(*cigarString_cit, cigarEncounteredM, cumulativeNucleotideCount + indelAdjustment - leftClipAdjustment, currentNucleotideCount);
+				cigarChunks.emplace_back(*cigarString_cit,
+				                         cigarEncounteredM,
+				                         cumulativeNucleotideCount + indelAdjustment - leftClipAdjustment,
+				                         currentNucleotideCount);
 				if (largestClip < currentNucleotideCount) {
 					largestClip = currentNucleotideCount;
 					bestChunkIndex = chunkIndex;
@@ -115,7 +132,10 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin, string::const_iter
 				cumulativeNucleotideCount += currentNucleotideCount;
 				break;
 			case 'H':
-				cigarChunks.emplace_back(*cigarString_cit, cigarEncounteredM, cumulativeNucleotideCount + indelAdjustment - leftClipAdjustment, currentNucleotideCount);
+				cigarChunks.emplace_back(*cigarString_cit,
+				                         cigarEncounteredM,
+				                         cumulativeNucleotideCount + indelAdjustment - leftClipAdjustment,
+				                         currentNucleotideCount);
 				if (largestClip < currentNucleotideCount) {
 					largestClip = currentNucleotideCount;
 					bestChunkIndex = chunkIndex;
@@ -159,12 +179,24 @@ void SuppAlignment::finalizeSupportingIndices() {
 	sort(supportingIndices.begin(), supportingIndices.end());
 	sort(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end());
 	supportingIndices.erase(unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
-	supportingIndicesSecondary.erase(unique(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end()), supportingIndicesSecondary.end());
+	supportingIndicesSecondary.erase(unique(supportingIndicesSecondary.begin(),
+	                                        supportingIndicesSecondary.end()),
+	                                        supportingIndicesSecondary.end());
 	support = static_cast<int>(supportingIndices.size());
 	secondarySupport = static_cast<int>(supportingIndicesSecondary.size());
 }
 
-SuppAlignment::SuppAlignment(int chrIndexIn, int posIn, int mateSupportIn, int expectedDiscordantsIn, bool encounteredMIn, bool invertedIn, int extendedPosIn, bool primaryIn, bool lowMapqSourceIn, bool nullMapqSourceIn, int originIndexIn) :
+SuppAlignment::SuppAlignment(int chrIndexIn,
+                             int posIn,
+                             int mateSupportIn,
+                             int expectedDiscordantsIn,
+                             bool encounteredMIn,
+                             bool invertedIn,
+                             int extendedPosIn,
+                             bool primaryIn,
+                             bool lowMapqSourceIn,
+                             bool nullMapqSourceIn,
+                             int originIndexIn) :
 				matchFuzziness { 5 * DEFAULTREADLENGTH },
 				chrIndex { chrIndexIn },
 				pos { posIn },
@@ -213,12 +245,27 @@ string SuppAlignment::print() const {
 	} else {
 		invStr.append("|");
 	}
+	const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 	if (!fuzzy) {
-		outStr.append(ChrConverter::indexToChr[chrIndex]).append(":").append(strtk::type_to_string<int>(pos));
+		outStr.
+		    append(chrConverter.indexToChr[chrIndex]).
+		    append(":").
+		    append(strtk::type_to_string<int>(pos));
 	} else {
-		outStr.append(ChrConverter::indexToChr[chrIndex]).append(":").append(strtk::type_to_string<int>(pos)).append("-").append(strtk::type_to_string<int>(extendedPos));
+		outStr.
+		    append(chrConverter.indexToChr[chrIndex]).
+		    append(":").
+		    append(strtk::type_to_string<int>(pos)).
+		    append("-").
+		    append(strtk::type_to_string<int>(extendedPos));
 	}
-	outStr.append(invStr).append("(").append(strtk::type_to_string<int>(support)).append(",").append(strtk::type_to_string<int>(secondarySupport)).append(",");
+	outStr.
+	    append(invStr).
+	    append("(").
+	    append(strtk::type_to_string<int>(support)).
+	    append(",").
+	    append(strtk::type_to_string<int>(secondarySupport)).
+	    append(",");
 	if (!suspicious) {
 		outStr.append(strtk::type_to_string<int>(mateSupport));
 		if (semiSuspicious || nullMapqSource) {
@@ -261,7 +308,8 @@ SuppAlignment::SuppAlignment(const string& saIn) :
 	if (encounteredM) {
 		++index;
 	}
-	chrIndex = ChrConverter::readChromosomeIndex(next(saIn.cbegin(), index), ':');
+	chrIndex = GlobalAppConfig::getInstance().
+	    getChrConverter().readChromosomeIndex(next(saIn.cbegin(), index), ':');
 	if (chrIndex > 1001) {
 		return;
 	}
@@ -322,7 +370,8 @@ bool SuppAlignment::saCloseness(const SuppAlignment& rhs, int fuzziness) const {
 	if (inverted == rhs.isInverted() && chrIndex == rhs.getChrIndex() && encounteredM == rhs.isEncounteredM()) {
 		if (strictFuzzy || rhs.isStrictFuzzy()) {
 			fuzziness = 2.5 * DEFAULTREADLENGTH;
-			return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) && (pos - fuzziness) <= (rhs.getExtendedPos() + fuzziness);
+			return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) &&
+			            (pos - fuzziness) <= (rhs.getExtendedPos() + fuzziness);
 		} else {
 			return abs(pos - rhs.getPos()) <= fuzziness;
 		}
@@ -338,7 +387,8 @@ bool SuppAlignment::saDistHomologyRescueCloseness(const SuppAlignment& rhs, int 
 	}
 	if (chrIndex == rhs.getChrIndex() && encounteredM == rhs.isEncounteredM()) {
 		if (strictFuzzy || rhs.isStrictFuzzy()) {
-			return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) && (pos - fuzziness) <= (rhs.getExtendedPos() + fuzziness);
+			return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) &&
+			            (pos - fuzziness) <= (rhs.getExtendedPos() + fuzziness);
 		} else {
 			return abs(pos - rhs.getPos()) <= fuzziness;
 		}

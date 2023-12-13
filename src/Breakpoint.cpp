@@ -24,6 +24,7 @@
 
 #include "Breakpoint.h"
 #include "ChrConverter.h"
+#include "GlobalAppConfig.h"
 #include "strtk.hpp"
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
@@ -56,15 +57,52 @@ bool Breakpoint::PROPERPAIRCOMPENSATIONMODE{false};
 int Breakpoint::bpindex{0};
 
 Breakpoint::Breakpoint(int chrIndexIn, int posIn)
-    : covFinalized{false}, missingInfoBp{false}, chrIndex{chrIndexIn},
-      pos{posIn}, normalSpans{0}, lowQualSpansSoft{0}, lowQualSpansHard{0},
-      unpairedBreaksSoft{0}, unpairedBreaksHard{0}, breaksShortIndel{0},
-      lowQualBreaksSoft{0}, lowQualBreaksHard{0}, repetitiveOverhangBreaks{0},
-      pairedBreaksSoft{0}, pairedBreaksHard{0}, leftSideDiscordantCandidates{0},
-      rightSideDiscordantCandidates{0}, mateSupport{0}, leftCoverage{0},
-      rightCoverage{0}, totalLowMapqHardClips{0},
-      hitsInMref{-1}, germline{false}, poolLeft{}, poolRight{},
-      poolLowQualLeft{}, poolLowQualRight{} {}
+    : covFinalized{false},
+      missingInfoBp{false},
+      chrIndex{chrIndexIn},
+      pos{posIn},
+      normalSpans{0},
+      lowQualSpansSoft{0},
+      lowQualSpansHard{0},
+      unpairedBreaksSoft{0},
+      unpairedBreaksHard{0},
+      breaksShortIndel{0},
+      lowQualBreaksSoft{0},
+      lowQualBreaksHard{0},
+      repetitiveOverhangBreaks{0},
+      pairedBreaksSoft{0},
+      pairedBreaksHard{0},
+      leftSideDiscordantCandidates{0},
+      rightSideDiscordantCandidates{0},
+      mateSupport{0},
+      leftCoverage{0},
+      rightCoverage{0},
+      totalLowMapqHardClips{0},
+      hitsInMref{-1},
+      germline{false},
+      poolLeft{},
+      poolRight{},
+      poolLowQualLeft{},
+      poolLowQualRight{} {}
+
+
+template <typename T>
+inline void
+Breakpoint::cleanUpVector(vector<T> &objectPool) {
+    // cerr << "cleaning up" << endl;
+    while (!objectPool.empty() && objectPool.back().isToRemove()) {
+        objectPool.pop_back();
+    }
+    for (auto saIt = objectPool.begin(); saIt != objectPool.end(); ++saIt) {
+        if (saIt->isToRemove()) {
+            swap(*saIt, objectPool.back());
+        }
+        while (!objectPool.empty() && objectPool.back().isToRemove()) {
+            objectPool.pop_back();
+        }
+    }
+    // cerr << "done" << endl;
+}
 
 void
 Breakpoint::addSoftAlignment(shared_ptr<Alignment> alignmentIn) {
@@ -163,7 +201,7 @@ void
 Breakpoint::printBreakpointReport(const string &overhangStr) {
     string res{};
     res.reserve(350);
-    res.append(ChrConverter::indexToChr[chrIndex]).append("\t");
+    res.append(GlobalAppConfig::getInstance().getChrConverter().indexToChr[chrIndex]).append("\t");
     res.append(strtk::type_to_string<int>(pos)).append("\t");
     res.append(strtk::type_to_string<int>(pos + 1)).append("\t");
 
@@ -1104,12 +1142,26 @@ Breakpoint::collectMateSupportHelper(
 }
 
 Breakpoint::Breakpoint(const string &bpIn, bool ignoreOverhang)
-    : covFinalized{true}, missingInfoBp{false}, chrIndex{0}, pos{0},
-      normalSpans{0}, lowQualSpansSoft{0}, lowQualSpansHard{0},
-      unpairedBreaksSoft{0}, unpairedBreaksHard{0}, breaksShortIndel{0},
-      lowQualBreaksSoft{0}, lowQualBreaksHard{0}, repetitiveOverhangBreaks{0},
-      pairedBreaksSoft{0}, pairedBreaksHard{0}, mateSupport{0}, leftCoverage{0},
-      rightCoverage{0}, hitsInMref{0}, germline{false} {
+    : covFinalized{true},
+      missingInfoBp{false},
+      chrIndex{0},
+      pos{0},
+      normalSpans{0},
+      lowQualSpansSoft{0},
+      lowQualSpansHard{0},
+      unpairedBreaksSoft{0},
+      unpairedBreaksHard{0},
+      breaksShortIndel{0},
+      lowQualBreaksSoft{0},
+      lowQualBreaksHard{0},
+      repetitiveOverhangBreaks{0},
+      pairedBreaksSoft{0},
+      pairedBreaksHard{0},
+      mateSupport{0},
+      leftCoverage{0},
+      rightCoverage{0},
+      hitsInMref{0},
+      germline{false} {
     auto index = 0;
     vector<int> bpChunkPositions{};
     bpChunkPositions.reserve(7);
@@ -1119,7 +1171,7 @@ Breakpoint::Breakpoint(const string &bpIn, bool ignoreOverhang)
         }
         ++index;
     }
-    chrIndex = ChrConverter::readChromosomeIndex(bpIn.cbegin(), '\t');
+    chrIndex = GlobalAppConfig::getInstance().getChrConverter().readChromosomeIndex(bpIn.cbegin(), '\t');
 
     for (auto i = bpChunkPositions[0] + 1; i < bpChunkPositions[1]; ++i) {
         pos = pos * 10 + (bpIn[i] - '0');

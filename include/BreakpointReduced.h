@@ -29,6 +29,7 @@
 #include "GermlineMatch.h"
 #include "MrefMatch.h"
 #include "SuppAlignmentAnno.h"
+#include "ChrConverter.h"
 #include <boost/format.hpp>
 #include <iostream>
 #include <string>

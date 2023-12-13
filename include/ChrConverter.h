@@ -1,11 +1,5 @@
 /*
- * ChrConverter.h
- *
- *  Created on: 28 Dec 2017
- *      Author: Umut H. Toprak, DKFZ Heidelberg (Divisions of Theoretical
- * Bioinformatics, Bioinformatics and Omics Data Analytics and currently
- * Neuroblastoma Genomics) Copyright (C) 2018 Umut H. Toprak, Matthias
- * Schlesner, Roland Eils and DKFZ Heidelberg
+ *     Author: Philip R. Kensche, DKFZ Heidelberg (Omics IT and Data Management Core Facility)
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -19,65 +13,66 @@
  *
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *      LICENSE: GPL
+ *     LICENSE: GPL
  */
 
-#ifndef CHRCONVERTER_H_
-#define CHRCONVERTER_H_
-#include <array>
-#include <string>
+#ifndef _CHRCONVERTER_H_
+#define _CHRCONVERTER_H_
 
-#include <iterator>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 
 namespace sophia {
 
-using namespace std;
+    using namespace std;
 
-class ChrConverter {
-  public:
-    static inline int readChromosomeIndex(string::const_iterator startIt,
-                                          char stopChar) {
-        int chrIndex{0};
-        if (isdigit(*startIt)) {
-            for (auto chr_cit = startIt; *chr_cit != stopChar; ++chr_cit) {
-                chrIndex = chrIndex * 10 + (*chr_cit - '0');
-            }
-            return chrIndex;
-        } else {
-            switch (*startIt) {
-            case 'h':
-                return 999;
-            case 'X':
-                return 40;
-            case 'G':
-                for (auto cit = next(startIt, 2); *cit != '.'; ++cit) {
-                    chrIndex = 10 * chrIndex + *cit - '0';
-                }
-                return chrIndex;
-            case 'Y':
-                return 41;
-            case 'M':
-                ++startIt;
-                if (*startIt == 'T') {
-                    return 1001;
-                } else {
-                    return 1003;
-                }
-            case 'N':
-                return 1000;
-            case 'p':
-                return 1002;
-            default:
-                return 1003;
-            }
-        }
-        return 0;
-    }
-    static const array<string, 1004> indexToChr;
-    static const array<int, 1004> indexConverter;
-    static const array<string, 85> indexToChrCompressedMref;
-};
+    /** ChrConverter contains information the names of chromosomes in an assembly. */
+    class ChrConverter {
+      protected:
 
-} /* namespace sophia */
+        /** The constructor should be used to initialize the fields from subclasses. It does
+            additional checks of the dimensions of the input vectors. */
+        ChrConverter(const vector<string>& indexToChr,
+                     const vector<string>& indexToChrCompressedMref,
+                     const vector<int>& chrSizesCompressedMref,
+                     const vector<int>& indexConverter);
 
-#endif /* CHRCONVERTER_H_ */
+
+      public:
+
+        virtual ~ChrConverter();
+
+        /** The name of the assembly. */
+        static const string assembly_name;
+
+        /** Mapping indices to chromosome names. */
+        const vector<string> indexToChr;
+
+        /** Mapping indices to chromosome names for compressed mref files. */
+        const vector<string> indexToChrCompressedMref;
+
+        /** Chromosome sizes in base pairs. */
+        const vector<int> chrSizesCompressedMref;
+
+        /** Mapping chromosome names to indices. */
+        const vector<int> indexConverter;
+
+        /** Parse chromosome index. */
+        virtual int readChromosomeIndex(string::const_iterator startIt, char stopChar) const = 0;
+
+        size_t n_chromosomes() {
+            return indexToChr.size();
+        };
+
+        size_t n_chromosomes_compressed_mref() {
+            return indexToChrCompressedMref.size();
+        };
+
+
+    };
+
+}
+
+#endif /* _CHRCONVERTER_H_ */

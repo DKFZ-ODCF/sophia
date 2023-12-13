@@ -23,6 +23,7 @@
  */
 
 #include "ChrConverter.h"
+#include "GlobalAppConfig.h"
 #include "strtk.hpp"
 #include <SvEvent.h>
 
@@ -139,10 +140,11 @@ SvEvent::SvEvent(const BreakpointReduced &bp1In, const BreakpointReduced &bp2In,
         determineGermlineClonalityBp(bp2In, selectedSa2, germlineClonality2);
     germlineStatus2 = germlineClonality2 > 0.15;
 
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
                           !selectedSa2.isProperPairErrorProne() &&
-                          ChrConverter::indexConverter[chrIndex1] < 23 &&
-                          ChrConverter::indexConverter[chrIndex2] < 23;
+                          chrConverter.indexConverter[chrIndex1] < 23 &&
+                          chrConverter.indexConverter[chrIndex2] < 23;
     auto splitSupportThreshold1 =
         (strictNonDecoy && !selectedSa1.isSemiSuspicious() &&
          (mateRatio1 >= 0.6))
@@ -336,9 +338,10 @@ SvEvent::SvEvent(const BreakpointReduced &bp1In, const BreakpointReduced &bp2In,
         determineGermlineClonalityBp(bp1In, selectedSa1, germlineClonality1);
     germlineStatus1 = germlineClonality1 > 0.15;
 
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                          ChrConverter::indexConverter[chrIndex1] < 23 &&
-                          ChrConverter::indexConverter[chrIndex2] < 23;
+                          chrConverter.indexConverter[chrIndex1] < 23 &&
+                          chrConverter.indexConverter[chrIndex2] < 23;
     auto splitSupportThreshold =
         (strictNonDecoy && !selectedSa2.isSemiSuspicious() &&
          (mateRatio1 >= 0.66))
@@ -531,9 +534,10 @@ SvEvent::SvEvent(const BreakpointReduced &bp1In, const SuppAlignmentAnno &sa1In,
         determineGermlineClonalityBp(bp1In, selectedSa1, germlineClonality1);
     germlineStatus1 = germlineClonality1 > 0.15;
 
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                          ChrConverter::indexConverter[chrIndex1] < 23 &&
-                          ChrConverter::indexConverter[chrIndex2] < 23;
+                          chrConverter.indexConverter[chrIndex1] < 23 &&
+                          chrConverter.indexConverter[chrIndex2] < 23;
     auto splitSupportThreshold =
         (strictNonDecoy && (mateRatio1 >= 0.66) ? 0 : 2);
 
@@ -1705,10 +1709,11 @@ string
 SvEvent::printMatch(const vector<pair<int, string>> &overhangDb) const {
     vector<string> outputFields;
     outputFields.reserve(20);
-    outputFields.emplace_back(ChrConverter::indexToChr[chrIndex1]);
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+    outputFields.emplace_back(chrConverter.indexToChr[chrIndex1]);
     outputFields.emplace_back(strtk::type_to_string<int>(pos1 - 1));
     outputFields.emplace_back(strtk::type_to_string<int>(pos1));
-    outputFields.emplace_back(ChrConverter::indexToChr[chrIndex2]);
+    outputFields.emplace_back(chrConverter.indexToChr[chrIndex2]);
     outputFields.emplace_back(strtk::type_to_string<int>(pos2 - 1));
     outputFields.emplace_back(
         inputScore > 0

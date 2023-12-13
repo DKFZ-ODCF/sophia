@@ -26,6 +26,7 @@
 #define MASTERREFPROCESSOR_H_
 
 #include "SuppAlignment.h"
+#include "ChrConverter.h"
 #include <BreakpointReduced.h>
 #include <MrefEntry.h>
 #include <array>
@@ -47,6 +48,7 @@ class MasterRefProcessor {
     MasterRefProcessor(const vector<string> &filesIn,
                        const string &outputRootName, const string &version,
                        const int defaultReadLengthIn);
+
     ~MasterRefProcessor() = default;
 
   private:

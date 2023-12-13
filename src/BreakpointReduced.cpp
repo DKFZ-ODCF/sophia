@@ -24,6 +24,7 @@
 
 #include "Breakpoint.h"
 #include "ChrConverter.h"
+#include "GlobalAppConfig.h"
 #include "strtk.hpp"
 #include <BreakpointReduced.h>
 #include <boost/algorithm/string/join.hpp>
@@ -57,17 +58,9 @@ sophia::BreakpointReduced::BreakpointReduced(const Breakpoint &tmpBp,
       pairedBreaksHard{tmpBp.getPairedBreaksHard()},
       mateSupport{tmpBp.getMateSupport()},
       leftCoverage{tmpBp.getLeftCoverage()},
-      rightCoverage{tmpBp.getRightCoverage()}, mrefHits{MrefMatch{
-                                                   -1,
-                                                   -1,
-                                                   10000,
-                                                   {},
-                                               }},
-      germlineInfo{GermlineMatch{
-          0.0,
-          0.0,
-          {},
-      }},
+      rightCoverage{tmpBp.getRightCoverage()},
+      mrefHits{MrefMatch{-1, -1, 10000, {}, }},
+      germlineInfo{GermlineMatch{0.0, 0.0, {}, }},
       suppAlignments{} {
     for (const auto &sa : tmpBp.getDoubleSidedMatches()) {
         if (sa.getChrIndex() < 1002) {
@@ -175,10 +168,11 @@ BreakpointReduced::testOverhangBasedCandidacy() const {
 }
 
 string
-BreakpointReduced::printOverhang(double germlineClonality, int numHits,
+BreakpointReduced::printOverhang(double germlineClonality,
+                                 int numHits,
                                  const string &overhang) const {
     string res{"##"};
-    res.append(ChrConverter::indexToChr[chrIndex]).append("\t");
+    res.append(GlobalAppConfig::getInstance().getChrConverter().indexToChr[chrIndex]).append("\t");
     res.append(strtk::type_to_string<int>(pos - 1)).append("\t");
     res.append(strtk::type_to_string<int>(pos)).append("\t");
     if (germlineClonality > 0.1) {

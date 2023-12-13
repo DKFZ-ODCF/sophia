@@ -13,7 +13,7 @@ install_strtk
 
 CPP=x86_64-conda_cos6-linux-gnu-g++
 INCLUDES="-I../include -I$CONDA_PREFIX/include"
-CPP_OPTS="-L$CONDA_PREFIX/lib -std=c++1z $INCLUDES -O3 -Wall -Wextra -static -static-libgcc -static-libstdc++ -flto -c -fmessage-length=0 -Wno-attributes"
+CPP_OPTS="-L$CONDA_PREFIX/lib -std=c++17 $INCLUDES -O3 -Wall -Wextra -static -static-libgcc -static-libstdc++ -flto -c -fmessage-length=0 -Wno-attributes"
 
 if [[ "${STATIC:-false}" == "true" ]]; then
     CPP_OPTS="-static -static-libgcc -static-libstdc++ $CPP_OPTS"
@@ -22,7 +22,10 @@ fi
 $CPP $CPP_OPTS -o "AnnotationProcessor.o" "../src/AnnotationProcessor.cpp"
 $CPP $CPP_OPTS -o "Breakpoint.o" "../src/Breakpoint.cpp"
 $CPP $CPP_OPTS -o "BreakpointReduced.o" "../src/BreakpointReduced.cpp"
+$CPP $CPP_OPTS -o "GlobalAppConfig.o" "../src/GlobalAppConfig.cpp"
 $CPP $CPP_OPTS -o "ChrConverter.o" "../src/ChrConverter.cpp"
+$CPP $CPP_OPTS -o "Hg37ChrConverter.o" "../src/Hg37ChrConverter.cpp"
+$CPP $CPP_OPTS -o "Hg38ChrConverter.o" "../src/Hg38ChrConverter.cpp"
 $CPP $CPP_OPTS -o "DeFuzzier.o" "../src/DeFuzzier.cpp"
 $CPP $CPP_OPTS -o "GermlineMatch.o" "../src/GermlineMatch.cpp"
 $CPP $CPP_OPTS -o "MrefEntry.o" "../src/MrefEntry.cpp"
@@ -32,6 +35,24 @@ $CPP $CPP_OPTS -o "SuppAlignment.o" "../src/SuppAlignment.cpp"
 $CPP $CPP_OPTS -o "SuppAlignmentAnno.o" "../src/SuppAlignmentAnno.cpp"
 $CPP $CPP_OPTS -o "SvEvent.o" "../src/SvEvent.cpp"
 $CPP $CPP_OPTS -o "HelperFunctions.o" "../src/HelperFunctions.cpp"
-$CPP $CPP_OPTS -o "sophiaAnnotate.o" "../sophiaAnnotate.cpp"
+$CPP $CPP_OPTS -o "sophiaAnnotate.o" "../src/sophiaAnnotate.cpp"
 
-$CPP -L$CONDA_PREFIX/lib -flto -o "sophiaAnnotate"  AnnotationProcessor.o Breakpoint.o BreakpointReduced.o ChrConverter.o DeFuzzier.o GermlineMatch.o MrefEntry.o MrefEntryAnno.o MrefMatch.o SuppAlignment.o SuppAlignmentAnno.o SvEvent.o HelperFunctions.o sophiaAnnotate.o -lz -lboost_system -lboost_iostreams
+$CPP -L$CONDA_PREFIX/lib -flto -o "sophiaAnnotate" \
+    AnnotationProcessor.o \
+    Breakpoint.o \
+    BreakpointReduced.o \
+    ChrConverter.o \
+    Hg37ChrConverter.o \
+    Hg38ChrConverter.o \
+    DeFuzzier.o \
+    GermlineMatch.o \
+    MrefEntry.o \
+    MrefEntryAnno.o \
+    MrefMatch.o \
+    SuppAlignment.o \
+    SuppAlignmentAnno.o \
+    SvEvent.o \
+    HelperFunctions.o \
+    GlobalAppConfig.o \
+    sophiaAnnotate.o \
+    -lz -lboost_system -lboost_iostreams
