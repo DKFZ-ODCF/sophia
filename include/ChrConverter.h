@@ -59,7 +59,8 @@ namespace sophia {
         /** Mapping chromosome names to indices. */
         const vector<int> indexConverter;
 
-        /** Parse chromosome index. */
+        /** Parse chromosome index.  It takes a position in a character stream, and translates the
+            following character(s) into index positions (using ChrConverter::indexToChr). */
         virtual int readChromosomeIndex(string::const_iterator startIt, char stopChar) const = 0;
 
         size_t n_chromosomes() {

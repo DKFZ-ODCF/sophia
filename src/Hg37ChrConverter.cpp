@@ -331,7 +331,23 @@ namespace sophia {
                        hg37::indexConverter) {}
 
     /* This is parsing code. It takes a position in a character stream, and translates the
-       following character(s) into index positions (see ChrConverter::indexToChr). */
+       following character(s) into index positions (see ChrConverter::indexToChr).
+
+       If the first position is a digit, read up to the next stopChar.
+       If the first position is *not* a digit return indices according to the following rules:
+
+         * h -> 999
+         * X -> 40
+         * Y -> 41
+         * MT -> 1001
+         * G?(\d+)\. -> \d+
+         * N -> 1000
+         * p -> 1002
+
+       NOTE: In none of these cases, the termination by a stopChar is actually checked.
+
+       All identifiers not matching any of these rules, mapped to 1003.
+    */
     int Hg37ChrConverter::readChromosomeIndex(std::string::const_iterator startIt,
                                               char stopChar) const {
         int chrIndex {0};
@@ -346,14 +362,14 @@ namespace sophia {
                 return 999;
             case 'X':
                 return 40;
-            case 'G':
+            case 'G':   // Match GL...... chromosomes.
                 for (auto cit = next(startIt, 2); *cit != '.'; ++cit) {
                     chrIndex = 10 * chrIndex + *cit - '0';
                 }
                 return chrIndex;
             case 'Y':
                 return 41;
-            case 'M':
+            case 'M':   // Match "MT"
                 ++startIt;
                 if (*startIt == 'T') {
                     return 1001;
