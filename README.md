@@ -1,5 +1,30 @@
 # SOPHIA Tool for Structural Variation Calling
 
+SOPHIA is a Structural Variant(SV) detection algorithm based on the supplementary alignment(SA) concept of the aligner BWA-mem, combined with filters based on expert-knowledge to increase specificity. 
+
+Currently, SOPHIA only is optimized for the hg38 assembly of the human genome. 
+It uses a large panel of normals for filtering artifacts (most often due to mapping difficulties) and common SVs in the germline.
+The parameters for filtering results are hand-tuned against the clinical gold standard FISH of V(D)J rearrangements.
+Results from the hand-tuned parameter set were tested against hallmark findings from disease datasets where hallmark SVs were known (CDKN2A in various TCGA datasets, EGFR in TCGA-GBM, GFI1B, MYCN and PRDM6 in ICGC-PEDBRAIN-MB etc.) 
+
+For a detailed description of the algorithm, please refer to Umut Topraks's dissertation at https://doi.org/10.11588/heidok.00027429, in particular chapter 2. Section 2.2.1 describes the method in more details.
+
+SOPHIA is a very fast and resource-light algorithm. It uses 2GB RAM, 2 CPU cores and runs in ~3.5 hours for 50x coverage WGS, and can detect variants with a single pass of the input BAM files. No local assembly is done.
+
+> This is a fork of the original [SOPHIA](https://bitbucket.org/utoprak/sophia/src/master/) bitbucket repository.
+
+Sophia is included in the [SophiaWorkflow](https://github.com/DKFZ-ODCF/SophiaWorkflow) that uses the [Roddy Workflow Management Systems](https://github.com/TheRoddyWMS/Roddy).
+
+
+### Citing
+
+You can cite Sophia as follows:
+
+    Integrative Analysis of Omics Datasets.
+    Doctoral dissertation, German Cancer Research Center (DKFZ), Heidelberg.
+    Umut Toprak (2019).
+    DOI 10.11588/heidok.000274296
+
 ## Runtime Dependencies
 
 The only dependency is Boost 1.70.0 (currently). E.g. you can do
