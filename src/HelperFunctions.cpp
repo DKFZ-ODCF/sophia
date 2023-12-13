@@ -24,8 +24,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     istream &
     error_terminating_getline(istream &is, string &str) {
         getline(is, str);

@@ -26,8 +26,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     GlobalAppConfig* GlobalAppConfig::instance_ = nullptr;
     std::mutex GlobalAppConfig::mutex_ = std::mutex();
 
@@ -59,4 +57,4 @@ namespace sophia {
         }
     }
 
-}
+} /* namespace sophia */

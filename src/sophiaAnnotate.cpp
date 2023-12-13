@@ -28,7 +28,6 @@
 
 
 int main(int argc, char** argv) {
-    using namespace std;
     using namespace sophia;
 
 	ios_base::sync_with_stdio(false);

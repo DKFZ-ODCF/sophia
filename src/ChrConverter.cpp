@@ -23,8 +23,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     ChrConverter::ChrConverter(const vector<string> &indexToChr,
                                const vector<string> &indexToChrCompressedMref,
                                const vector<int> &chrSizesCompressedMref,

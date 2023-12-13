@@ -26,17 +26,15 @@
 
 namespace sophia {
 
-using namespace std;
-
-GermlineMatch::GermlineMatch(
-    double clonalityIn, double conservativeClonalityIn,
-    const vector<pair<SuppAlignmentAnno, double>> &suppMatchesIn)
-    : clonality{clonalityIn}, conservativeClonality{conservativeClonalityIn},
-      suppMatches{}, clonalities{} {
-    for (const auto &saPair : suppMatchesIn) {
-        suppMatches.push_back(saPair.first);
-        clonalities.push_back(saPair.second);
+    GermlineMatch::GermlineMatch(
+        double clonalityIn, double conservativeClonalityIn,
+        const vector<pair<SuppAlignmentAnno, double>> &suppMatchesIn)
+        : clonality{clonalityIn}, conservativeClonality{conservativeClonalityIn},
+          suppMatches{}, clonalities{} {
+        for (const auto &saPair : suppMatchesIn) {
+            suppMatches.push_back(saPair.first);
+            clonalities.push_back(saPair.second);
+        }
     }
-}
 
 } /* namespace sophia */

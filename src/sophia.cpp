@@ -22,18 +22,17 @@
 #include "GlobalAppConfig.h"
 
 
-using namespace std;
-using namespace sophia;
-
-pair<double, double> getIsizeParameters(const string &ISIZEFILE);
+std::pair<double, double> getIsizeParameters(const std::string &ISIZEFILE);
 int main(int argc, char** argv) {
-	ios_base::sync_with_stdio(false);
+    using namespace sophia;
+
+	std::ios_base::sync_with_stdio(false);
 	cin.tie(nullptr);
 	boost::program_options::options_description desc("Allowed options");
 	desc.add_options() //
 	("help", "produce help message") //
-    ("assemblyname", boost::program_options::value<string>(), "assembly name (hg37, hg38)") //
-	("mergedisizes", boost::program_options::value<string>(), "insertsize distribution file for the merged bam") //
+    ("assemblyname", boost::program_options::value<std::string>(), "assembly name (hg37, hg38)") //
+	("mergedisizes", boost::program_options::value<std::string>(), "insertsize distribution file for the merged bam") //
 	("medianisize", boost::program_options::value<double>(), "median insert size for the merged bam") //
 	("stdisizepercentage", boost::program_options::value<double>(), "percentage standard deviation of the insert size for the merged bam") //
 	("defaultreadlength", boost::program_options::value<int>(), "Default read length for the technology used in sequencing 101,151 etc.") //
@@ -99,9 +98,9 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	string mergedIsizeFile;
+	std::string mergedIsizeFile;
 	if (inputVariables.count("mergedisizes")) {
-		mergedIsizeFile = inputVariables["mergedisizes"].as<string>();
+		mergedIsizeFile = inputVariables["mergedisizes"].as<std::string>();
 		auto isizeparams = getIsizeParameters(mergedIsizeFile);
 		Alignment::ISIZEMAX = min(4000.0, isizeparams.first + isizeSigmaLevel * isizeparams.second);
 		SuppAlignment::ISIZEMAX = Alignment::ISIZEMAX;
@@ -124,12 +123,12 @@ int main(int argc, char** argv) {
 
     unique_ptr<ChrConverter> chrConverter;
 	if (!inputVariables.count("assemblyname") ||
-	      inputVariables["assemblyname"].as<string>() == Hg37ChrConverter::assembly_name) {
+	      inputVariables["assemblyname"].as<std::string>() == Hg37ChrConverter::assembly_name) {
 	    chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
-    } else if (inputVariables["assemblyname"].as<string>() == Hg38ChrConverter::assembly_name) {
+    } else if (inputVariables["assemblyname"].as<std::string>() == Hg38ChrConverter::assembly_name) {
         chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
     } else {
-        cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<string>() << ". I know "
+        cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<std::string>() << ". I know "
              << Hg37ChrConverter::assembly_name << " and "
              << Hg38ChrConverter::assembly_name << endl;
         return 1;
@@ -156,12 +155,12 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-pair<double, double> getIsizeParameters(const string &ISIZEFILE) {
-	pair<double, double> isizeMedianStd { };
-	ifstream infile { ISIZEFILE };
-	string line;
+std::pair<double, double> getIsizeParameters(const std::string &ISIZEFILE) {
+	std::pair<double, double> isizeMedianStd { };
+	std::ifstream infile { ISIZEFILE };
+	std::string line;
 	auto i = 0;
-	while (error_terminating_getline(infile, line)) {
+	while (sophia::error_terminating_getline(infile, line)) {
 		boost::algorithm::trim_right(line);
 		switch (i) {
 		case 0:

@@ -21,7 +21,6 @@
 
 
 int main(int argc, char** argv) {
-    using namespace std;
     using namespace sophia;
 
 	boost::program_options::options_description desc("Allowed options");

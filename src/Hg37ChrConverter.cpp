@@ -24,11 +24,9 @@
 
 namespace sophia {
 
-    using namespace std;
-
     namespace hg37 {
 
-        static const vector<string> indexToChr {
+        static const vector<std::string> indexToChr {
             "0",          "1",          "2",          "3",          "4",
             "5",          "6",          "7",          "8",          "9",
             "10",         "11",         "12",         "13",         "14",
@@ -231,7 +229,7 @@ namespace sophia {
             "995",        "996",        "997",        "998",        "hs37d5",
             "NC_007605",  "MT",         "phiX174",    "INVALID"};
 
-        static const vector<string> indexToChrCompressedMref {
+        static const vector<std::string> indexToChrCompressedMref {
             "1",          "2",          "3",          "4",          "5",
             "6",          "7",          "8",          "9",          "10",
             "11",         "12",         "13",         "14",         "15",
@@ -324,7 +322,7 @@ namespace sophia {
 
     } /* namespace hg37 */
 
-    const string Hg37ChrConverter::assembly_name = "hg37";
+    const std::string Hg37ChrConverter::assembly_name = "hg37";
 
     Hg37ChrConverter::Hg37ChrConverter()
         : ChrConverter(hg37::indexToChr,
@@ -334,7 +332,7 @@ namespace sophia {
 
     /* This is parsing code. It takes a position in a character stream, and translates the
        following character(s) into index positions (see ChrConverter::indexToChr). */
-    int Hg37ChrConverter::readChromosomeIndex(string::const_iterator startIt,
+    int Hg37ChrConverter::readChromosomeIndex(std::string::const_iterator startIt,
                                               char stopChar) const {
         int chrIndex {0};
         if (isdigit(*startIt)) {
