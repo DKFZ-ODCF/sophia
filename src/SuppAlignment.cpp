@@ -104,7 +104,11 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
     //cerr << "guessSupplementOffset" << endl;
 	vector<CigarChunk> cigarChunks;
 	auto cigarEncounteredM = false;
-	auto cumulativeNucleotideCount = 0, currentNucleotideCount = 0, chunkIndex = 0, bestChunkIndex = 0, indelAdjustment = 0;
+	auto cumulativeNucleotideCount = 0,
+	     currentNucleotideCount = 0,
+	     chunkIndex = 0,
+	     bestChunkIndex = 0,
+	     indelAdjustment = 0;
 	auto largestClip = 0;
 	auto leftClipAdjustment = 0;
 	for (auto cigarString_cit = fieldBegins[3]; cigarString_cit != fieldEnds[3]; ++cigarString_cit) {
@@ -178,7 +182,8 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
 void SuppAlignment::finalizeSupportingIndices() {
 	sort(supportingIndices.begin(), supportingIndices.end());
 	sort(supportingIndicesSecondary.begin(), supportingIndicesSecondary.end());
-	supportingIndices.erase(unique(supportingIndices.begin(), supportingIndices.end()), supportingIndices.end());
+	supportingIndices.erase(unique(supportingIndices.begin(), supportingIndices.end()),
+	                        supportingIndices.end());
 	supportingIndicesSecondary.erase(unique(supportingIndicesSecondary.begin(),
 	                                        supportingIndicesSecondary.end()),
 	                                        supportingIndicesSecondary.end());
@@ -367,7 +372,9 @@ SuppAlignment::SuppAlignment(const string& saIn) :
 }
 
 bool SuppAlignment::saCloseness(const SuppAlignment& rhs, int fuzziness) const {
-	if (inverted == rhs.isInverted() && chrIndex == rhs.getChrIndex() && encounteredM == rhs.isEncounteredM()) {
+	if (inverted == rhs.isInverted()
+	    && chrIndex == rhs.getChrIndex()
+	    && encounteredM == rhs.isEncounteredM()) {
 		if (strictFuzzy || rhs.isStrictFuzzy()) {
 			fuzziness = 2.5 * DEFAULTREADLENGTH;
 			return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) &&

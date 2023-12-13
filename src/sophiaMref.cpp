@@ -38,7 +38,8 @@ int main(int argc, char** argv) {
 	    "outputrootname");
 
 	boost::program_options::variables_map inputVariables { };
-	boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), inputVariables);
+	boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc),
+	                              inputVariables);
 	boost::program_options::notify(inputVariables);
 
 	if (inputVariables.count("help")) {
@@ -91,7 +92,8 @@ int main(int argc, char** argv) {
     } else if (inputVariables["assemblyname"].as<string>() == Hg38ChrConverter::assembly_name) {
         chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
     } else {
-        cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<string>() << ". I know "
+        cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<string>()
+             << ". I know "
              << Hg37ChrConverter::assembly_name << " and "
              << Hg38ChrConverter::assembly_name << endl;
             return 1;

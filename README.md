@@ -90,4 +90,4 @@ STATIC=true build-sophiaAnnotate.sh
   * Patch: Use `namespace::std` to get rid of `std::` noise in the code
 
 * 9e3b6ed
-  * Last version in [bitbucket]](https://bitbucket.org/compbio_charite/sophia/src/master/)
+  * Last version in [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)

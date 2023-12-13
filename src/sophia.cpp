@@ -109,12 +109,16 @@ int main(int argc, char** argv) {
 		if (inputVariables.count("medianisize") && inputVariables.count("stdisizepercentage")) {
 			auto medianIsize = inputVariables["medianisize"].as<double>();
 			auto isizeStdPercentage = inputVariables["stdisizepercentage"].as<double>();
-			Alignment::ISIZEMAX = min(4000.0, medianIsize + isizeSigmaLevel * medianIsize * isizeStdPercentage * 0.01);
+			Alignment::ISIZEMAX =
+			    min(4000.0,
+			        medianIsize + isizeSigmaLevel * medianIsize * isizeStdPercentage * 0.01);
 			SuppAlignment::ISIZEMAX = Alignment::ISIZEMAX;
 		} else {
 			Alignment::ISIZEMAX = 2000.0;
 			SuppAlignment::ISIZEMAX = 2000.0;
-			cerr << "No insert size distribution file given, using a dummy default value of 2000 as the min insert size of a distant event" << endl;
+			cerr << "No insert size distribution file given, using a dummy default value of 2000 "
+			     << "as the min insert size of a distant event"
+			     << endl;
 		}
 	}
 

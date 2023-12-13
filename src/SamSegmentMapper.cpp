@@ -37,9 +37,14 @@ SamSegmentMapper::SamSegmentMapper(int defaultReadLengthIn)
       PROPERPARIRCOMPENSATIONMODE{Breakpoint::PROPERPAIRCOMPENSATIONMODE},
       DISCORDANTLEFTRANGE{static_cast<int>(round(defaultReadLengthIn * 3))},
       DISCORDANTRIGHTRANGE{static_cast<int>(round(defaultReadLengthIn * 2.51))},
-      printedBps{0u}, chrIndexCurrent{0}, minPos{-1}, maxPos{-1},
-      breakpointsCurrent{}, discordantAlignmentsPool{},
-      discordantAlignmentCandidatesPool{}, discordantLowQualAlignmentsPool{} {}
+      printedBps{0u},
+      chrIndexCurrent{0},
+      minPos{-1},
+      maxPos{-1},
+      breakpointsCurrent{},
+      discordantAlignmentsPool{},
+      discordantAlignmentCandidatesPool{},
+      discordantLowQualAlignmentsPool{} {}
 
 void
 SamSegmentMapper::parseSamStream() {

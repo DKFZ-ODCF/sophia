@@ -49,8 +49,16 @@ MrefEntry::MrefEntry() :
 
 void MrefEntry::addEntry(BreakpointReduced& tmpBreakpoint, int fileIndex) {
 	pos = tmpBreakpoint.getPos();
-	auto artifactBreakTotal = tmpBreakpoint.getLowQualBreaksSoft() + tmpBreakpoint.getLowQualBreaksHard() + tmpBreakpoint.getRepetitiveOverhangBreaks();
-	auto eventTotal = tmpBreakpoint.getPairedBreaksSoft() + tmpBreakpoint.getPairedBreaksHard() + tmpBreakpoint.getUnpairedBreaksSoft() + tmpBreakpoint.getUnpairedBreaksHard() + tmpBreakpoint.getBreaksShortIndel();
+	auto artifactBreakTotal =
+	    tmpBreakpoint.getLowQualBreaksSoft()
+	    + tmpBreakpoint.getLowQualBreaksHard()
+	    + tmpBreakpoint.getRepetitiveOverhangBreaks();
+	auto eventTotal =
+	    tmpBreakpoint.getPairedBreaksSoft()
+	    + tmpBreakpoint.getPairedBreaksHard()
+	    + tmpBreakpoint.getUnpairedBreaksSoft()
+	    + tmpBreakpoint.getUnpairedBreaksHard()
+	    + tmpBreakpoint.getBreaksShortIndel();
 	auto breakTotal = eventTotal + artifactBreakTotal;
 	if (breakTotal < 200) {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
@@ -64,7 +72,8 @@ void MrefEntry::addEntry(BreakpointReduced& tmpBreakpoint, int fileIndex) {
 			auto qualCheck = false;
 			auto splitTotal = saPtr->getSupport() + saPtr->getSecondarySupport();
 			if (saPtr->isDistant()) {
-				auto clonalityCondition = (((0.0 + saPtr->getMateSupport()) / saPtr->getExpectedDiscordants()) >= 0.5);
+				auto clonalityCondition =
+				    (((0.0 + saPtr->getMateSupport()) / saPtr->getExpectedDiscordants()) >= 0.5);
 				if (!clonalityCondition) {
 					continue;
 				}
@@ -73,7 +82,9 @@ void MrefEntry::addEntry(BreakpointReduced& tmpBreakpoint, int fileIndex) {
 					qualCheck = (saPtr->getMateSupport() > 4);
 				}
 			} else {
-				qualCheck = (splitTotal > 4) || (splitTotal > 2 && saPtr->getSupport() > 0 && saPtr->getSecondarySupport() > 0);
+				qualCheck = (splitTotal > 4)
+				             || (splitTotal > 2 && saPtr->getSupport() > 0
+				                 && saPtr->getSecondarySupport() > 0);
 			}
 			if (qualCheck) {
 				if (!saMatcher(saPtr)) {
@@ -99,10 +110,17 @@ void MrefEntry::addEntry(BreakpointReduced& tmpBreakpoint, int fileIndex) {
 	}
 	if (eventTotal + artifactBreakTotal > 0) {
 		if (covValidity) {
-			auto eventTotalStrict = tmpBreakpoint.getPairedBreaksSoft() + tmpBreakpoint.getUnpairedBreaksSoft() + tmpBreakpoint.getPairedBreaksHard();
-			auto artifactTotalRelaxed = tmpBreakpoint.getLowQualBreaksSoft() + tmpBreakpoint.getLowQualSpansSoft() + tmpBreakpoint.getRepetitiveOverhangBreaks();
+			auto eventTotalStrict =
+			    tmpBreakpoint.getPairedBreaksSoft()
+			    + tmpBreakpoint.getUnpairedBreaksSoft()
+			    + tmpBreakpoint.getPairedBreaksHard();
+			auto artifactTotalRelaxed =
+			    tmpBreakpoint.getLowQualBreaksSoft()
+			    + tmpBreakpoint.getLowQualSpansSoft()
+			    + tmpBreakpoint.getRepetitiveOverhangBreaks();
 			if ((eventTotalStrict + artifactTotalRelaxed) > 0) {
-				artifactRatios.push_back((0.0 + artifactTotalRelaxed) / (eventTotalStrict + artifactTotalRelaxed));
+				artifactRatios.push_back(
+				    (0.0 + artifactTotalRelaxed) / (eventTotalStrict + artifactTotalRelaxed));
 				fileIndicesWithArtifactRatios.push_back(fileIndex);
 			}
 		}
@@ -146,7 +164,8 @@ string MrefEntry::printBpInfo(const string& chromosome) {
 	outputFields.emplace_back(boost::str(doubleFormatter % ((fileIndices.size() + 0.0) / NUMPIDS)));
 	outputFields.emplace_back(boost::str(doubleFormatter % ((fileIndicesWithArtifactRatios.size() + 0.0) / NUMPIDS)));
 	if (!artifactRatios.empty()) {
-		outputFields.emplace_back(boost::str(doubleFormatter % (accumulate(artifactRatios.cbegin(), artifactRatios.cend(), 0.0) / artifactRatios.size())));
+		outputFields.emplace_back(boost::str(doubleFormatter % (accumulate(artifactRatios.cbegin(),
+		                          artifactRatios.cend(), 0.0) / artifactRatios.size())));
 	} else {
 		outputFields.emplace_back("NA");
 	}
@@ -168,7 +187,10 @@ string MrefEntry::printBpInfo(const string& chromosome) {
 		}
 	}
 	vector<string> fileIndicesStr { };
-	transform(fileIndices.begin(), fileIndices.end(), back_inserter(fileIndicesStr), [](int fileIndex) {return strtk::type_to_string<int>(fileIndex);});
+	transform(fileIndices.begin(),
+	          fileIndices.end(),
+	          back_inserter(fileIndicesStr),
+	          [](int fileIndex) {return strtk::type_to_string<int>(fileIndex);});
 	outputFields.emplace_back(boost::join(fileIndicesStr, ","));
 	return boost::join(outputFields, "\t").append("\n");
 }
@@ -181,7 +203,8 @@ string MrefEntry::printArtifactRatios(const string& chromosome) {
 	outputFields.emplace_back(strtk::type_to_string<int>(pos + 1));
 	vector<string> artifactRatiosOutput(NUMPIDS, ".");
 	for (auto i = 0; i < static_cast<int>(fileIndicesWithArtifactRatios.size()); ++i) {
-		artifactRatiosOutput[fileIndicesWithArtifactRatios[i]] = boost::str(doubleFormatter % artifactRatios[i]);
+		artifactRatiosOutput[fileIndicesWithArtifactRatios[i]] =
+		    boost::str(doubleFormatter % artifactRatios[i]);
 	}
 	for (const auto &artifactRatio : artifactRatiosOutput) {
 		outputFields.push_back(artifactRatio);
@@ -204,7 +227,10 @@ SuppAlignmentAnno* MrefEntry::searchFuzzySa(const SuppAlignmentAnno& fuzzySa) {
 }
 
 bool MrefEntry::saMatcher(SuppAlignmentAnno* saPtr) {
-	if (saPtr->isToRemove() || saPtr->isSuspicious() || (saPtr->getExpectedDiscordants() > 0 && !(saPtr->getMateSupport() / (saPtr->getExpectedDiscordants() + 0.0) > 0.1))) {
+	if (saPtr->isToRemove()
+	    || saPtr->isSuspicious()
+	    || (saPtr->getExpectedDiscordants() > 0
+	        && !(saPtr->getMateSupport() / (saPtr->getExpectedDiscordants() + 0.0) > 0.1))) {
 		return true;
 	}
 	for (auto &sa : suppAlignments) {

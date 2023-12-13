@@ -107,15 +107,26 @@ BreakpointReduced::complexRearrangementMateRatioRescue(bool encounteredM) {
 sophia::BreakpointReduced::BreakpointReduced(
     const SuppAlignmentAnno &sa, const BreakpointReduced &emittingBp,
     bool fuzzySecondary)
-    : hasOverhang{false}, toRemove{false}, lineIndex{-1},
-      chrIndex{sa.getChrIndex()}, pos{!fuzzySecondary ? sa.getPos()
-                                                      : sa.getExtendedPos()},
-      normalSpans{}, lowQualSpansSoft{}, lowQualSpansHard{},
-      unpairedBreaksSoft{}, unpairedBreaksHard{}, breaksShortIndel{},
-      lowQualBreaksSoft{}, lowQualBreaksHard{}, repetitiveOverhangBreaks{},
-      pairedBreaksSoft{}, pairedBreaksHard{}, mateSupport{}, leftCoverage{},
-      rightCoverage{}, mrefHits{MrefMatch{-1, -1, 10000, {}}},
-      germlineInfo{GermlineMatch{0.0, 0.0, {}}}, suppAlignments{} {
+    : hasOverhang{false},
+      toRemove{false}, lineIndex{-1},
+      chrIndex{sa.getChrIndex()}, pos{!fuzzySecondary ? sa.getPos() : sa.getExtendedPos()},
+      normalSpans{},
+      lowQualSpansSoft{},
+      lowQualSpansHard{},
+      unpairedBreaksSoft{},
+      unpairedBreaksHard{},
+      breaksShortIndel{},
+      lowQualBreaksSoft{},
+      lowQualBreaksHard{},
+      repetitiveOverhangBreaks{},
+      pairedBreaksSoft{},
+      pairedBreaksHard{},
+      mateSupport{},
+      leftCoverage{},
+      rightCoverage{},
+      mrefHits{MrefMatch{-1, -1, 10000, {}}},
+      germlineInfo{GermlineMatch{0.0, 0.0, {}}},
+      suppAlignments{} {
     addDummySa(sa, emittingBp);
 }
 

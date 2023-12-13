@@ -46,10 +46,14 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
                                          int defaultReadLengthTumorIn,
                                          bool controlCheckMode,
                                          int germlineDbLimit)
-    : NOCONTROLMODE{true}, GERMLINEDBLIMIT{germlineDbLimit},
-      contaminationObserved{false}, massiveInvFilteringLevel{0},
-      filteredResults{}, tumorResults{85, vector<BreakpointReduced>{}},
-      controlResults{85, vector<BreakpointReduced>{}}, visitedLineIndices{} {
+    : NOCONTROLMODE{true},
+      GERMLINEDBLIMIT{germlineDbLimit},
+      contaminationObserved{false},
+      massiveInvFilteringLevel{0},
+      filteredResults{},
+      tumorResults{85, vector<BreakpointReduced>{}},
+      controlResults{85, vector<BreakpointReduced>{}},
+      visitedLineIndices{} {
     unique_ptr<ifstream> tumorInputHandle{
         make_unique<ifstream>(tumorResultsIn, ios_base::in | ios_base::binary)};
     unique_ptr<boost::iostreams::filtering_istream> tumorGzHandle{
@@ -111,9 +115,12 @@ AnnotationProcessor::AnnotationProcessor(
     const string &controlResultsIn, int defaultReadLengthTumorIn,
     int defaultReadLengthControlIn, int germlineDbLimit, int lowQualControlIn,
     bool pathogenInControlIn)
-    : NOCONTROLMODE{false}, GERMLINEDBLIMIT{germlineDbLimit},
-      contaminationObserved{false}, massiveInvFilteringLevel{0},
-      filteredResults{}, tumorResults{85, vector<BreakpointReduced>{}},
+    : NOCONTROLMODE{false},
+      GERMLINEDBLIMIT{germlineDbLimit},
+      contaminationObserved{false},
+      massiveInvFilteringLevel{0},
+      filteredResults{},
+      tumorResults{85, vector<BreakpointReduced>{}},
       controlResults{85, vector<BreakpointReduced>{}} {
     unique_ptr<ifstream> controlInputHandle{make_unique<ifstream>(
         controlResultsIn, ios_base::in | ios_base::binary)};

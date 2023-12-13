@@ -143,8 +143,12 @@ int main(int argc, char** argv) {
     const GlobalAppConfig &config = GlobalAppConfig::init(move(chrConverter));
 
 	MrefEntryAnno::PIDSINMREF = pidsInMref;
-	unique_ptr<ifstream> mrefInputHandle { make_unique<ifstream>(options["mref"].as<string>(), ios_base::in | ios_base::binary) };
-	unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle { make_unique<boost::iostreams::filtering_istream>() };
+	unique_ptr<ifstream> mrefInputHandle {
+	    make_unique<ifstream>(options["mref"].as<string>(), ios_base::in | ios_base::binary)
+	};
+	unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle {
+	    make_unique<boost::iostreams::filtering_istream>()
+	};
 	mrefGzHandle->push(boost::iostreams::gzip_decompressor());
 	mrefGzHandle->push(*mrefInputHandle);
 	cerr << "m\n";
@@ -201,12 +205,23 @@ int main(int argc, char** argv) {
 		auto pathogenInControl = false;
 		{
 			SvEvent::NOCONTROLMODE = true;
-			AnnotationProcessor annotationProcessorControlCheck { controlResults, mref, defaultReadLengthControl, true, germlineDbLimit };
+			AnnotationProcessor annotationProcessorControlCheck {
+			    controlResults, mref, defaultReadLengthControl, true, germlineDbLimit
+			};
 			lowQualControl = annotationProcessorControlCheck.getMassiveInvFilteringLevel();
 			pathogenInControl = annotationProcessorControlCheck.isContaminationObserved();
 			SvEvent::NOCONTROLMODE = false;
 		}
-		AnnotationProcessor annotationProcessor { tumorResults, mref, controlResults, defaultReadLengthTumor, defaultReadLengthControl, germlineDbLimit, lowQualControl, pathogenInControl };
+		AnnotationProcessor annotationProcessor {
+		    tumorResults,
+		    mref,
+		    controlResults,
+		    defaultReadLengthTumor,
+		    defaultReadLengthControl,
+		    germlineDbLimit,
+		    lowQualControl,
+		    pathogenInControl
+		};
 		annotationProcessor.printFilteredResults(pathogenInControl, lowQualControl);
 	} else {
 		SvEvent::NOCONTROLMODE = true;
