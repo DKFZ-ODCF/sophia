@@ -41,7 +41,7 @@ Note that the build-scripts are for when you manage your dependencies with Conda
 
 ### Static Build
 
-If you want to compile statically you need to install glibc and boost static libraries (not possible with Conda, in the moment) and do
+If you want to compile statically you need to install glibc and boost static libraries (currently, not possible with Conda) and do
 
 ```bash
 source activate sophia
@@ -52,3 +52,17 @@ STATIC=true build-sophia.sh
 cd ../Release_sophiaAnnotate
 STATIC=true build-sophiaAnnotate.sh
 ```
+
+## Changes
+
+* 35.1.0 (upcoming)
+  * Minor: Nominally added support for hg38 (hg37 support remains)
+  * Minor: Added `--assemblyname` option, defaulting to "hg37" when omitted (old behaviour)
+    > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted.
+  * Minor: Build script for `sophiaMref`
+  * Patch: Code readability improvements, `.editorconfig` file, and `clang-format` configuration
+  * Patch: Improved compilation instructions
+  * Patch: Use `namespace::std` to get rid of `std::` noise in the code
+
+* 9e3b6ed
+  * Last version in [bitbucket]](https://bitbucket.org/compbio_charite/sophia/src/master/)
