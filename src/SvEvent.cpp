@@ -141,8 +141,8 @@ namespace sophia {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
                               !selectedSa2.isProperPairErrorProne() &&
-                              chrConverter.indexConverter[chrIndex1] < 23 &&
-                              chrConverter.indexConverter[chrIndex2] < 23;
+                              chrConverter.compressedMrefIndexToIndex(chrIndex1) < 23 &&
+                              chrConverter.compressedMrefIndexToIndex(chrIndex2) < 23;
         auto splitSupportThreshold1 =
             (strictNonDecoy && !selectedSa1.isSemiSuspicious() &&
              (mateRatio1 >= 0.6))
@@ -352,8 +352,8 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                              chrConverter.indexConverter[chrIndex1] < 23 &&
-                              chrConverter.indexConverter[chrIndex2] < 23;
+                              chrConverter.compressedMrefIndexToIndex(chrIndex1) < 23 &&
+                              chrConverter.compressedMrefIndexToIndex(chrIndex2) < 23;
         auto splitSupportThreshold =
             (strictNonDecoy && !selectedSa2.isSemiSuspicious() &&
              (mateRatio1 >= 0.66))
@@ -548,8 +548,8 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                              chrConverter.indexConverter[chrIndex1] < 23 &&
-                              chrConverter.indexConverter[chrIndex2] < 23;
+                              chrConverter.compressedMrefIndexToIndex(chrIndex1) < 23 &&
+                              chrConverter.compressedMrefIndexToIndex(chrIndex2) < 23;
         auto splitSupportThreshold =
             (strictNonDecoy && (mateRatio1 >= 0.66) ? 0 : 2);
 
@@ -1722,10 +1722,10 @@ namespace sophia {
         vector<string> outputFields;
         outputFields.reserve(20);
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        outputFields.emplace_back(chrConverter.indexToChr[chrIndex1]);
+        outputFields.emplace_back(chrConverter.indexToChrName(chrIndex1));
         outputFields.emplace_back(strtk::type_to_string<int>(pos1 - 1));
         outputFields.emplace_back(strtk::type_to_string<int>(pos1));
-        outputFields.emplace_back(chrConverter.indexToChr[chrIndex2]);
+        outputFields.emplace_back(chrConverter.indexToChrName(chrIndex2));
         outputFields.emplace_back(strtk::type_to_string<int>(pos2 - 1));
         outputFields.emplace_back(
             inputScore > 0

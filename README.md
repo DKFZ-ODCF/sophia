@@ -25,40 +25,47 @@ You can cite Sophia as follows:
     Umut Toprak (2019).
     DOI 10.11588/heidok.000274296
 
+### Tools
+
+* `sophia` - The main tool for SV calling. It takes a BAM file as input and outputs a list of SVs in mref format.
+* `sophiaAnnotate` - Tool for annotating SVs with gene information. It reads in an mref file created by `sophiaMref` and annotates the SVs in the input file with gene information.
+* `sophiaMref` - The `sophiaMref` tool processes a list of gzipped control bed files and generates a reference that can be used by `sophiaAnnotate` for annotating structural variants with gene information.
+
+For instructions on commandline parameters, invoke the tool with `--help`.
+
 ## Runtime Dependencies
 
-The only dependency is Boost 1.70.0 (currently). E.g. you can do
+The only dependency is Boost 1.82.0 (currently). E.g. you can do
 
 ```bash
-conda create -n sophia boost=1.70.0
+conda create -n sophia boost=1.82.0
 ```
 
 ## Building
-
-### Build-time Dependencies
-
-* g++ >= 7
-* Boost 1.70.0
 
 ### Dynamic Build
 
 With Conda you can do
 
 ```bash
-conda create -n sophia gxx_linux-64=8 boost=1.70.0
+conda create -n sophia gxx_linux-64=8 boost=1.82.0
 ```
 
-to create an environment to build the `sophia` and `sophiaAnnotate` binaries.
+to create an environment to build the SOPHIA binaries binaries.
 
 To build you need to do
 
 ```bash
 source activate sophia
-cd Release_sophia
-build-sophia.sh
+
+cd Release_sophiaMref
+./build-sophiaMref.sh
+
+cd ../Release_sophia
+./build-sophia.sh
 
 cd ../Release_sophiaAnnotate
-build-sophiaAnnotate.sh
+./build-sophiaAnnotate.sh
 ```
 
 Note that the build-scripts are for when you manage your dependencies with Conda.

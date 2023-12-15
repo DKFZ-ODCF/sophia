@@ -44,11 +44,12 @@ namespace sophia {
           DEFAULTREADLENGTH{defaultReadLengthIn},
           mrefDb{} {
 
-        const vector<int> &chrSizes =
-            GlobalAppConfig::getInstance().getChrConverter().chrSizesCompressedMref;
-        for (std::vector<int>::size_type i = 0; i < chrSizes.size(); ++i) {
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+        for (std::vector<int>::size_type i = 0;
+             i < chrConverter.nChromosomesCompressedMref();
+             ++i) {
             //		mrefDbPtrs.emplace_back(chrSizes[i] + 1, nullptr);
-            mrefDb.emplace_back(chrSizes[i] + 1, MrefEntry{});
+            mrefDb.emplace_back(chrConverter.chrSizeCompressedMref(i) + 1, MrefEntry{});
         }
         vector<string> header{"#chr", "start", "end"};
         for (const auto &gzFile : filesIn) {
@@ -106,7 +107,7 @@ namespace sophia {
                 remove_if(mrefDb.back().begin(), mrefDb.back().end(),
                           [](const MrefEntry &bp) { return bp.getPos() == -1; }),
                 mrefDb.back().end());
-            auto chromosome = chrConverter.indexToChrCompressedMref[i];
+            auto chromosome = chrConverter.indexToChrNameCompressedMref(i);
             --i;
             for (auto &bp : mrefDb.back()) {
                 if (bp.getPos() != -1 && bp.getValidityScore() != -1) {
@@ -133,8 +134,8 @@ namespace sophia {
         while (error_terminating_getline(gzStream, sophiaLine)) {
             if (sophiaLine[0] != '#') {
                 auto chrIndex =
-                    chrConverter.indexConverter[chrConverter.readChromosomeIndex(
-                            sophiaLine.cbegin(), '\t')];
+                    chrConverter.compressedMrefIndexToIndex(
+                        chrConverter.parseChrAndReturnIndex(sophiaLine.cbegin(), '\t'));
                 if (chrIndex < 0) {
                     continue;
                 }

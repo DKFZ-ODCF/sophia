@@ -23,22 +23,6 @@
 
 namespace sophia {
 
-    ChrConverter::ChrConverter(const vector<string> &indexToChr,
-                               const vector<string> &indexToChrCompressedMref,
-                               const vector<int> &chrSizesCompressedMref,
-                               const vector<int> &indexConverter) :
-                    indexToChr(indexToChr),
-                    indexToChrCompressedMref(indexToChrCompressedMref),
-                    chrSizesCompressedMref(chrSizesCompressedMref),
-                    indexConverter(indexConverter) {
-            if (indexToChr.size() != indexConverter.size())
-                throw invalid_argument(
-                    "indexToChr and indexConverter must have the same size");
-            if (indexToChrCompressedMref.size() != chrSizesCompressedMref.size())
-                throw invalid_argument(
-                    "indexToChrCompressedMref and chrSizesCompressedMref must have the same size");
-        }
-
     ChrConverter::~ChrConverter() {}
 
 }

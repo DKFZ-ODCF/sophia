@@ -33,25 +33,25 @@ namespace sophia {
         return *chrConverter;
     }
 
-    GlobalAppConfig::GlobalAppConfig(unique_ptr<ChrConverter const> chrConverter):
+    GlobalAppConfig::GlobalAppConfig(std::unique_ptr<ChrConverter const> chrConverter):
         chrConverter(move(chrConverter)) {}
 
     GlobalAppConfig::~GlobalAppConfig() {}
 
-    GlobalAppConfig &GlobalAppConfig::init(unique_ptr<ChrConverter const> chrConverter)
+    GlobalAppConfig &GlobalAppConfig::init(std::unique_ptr<ChrConverter const> chrConverter)
     {
-        lock_guard<mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock (mutex_);
         if (GlobalAppConfig::instance_ == nullptr) {
             GlobalAppConfig::instance_ = new GlobalAppConfig(move(chrConverter));
         } else {
-            throw new logic_error("GlobalAppConfig already initialized");
+            throw new std::logic_error("GlobalAppConfig already initialized");
         }
         return *GlobalAppConfig::instance_;
     }
 
     const GlobalAppConfig &GlobalAppConfig::getInstance() {
         if (GlobalAppConfig::instance_ == nullptr) {
-            throw new logic_error("GlobalAppConfig not initialized");
+            throw new std::logic_error("GlobalAppConfig not initialized");
         } else {
             return *GlobalAppConfig::instance_;
         }

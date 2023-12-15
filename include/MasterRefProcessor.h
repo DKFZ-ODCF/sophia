@@ -41,26 +41,24 @@
 
 namespace sophia {
 
-using namespace std;
+    class MasterRefProcessor {
+      public:
+        MasterRefProcessor(const vector<std::string> &filesIn,
+                           const string &outputRootName,
+                           const string &version,
+                           const int defaultReadLengthIn);
 
-class MasterRefProcessor {
-  public:
-    MasterRefProcessor(const vector<string> &filesIn,
-                       const string &outputRootName, const string &version,
-                       const int defaultReadLengthIn);
+        ~MasterRefProcessor() = default;
 
-    ~MasterRefProcessor() = default;
-
-  private:
-    unsigned long long processFile(const string &gzPath, short fileIndex);
-    bool processBp(BreakpointReduced &bp, int chrIndex, short fileIndex);
-    const int NUMPIDS;
-    const int DEFAULTREADLENGTH;
-    unique_ptr<ofstream> mergedBpsOutput;
-    vector<vector<MrefEntry>> mrefDb;
-};
+      private:
+        unsigned long long processFile(const string &gzPath, short fileIndex);
+        bool processBp(BreakpointReduced &bp, int chrIndex, short fileIndex);
+        const int NUMPIDS;
+        const int DEFAULTREADLENGTH;
+        unique_ptr<ofstream> mergedBpsOutput;
+        vector<vector<MrefEntry>> mrefDb;
+    };
 
 }   // namespace sophia
-/* namespace sophiaMref */
 
 #endif /* MASTERREFPROCESSOR_H_ */

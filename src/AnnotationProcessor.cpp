@@ -66,7 +66,7 @@ namespace sophia {
                 continue;
             };
             Breakpoint tmpBp{line, true};
-            auto chrIndex = chrConverter.indexConverter[tmpBp.getChrIndex()];
+            auto chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
             if (chrIndex < 0) {
                 continue;
             }
@@ -225,7 +225,7 @@ namespace sophia {
                     }
                 }
             }
-            auto chrIndex = chrConverter.indexConverter[tmpBp.getChrIndex()];
+            auto chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
             controlResults[chrIndex].push_back(tmpBp);
             ++lineIndex;
         }
@@ -245,7 +245,7 @@ namespace sophia {
                 continue;
             };
             Breakpoint tmpBp{line, true};
-            auto chrIndex = chrConverter.indexConverter[tmpBp.getChrIndex()];
+            auto chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
             if (chrIndex < 0) {
                 continue;
             }
@@ -319,7 +319,7 @@ namespace sophia {
             return;
         }
         auto saChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-            indexConverter[sa.getChrIndex()];
+            compressedMrefIndexToIndex(sa.getChrIndex());
         if (saChrIndex < 0) {
             return;
         }
@@ -554,7 +554,7 @@ namespace sophia {
                                            int conservativeDistanceThreshold,
                                            vector<vector<MrefEntryAnno>> &mref) {
         auto convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-            indexConverter[bpIn.getChrIndex()];
+            compressedMrefIndexToIndex(bpIn.getChrIndex());
         vector<SuppAlignmentAnno> suppMatches{};
         if (convertedChrIndex < 0) {
             return MrefMatch{0, 0, 10000, suppMatches};
@@ -691,7 +691,7 @@ namespace sophia {
             return dummyMatchTrue;
         }
         auto convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-            indexConverter[bpIn.getChrIndex()];
+            compressedMrefIndexToIndex(bpIn.getChrIndex());
         if (convertedChrIndex < 0) {
             return dummyMatchFalse;
         }

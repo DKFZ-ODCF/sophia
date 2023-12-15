@@ -22,20 +22,78 @@
 #include "ChrConverter.h"
 #include <string>
 #include <vector>
+#include <boost/unordered/unordered_map.hpp>
 
 
 namespace sophia {
 
-    using namespace std;
+    using namespace boost::unordered;
 
     class Hg38ChrConverter: public ChrConverter {
+
+      protected:
+
+        /* This makes a search structure to map chromosome names to index positions in an array.
+           This is useful mostly during the initial parsing of chromosome names from the input.
+           Afterwards, we continue working with the positions. */
+        unordered_map<std::string, std::vector<std::string>::size_type> makeChrToIndex(
+            const std::vector<std::string>& chromosomes
+            ) const;
+
+        /** Given the index-maps for all chromosomes, and the selected "compressed mref" chromosomes,
+            create a mapping of mref indices to all chromosome indices. */
+        std::vector<ChrIndex> makeCompressedMrefIndexToIndexConverter(
+            const unordered_map<std::string, ChrIndex> &allChromosomeLookup,
+            const unordered_map<std::string, CompressedMrefIndex> &compressedMrefChromosomeLookup
+            ) const;
+
+        const unordered_map<std::string, ChrIndex> allChromosomeLookup;
+
+        const unordered_map<std::string, CompressedMrefIndex> compressedMrefChromosomeLookup;
+
+        const std::vector<int> allChromosomeLengths;
+
+        const std::vector<ChrIndex> compressedMrefIndexToIndexLookup;
+        const std::vector<std::string> compressedMrefChromosomes;
+
+        Hg38ChrConverter(const std::vector<std::string> &allChromosomes,
+                         const std::vector<int> &allChromosomeLengths,
+                         const std::vector<std::string> &compressedMrefChromosomes);
+
       public:
 
-        static const string assembly_name;
+        static const std::string assemblyName;
 
+        /** This default constructor only makes sense, as long as the hg38 chromosome names are
+            hard-coded. */
         Hg38ChrConverter();
 
-        int readChromosomeIndex(string::const_iterator startIt, char stopChar) const;
+        /** Number of chromosomes. */
+        int nChromosomes() const;
+
+        /** Number of compressed mref chromosomes. */
+        int nChromosomesCompressedMref() const;
+
+        /** Map an index position to a chromosome name. */
+        std::string indexToChrName(ChrIndex index) const;
+
+        /** Map an index position to a chromosome name for compressed mref files. */
+        std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
+
+        /** Map the compressed mref index to the uncompressed mref index. */
+        ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const;
+
+        /** Map compressed mref index to chromosome size. */
+        int chrSizeCompressedMref(CompressedMrefIndex index) const;
+
+        /** Map a chromosome name to an index position. */
+        ChrIndex chrNameToIndex(std::string chrName) const;
+
+        /** Parse chromosome index. It takes a position in a character stream, and translates the
+            following character(s) into index positions (using ChrConverter::indexToChr).
+            If the name cannot be parsed, throws a domain_error exception. */
+        ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
+                                        char stopChar) const;
 
     };
 

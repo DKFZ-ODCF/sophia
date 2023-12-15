@@ -41,8 +41,11 @@ namespace sophia {
     sophia::BreakpointReduced::BreakpointReduced(const Breakpoint &tmpBp,
                                                  int lineIndexIn,
                                                  bool hasOverhangIn)
-        : hasOverhang{hasOverhangIn}, toRemove{false}, lineIndex{lineIndexIn},
-          chrIndex{tmpBp.getChrIndex()}, pos{tmpBp.getPos()},
+        : hasOverhang{hasOverhangIn},
+          toRemove{false},
+          lineIndex{lineIndexIn},
+          chrIndex{tmpBp.getChrIndex()},
+          pos{tmpBp.getPos()},
           normalSpans{tmpBp.getNormalSpans()},
           lowQualSpansSoft{tmpBp.getLowQualBreaksSoft()},
           lowQualSpansHard{tmpBp.getLowQualSpansHard()},
@@ -181,7 +184,8 @@ namespace sophia {
                                      int numHits,
                                      const string &overhang) const {
         string res{"##"};
-        res.append(GlobalAppConfig::getInstance().getChrConverter().indexToChr[chrIndex]).append("\t");
+        res.append(GlobalAppConfig::getInstance().getChrConverter().
+            indexToChrName(chrIndex)).append("\t");
         res.append(strtk::type_to_string<int>(pos - 1)).append("\t");
         res.append(strtk::type_to_string<int>(pos)).append("\t");
         if (germlineClonality > 0.1) {

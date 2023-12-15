@@ -199,7 +199,8 @@ namespace sophia {
     Breakpoint::printBreakpointReport(const string &overhangStr) {
         string res{};
         res.reserve(350);
-        res.append(GlobalAppConfig::getInstance().getChrConverter().indexToChr[chrIndex]).append("\t");
+        res.append(GlobalAppConfig::getInstance().getChrConverter().
+            indexToChrName(chrIndex)).append("\t");
         res.append(strtk::type_to_string<int>(pos)).append("\t");
         res.append(strtk::type_to_string<int>(pos + 1)).append("\t");
 
@@ -1169,7 +1170,7 @@ namespace sophia {
             }
             ++index;
         }
-        chrIndex = GlobalAppConfig::getInstance().getChrConverter().readChromosomeIndex(bpIn.cbegin(), '\t');
+        chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(bpIn.cbegin(), '\t');
 
         for (auto i = bpChunkPositions[0] + 1; i < bpChunkPositions[1]; ++i) {
             pos = pos * 10 + (bpIn[i] - '0');

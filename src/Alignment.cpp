@@ -70,7 +70,7 @@ namespace sophia {
                 }
                 ++index;
             }
-            chrIndex = GlobalAppConfig::getInstance().getChrConverter().readChromosomeIndex(
+            chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
                 next(samLine.cbegin(), samChunkPositions[1] + 1), '\t');
         }
     }
@@ -171,7 +171,7 @@ namespace sophia {
         if (samLine[1 + samChunkPositions[5]] == '=') {
             mateChrIndex = chrIndex;
         } else {
-            mateChrIndex = GlobalAppConfig::getInstance().getChrConverter().readChromosomeIndex(
+            mateChrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
                 next(samLine.cbegin(), 1 + samChunkPositions[5]), '\t');
         }
     }

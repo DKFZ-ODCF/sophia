@@ -91,7 +91,7 @@ namespace sophia {
         fieldEnds.push_back(saCend);
 
         chrIndex = GlobalAppConfig::getInstance().
-            getChrConverter().readChromosomeIndex(fieldBegins[0], ',');
+            getChrConverter().parseChrAndReturnIndex(fieldBegins[0], ',');
         if (chrIndex > 1001) {
             return;
         }
@@ -251,12 +251,12 @@ namespace sophia {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         if (!fuzzy) {
             outStr.
-                append(chrConverter.indexToChr[chrIndex]).
+                append(chrConverter.indexToChrName(chrIndex)).
                 append(":").
                 append(strtk::type_to_string<int>(pos));
         } else {
             outStr.
-                append(chrConverter.indexToChr[chrIndex]).
+                append(chrConverter.indexToChrName(chrIndex)).
                 append(":").
                 append(strtk::type_to_string<int>(pos)).
                 append("-").
@@ -312,7 +312,7 @@ namespace sophia {
             ++index;
         }
         chrIndex = GlobalAppConfig::getInstance().
-            getChrConverter().readChromosomeIndex(next(saIn.cbegin(), index), ':');
+            getChrConverter().parseChrAndReturnIndex(next(saIn.cbegin(), index), ':');
         if (chrIndex > 1001) {
             return;
         }

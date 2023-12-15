@@ -38,12 +38,12 @@ namespace sophia {
 
       protected:
 
-        GlobalAppConfig(unique_ptr<ChrConverter const> chrConverter);
+        GlobalAppConfig(std::unique_ptr<ChrConverter const> chrConverter);
 
         ~GlobalAppConfig();
 
         /** The chromosome converter. */
-        const unique_ptr<ChrConverter const> chrConverter;
+        const std::unique_ptr<ChrConverter const> chrConverter;
 
       public:
 
@@ -56,7 +56,7 @@ namespace sophia {
         void operator=(const GlobalAppConfig &) = delete;
 
         /** Factory method. */
-        static GlobalAppConfig &init(unique_ptr<ChrConverter const> chrConverter);
+        static GlobalAppConfig &init(std::unique_ptr<ChrConverter const> chrConverter);
 
         /** Getter. */
         static const GlobalAppConfig &getInstance();

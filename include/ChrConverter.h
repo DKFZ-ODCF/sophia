@@ -26,51 +26,52 @@
 
 namespace sophia {
 
-    using namespace std;
+    // These two are only to make the code clearer, but are not type checked. There are no opaque
+    // or strongly type-checked typedefs in C++17.
+    typedef size_t ChrIndex;
+    typedef size_t CompressedMrefIndex;
 
-    /** ChrConverter contains information the names of chromosomes in an assembly. */
+    /** ChrConverter manages information on chromosomes names, sizes, and index positions in
+        data arrays.
+
+        This probably needs a redesign. The current situation is just an intermediate step away
+        from the former completely procedural implementation that heavily leaked implementation
+        details into the calling code and was highly tuned but very inflexible. */
     class ChrConverter {
-      protected:
-
-        /** The constructor should be used to initialize the fields from subclasses. It does
-            additional checks of the dimensions of the input vectors. */
-        ChrConverter(const vector<string>& indexToChr,
-                     const vector<string>& indexToChrCompressedMref,
-                     const vector<int>& chrSizesCompressedMref,
-                     const vector<int>& indexConverter);
-
 
       public:
 
         virtual ~ChrConverter();
 
         /** The name of the assembly. */
-        static const string assembly_name;
+        static const std::string assemlyName;
 
-        /** Mapping indices to chromosome names. */
-        const vector<string> indexToChr;
+        /** Number of chromosomes. */
+        virtual int nChromosomes() const = 0;
 
-        /** Mapping indices to chromosome names for compressed mref files. */
-        const vector<string> indexToChrCompressedMref;
+        /** Number of compressed mref chromosomes. */
+        virtual int nChromosomesCompressedMref() const = 0;
 
-        /** Chromosome sizes in base pairs. */
-        const vector<int> chrSizesCompressedMref;
+        /** Map an index position to a chromosome name. */
+        virtual std::string indexToChrName(ChrIndex index) const = 0;
 
-        /** Mapping chromosome names to indices. */
-        const vector<int> indexConverter;
+        /** Map an index position to a chromosome name for compressed mref files. */
+        virtual std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
 
-        /** Parse chromosome index.  It takes a position in a character stream, and translates the
-            following character(s) into index positions (using ChrConverter::indexToChr). */
-        virtual int readChromosomeIndex(string::const_iterator startIt, char stopChar) const = 0;
+        /** Map the compressed mref index to the uncompressed mref index. */
+        virtual ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const = 0;
 
-        size_t n_chromosomes() {
-            return indexToChr.size();
-        };
+        /** Map compressed mref index to chromosome size. */
+        virtual int chrSizeCompressedMref(CompressedMrefIndex index) const = 0;
 
-        size_t n_chromosomes_compressed_mref() {
-            return indexToChrCompressedMref.size();
-        };
+        /** Map a chromosome name to an index position. */
+        virtual ChrIndex chrNameToIndex(std::string chrName) const = 0;
 
+        /** Parse chromosome index. It takes a position in a character stream, and translates the
+            following character(s) into index positions (using ChrConverter::indexToChr).
+            If the name cannot be parsed, throws a domain_error exception. */
+        virtual ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
+                                                char stopChar) const = 0;
 
     };
 

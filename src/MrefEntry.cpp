@@ -64,7 +64,7 @@ namespace sophia {
                 if (saPtr->isSuspicious()
                     || saPtr->isToRemove()
                     || (saPtr->getChrIndex() != 1001
-                        && chrConverter.indexConverter[saPtr->getChrIndex()] < 0)) {
+                        && chrConverter.compressedMrefIndexToIndex(saPtr->getChrIndex()) < 0)) {
                     continue;
                 }
                 auto qualCheck = false;

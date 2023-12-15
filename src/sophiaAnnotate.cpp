@@ -127,14 +127,14 @@ int main(int argc, char** argv) {
 
 	unique_ptr<ChrConverter> chrConverter;
 	if (!options.count("assemblyname") ||
-	      options["assemblyname"].as<string>() == Hg37ChrConverter::assembly_name) {
+	      options["assemblyname"].as<string>() == Hg37ChrConverter::assemblyName) {
 	    chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
-    } else if (options["assemblyname"].as<string>() == Hg38ChrConverter::assembly_name) {
+    } else if (options["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
         chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
     } else {
         cerr << "Unknown assembly name " << options["assemblyname"].as<string>() << ". I know "
-             << Hg37ChrConverter::assembly_name << " and "
-             << Hg38ChrConverter::assembly_name << endl;
+             << Hg37ChrConverter::assemblyName << " and "
+             << Hg38ChrConverter::assemblyName << endl;
         return 1;
     }
 
@@ -159,7 +159,8 @@ int main(int argc, char** argv) {
 			continue;
 		};
 		auto chrIndex =
-		    chrConverterTmp.indexConverter[chrConverterTmp.readChromosomeIndex(line.cbegin(), '\t')];
+		    chrConverterTmp.compressedMrefIndexToIndex(
+		        chrConverterTmp.parseChrAndReturnIndex(line.cbegin(), '\t'));
 		if (chrIndex < 0) {
 			continue;
 		}

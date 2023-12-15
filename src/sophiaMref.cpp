@@ -19,7 +19,7 @@
 #include "Hg38ChrConverter.h"
 #include "HelperFunctions.h"
 
-
+/** sophiaMref is used to generate the blacklist from gzins file. */
 int main(int argc, char** argv) {
     using namespace sophia;
 
@@ -86,15 +86,15 @@ int main(int argc, char** argv) {
 
     unique_ptr<ChrConverter> chrConverter;
 	if (!inputVariables.count("assemblyname") ||
-	      inputVariables["assemblyname"].as<string>() == Hg37ChrConverter::assembly_name) {
+	      inputVariables["assemblyname"].as<string>() == Hg37ChrConverter::assemblyName) {
 	    chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
-    } else if (inputVariables["assemblyname"].as<string>() == Hg38ChrConverter::assembly_name) {
+    } else if (inputVariables["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
         chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
     } else {
         cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<string>()
              << ". I know "
-             << Hg37ChrConverter::assembly_name << " and "
-             << Hg38ChrConverter::assembly_name << endl;
+             << Hg37ChrConverter::assemblyName << " and "
+             << Hg38ChrConverter::assemblyName << endl;
             return 1;
     }
 
