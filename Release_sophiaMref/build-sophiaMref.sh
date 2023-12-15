@@ -13,10 +13,11 @@ install_strtk
 
 CPP=x86_64-conda_cos6-linux-gnu-g++
 INCLUDES="-I../include -I$CONDA_PREFIX/include"
-CPP_OPTS="-L$CONDA_PREFIX/lib -std=c++17 $INCLUDES -O3 -Wall -Wextra -static -static-libgcc -static-libstdc++ -flto -c -fmessage-length=0 -Wno-attributes"
+CPP_OPTS="-L$CONDA_PREFIX/lib -std=c++17 $INCLUDES -O3 -Wall -Wextra -flto -c -fmessage-length=0 -Wno-attributes"
 
+LD_OPTS=""
 if [[ "${STATIC:-false}" == "true" ]]; then
-    CPP_OPTS="-static -static-libgcc -static-libstdc++ $CPP_OPTS"
+    LD_OPTS="-static -static-libgcc -static-libstdc++"
 fi
 
 $CPP $CPP_OPTS -o "GlobalAppConfig.o" "../src/GlobalAppConfig.cpp"
@@ -36,7 +37,7 @@ $CPP $CPP_OPTS -o "BreakpointReduced.o" "../src/BreakpointReduced.cpp"
 $CPP $CPP_OPTS -o "GermlineMatch.o" "../src/GermlineMatch.cpp"
 $CPP $CPP_OPTS -o "DeFuzzier.o" "../src/DeFuzzier.cpp"
 
-$CPP -L$CONDA_PREFIX/lib -flto -o "sophiaMref" \
+$CPP -L$CONDA_PREFIX/lib -o "sophiaMref" \
     GlobalAppConfig.o \
     ChrConverter.o \
     Hg37ChrConverter.o \
@@ -53,4 +54,4 @@ $CPP -L$CONDA_PREFIX/lib -flto -o "sophiaMref" \
     GermlineMatch.o \
     DeFuzzier.o \
     sophiaMref.o \
-    -lz -lboost_system -lboost_iostreams -lboost_program_options
+    $LD_OPTS -lz -lboost_system -lboost_iostreams -lboost_program_options

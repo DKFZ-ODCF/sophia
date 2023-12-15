@@ -14,10 +14,11 @@ install_strtk
 CPP=x86_64-conda_cos6-linux-gnu-g++
 INCLUDES="-I../include -I$CONDA_PREFIX/include"
 
-CPP_OPTS="-L$CONDA_PREFIX/lib -std=c++17 $INCLUDES -O3 -Wall -Wextra -static -static-libgcc -static-libstdc++ -flto -c -fmessage-length=0 -Wno-attributes"
+CPP_OPTS="-L$CONDA_PREFIX/lib -std=c++17 $INCLUDES -O3 -Wall -Wextra -flto -c -fmessage-length=0 -Wno-attributes"
 
+LD_OPTS=""
 if [[ "${STATIC:-false}" == "true" ]]; then
-    CPP_OPTS="-static -static-libgcc -static-libstdc++ $CPP_OPTS"
+    LD_OPTS="-static -static-libgcc -static-libstdc++"
 fi
 
 $CPP $CPP_OPTS -o "Alignment.o" "../src/Alignment.cpp"
@@ -33,7 +34,7 @@ $CPP $CPP_OPTS -o "SuppAlignment.o" "../src/SuppAlignment.cpp"
 $CPP $CPP_OPTS -o "HelperFunctions.o" "../src/HelperFunctions.cpp"
 $CPP $CPP_OPTS -o "sophia.o" "../src/sophia.cpp"
 
-$CPP -L$CONDA_PREFIX/lib -flto -o "sophia"  \
+$CPP -L$CONDA_PREFIX/lib -o "sophia"  \
     Alignment.o \
     Breakpoint.o \
     ChosenBp.o \
@@ -46,4 +47,4 @@ $CPP -L$CONDA_PREFIX/lib -flto -o "sophia"  \
     HelperFunctions.o \
     GlobalAppConfig.o \
     sophia.o \
-    -lboost_program_options
+    $LD_OPTS -lboost_program_options

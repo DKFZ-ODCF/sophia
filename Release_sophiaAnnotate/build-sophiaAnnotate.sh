@@ -13,10 +13,11 @@ install_strtk
 
 CPP=x86_64-conda_cos6-linux-gnu-g++
 INCLUDES="-I../include -I$CONDA_PREFIX/include"
-CPP_OPTS="-L$CONDA_PREFIX/lib -std=c++17 $INCLUDES -O3 -Wall -Wextra -static -static-libgcc -static-libstdc++ -flto -c -fmessage-length=0 -Wno-attributes"
+CPP_OPTS="-L$CONDA_PREFIX/lib -std=c++17 $INCLUDES -O3 -Wall -Wextra -flto -c -fmessage-length=0 -Wno-attributes"
 
+LD_OPTS=""
 if [[ "${STATIC:-false}" == "true" ]]; then
-    CPP_OPTS="-static -static-libgcc -static-libstdc++ $CPP_OPTS"
+    LD_OPTS="-static -static-libgcc -static-libstdc++"
 fi
 
 $CPP $CPP_OPTS -o "AnnotationProcessor.o" "../src/AnnotationProcessor.cpp"
@@ -37,7 +38,7 @@ $CPP $CPP_OPTS -o "SvEvent.o" "../src/SvEvent.cpp"
 $CPP $CPP_OPTS -o "HelperFunctions.o" "../src/HelperFunctions.cpp"
 $CPP $CPP_OPTS -o "sophiaAnnotate.o" "../src/sophiaAnnotate.cpp"
 
-$CPP -L$CONDA_PREFIX/lib -flto -o "sophiaAnnotate" \
+$CPP -L$CONDA_PREFIX/lib -o "sophiaAnnotate" \
     AnnotationProcessor.o \
     Breakpoint.o \
     BreakpointReduced.o \
@@ -55,4 +56,4 @@ $CPP -L$CONDA_PREFIX/lib -flto -o "sophiaAnnotate" \
     HelperFunctions.o \
     GlobalAppConfig.o \
     sophiaAnnotate.o \
-    -lz -lboost_system -lboost_iostreams
+    $LD_OPTS -lboost_system -lboost_iostreams
