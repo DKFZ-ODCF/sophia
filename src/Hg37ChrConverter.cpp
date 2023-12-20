@@ -381,63 +381,79 @@ namespace sophia {
         return chrSizesCompressedMref[index];
     }
 
+    ChrIndex Hg37ChrConverter::chrNameToIndex(std::string chrName) const {
+        return parseChrAndReturnIndex(chrName.begin(), ' ');
+    }
+
     /* This is parsing code. It takes a position in a character stream, and translates the
        following character(s) into index positions (see ChrConverter::indexToChr).
 
        If the first position is a digit, read up to the next stopChar.
        If the first position is *not* a digit return indices according to the following rules:
 
+         * (\d+)$ -> $1
          * h -> 999
          * X -> 40
          * Y -> 41
          * MT -> 1001
-         * G?(\d+)\. -> \d+
+         * G?(\d+)\. -> $1
          * N -> 1000
          * p -> 1002
 
        NOTE: In none of these cases, the termination by a stopChar is actually checked.
 
+       NOTE: Most of the matches are eager matches, which means the algorithm does not check for
+             whether the end iterator or the stopChar is actually reached!
+
        All identifiers not matching any of these rules, with throw an exception (domain_error).
     */
-    ChrIndex Hg37ChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
-                                                      char stopChar) const {
+    ChrIndex Hg37ChrConverter::parseChrAndReturnIndexImpl(std::string::const_iterator start,
+                                                          std::string::const_iterator end,
+                                                          char stopChar) const {
         int chrIndex {0};
-        if (isdigit(*startIt)) {
-            for (auto chr_cit = startIt; *chr_cit != stopChar; ++chr_cit) {
+        if (start == end) {
+            throw std::domain_error("Chromosome identifier is empty.");
+        } else if (isdigit(*start)) {
+            for (auto chr_cit = start; chr_cit != end && *chr_cit != stopChar; ++chr_cit) {
                 chrIndex = chrIndex * 10 + (*chr_cit - '0');
             }
             return chrIndex;
         } else {
-            switch (*startIt) {
-            case 'h':
-                return 999;
-            case 'X':
-                return 40;
-            case 'G':   // Match GL...... chromosomes.
-                for (auto cit = next(startIt, 2); *cit != '.'; ++cit) {
-                    chrIndex = 10 * chrIndex + *cit - '0';
-                }
-                return chrIndex;
-            case 'Y':
-                return 41;
-            case 'M':   // Match "MT"
-                ++startIt;
-                if (*startIt == 'T') {
-                    return 1001;
-                } else {
-                    throw std::domain_error("Chromosome identifier with invalid prefix 'M"
-                                            + std::to_string(*startIt) + "'.");
-                }
-            case 'N':
-                return 1000;
-            case 'p':
-                return 1002;
-            default:
-                throw std::domain_error("Chromosome identifier with invalid prefix '"
-                                        + std::to_string(*startIt) + "'.");
+            switch (*start) {
+                case 'h':
+                    return 999;
+                case 'X':
+                    return 40;
+                case 'G':   // Match GL...... chromosomes.
+                    for (auto cit = next(start, 2); *cit != '.'; ++cit) {
+                        chrIndex = 10 * chrIndex + *cit - '0';
+                    }
+                    return chrIndex;
+                case 'Y':
+                    return 41;
+                case 'M':   // Match "MT"
+                    ++start;
+                    if (start != end && *start == 'T') {
+                        return 1001;
+                    } else {
+                        throw std::domain_error("Chromosome identifier with invalid prefix 'M"
+                                                + std::to_string(*start) + "'.");
+                    }
+                case 'N':
+                    return 1000;
+                case 'p':
+                    return 1002;
+                default:
+                    throw std::domain_error("Chromosome identifier with invalid prefix '"
+                                            + std::to_string(*start) + "'.");
             }
         }
         throw std::runtime_error("Oops! This should not occur!");
+    }
+    
+    ChrIndex Hg37ChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
+                                                      char stopChar) const {
+        return parseChrAndReturnIndex(startIt, stopChar);
     }
 
 

@@ -73,28 +73,34 @@ Note that the build-scripts are for when you manage your dependencies with Conda
 
 ### Static Build
 
-If you want to compile statically you need to install glibc and boost static libraries (currently, not possible with Conda) and do
+If you want to compile statically you need to install glibc and boost static libraries. Conda does not provide a statically compiled version of boost, though. Please refer to the [boost documentation]() for detailed instructions or in case of problems.
+
+Shortly, to install boost statically you need to do
+
+```bash
+./bootstrap.sh --prefix=build/
+./b2 --prefix=build/ link=static runtime-link=static cxxflags="-std=c++11 -fPIC"
+ls build/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/build/lib
+```
 
 ```bash
 source activate sophia
-
-cd Release_sophia
-STATIC=true build-sophia.sh
-
-cd ../Release_sophiaAnnotate
-STATIC=true build-sophiaAnnotate.sh
+make STATIC=
 ```
 
 ## Changes
 
 * 35.1.0 (upcoming)
-  * Minor: Nominally added support for hg38 (hg37 support remains)
-  * Minor: Added `--assemblyname` option, defaulting to "hg37" when omitted (old behaviour)
+  * Minor: Multiple assembly support 
+    * Added `--assemblyname` option, defaulting to "hg37" when omitted (old behaviour)
+    * Added support for hg38
     > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted.
-  * Minor: Build script for `sophiaMref`
+  * Minor: Build system
+    * Use `make` as build system. `Release_*` directories are removed.
+    * Allow static building with `make STATIC=1`
+    * Build `sophiaMref`
   * Patch: Code readability improvements, `.editorconfig` file, and `clang-format` configuration
-  * Patch: Improved compilation instructions
-  * Patch: Use `namespace::std` to get rid of `std::` noise in the code
 
 * 9e3b6ed
   * Last version in [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)

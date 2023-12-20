@@ -124,9 +124,9 @@ int main(int argc, char** argv) {
     unique_ptr<ChrConverter> chrConverter;
 	if (!inputVariables.count("assemblyname") ||
 	      inputVariables["assemblyname"].as<std::string>() == Hg37ChrConverter::assemblyName) {
-	    chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
+	    chrConverter = unique_ptr<Hg37ChrConverter>(new Hg37ChrConverter());
     } else if (inputVariables["assemblyname"].as<std::string>() == Hg38ChrConverter::assemblyName) {
-        chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
+        chrConverter = unique_ptr<Hg38ChrConverter>(new Hg38ChrConverter());
     } else {
         cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<std::string>()
              << ". I know "

@@ -172,7 +172,7 @@ BreakpointReduced::printOverhang(double germlineClonality,
                                  int numHits,
                                  const string &overhang) const {
     string res{"##"};
-    res.append(GlobalAppConfig::getInstance().getChrConverter().indexToChr[chrIndex]).append("\t");
+    res.append(GlobalAppConfig::getInstance().getChrConverter().indexToChrName(chrIndex)).append("\t");
     res.append(strtk::type_to_string<int>(pos - 1)).append("\t");
     res.append(strtk::type_to_string<int>(pos)).append("\t");
     if (germlineClonality > 0.1) {

@@ -49,6 +49,10 @@ namespace sophia {
         /** Mapping compressed mref indices names to indices. */
         const std::vector<ChrIndex> indexConverter;
 
+        ChrIndex parseChrAndReturnIndexImpl(std::string::const_iterator start,
+                                            std::string::const_iterator end,
+                                            char stopChar) const;
+
       public:
 
         static const std::string assemblyName;
@@ -75,6 +79,9 @@ namespace sophia {
 
         /** Map a chromosome name to an index position for compressed mref files. */
         CompressedMrefIndex chrNameToIndexCompressedMref(std::string chrName) const;
+
+        /** Map a chromosome name to an index position. */
+        ChrIndex chrNameToIndex(std::string chrName) const;
 
         /** Parse chromosome name given a iterator (start) and termination character.
             Validate against the pre-declared chromosome names. */

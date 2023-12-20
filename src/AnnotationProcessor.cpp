@@ -64,7 +64,7 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
             continue;
         };
         Breakpoint tmpBp{line, true};
-        auto chrIndex = chrConverter.indexConverter[tmpBp.getChrIndex()];
+        auto chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
         if (chrIndex < 0) {
             continue;
         }
@@ -220,7 +220,7 @@ AnnotationProcessor::AnnotationProcessor(
                 }
             }
         }
-        auto chrIndex = chrConverter.indexConverter[tmpBp.getChrIndex()];
+        auto chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
         controlResults[chrIndex].push_back(tmpBp);
         ++lineIndex;
     }
@@ -240,7 +240,7 @@ AnnotationProcessor::AnnotationProcessor(
             continue;
         };
         Breakpoint tmpBp{line, true};
-        auto chrIndex = chrConverter.indexConverter[tmpBp.getChrIndex()];
+        auto chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
         if (chrIndex < 0) {
             continue;
         }
@@ -314,7 +314,7 @@ AnnotationProcessor::searchSa(int chrIndex, int dbIndex,
         return;
     }
     auto saChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-        indexConverter[sa.getChrIndex()];
+        compressedMrefIndexToIndex(sa.getChrIndex());
     if (saChrIndex < 0) {
         return;
     }
@@ -549,7 +549,7 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
                                        int conservativeDistanceThreshold,
                                        vector<vector<MrefEntryAnno>> &mref) {
     auto convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-        indexConverter[bpIn.getChrIndex()];
+        compressedMrefIndexToIndex(bpIn.getChrIndex());
     vector<SuppAlignmentAnno> suppMatches{};
     if (convertedChrIndex < 0) {
         return MrefMatch{0, 0, 10000, suppMatches};
@@ -686,7 +686,7 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
         return dummyMatchTrue;
     }
     auto convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-        indexConverter[bpIn.getChrIndex()];
+        compressedMrefIndexToIndex(bpIn.getChrIndex());
     if (convertedChrIndex < 0) {
         return dummyMatchFalse;
     }
