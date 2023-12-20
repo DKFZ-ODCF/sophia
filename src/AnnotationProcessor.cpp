@@ -64,9 +64,12 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
             continue;
         };
         Breakpoint tmpBp{line, true};
-        auto chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
-        if (chrIndex < 0) {
+        auto chrIndexO = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
+        ChrIndex chrIndex;
+        if (!chrIndexO.has_value()) {
             continue;
+        } else {
+            chrIndex = chrIndexO.value();
         }
         auto hasOverhang = line.back() != '.' && line.back() != '#';
         tumorResults[chrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
@@ -220,8 +223,8 @@ AnnotationProcessor::AnnotationProcessor(
                 }
             }
         }
-        auto chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
-        controlResults[chrIndex].push_back(tmpBp);
+        auto chrIndexO = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
+        controlResults[chrIndexO.value()].push_back(tmpBp);
         ++lineIndex;
     }
     for (auto &cres : controlResults) {
@@ -240,9 +243,12 @@ AnnotationProcessor::AnnotationProcessor(
             continue;
         };
         Breakpoint tmpBp{line, true};
-        auto chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
-        if (chrIndex < 0) {
+        auto chrIndexO = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
+        ChrIndex chrIndex;
+        if (!chrIndexO.has_value()) {
             continue;
+        } else {
+            chrIndex = chrIndexO.value();
         }
         auto hasOverhang = line.back() != '.' && line.back() != '#';
         tumorResults[chrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
@@ -313,10 +319,13 @@ AnnotationProcessor::searchSa(int chrIndex, int dbIndex,
         }
         return;
     }
-    auto saChrIndex = GlobalAppConfig::getInstance().getChrConverter().
+    auto saChrIndexO = GlobalAppConfig::getInstance().getChrConverter().
         compressedMrefIndexToIndex(sa.getChrIndex());
-    if (saChrIndex < 0) {
+    ChrIndex saChrIndex;
+    if (!saChrIndexO.has_value()) {
         return;
+    } else {
+        saChrIndex = saChrIndexO.value();
     }
     auto fuzziness = 3 * SuppAlignmentAnno::DEFAULTREADLENGTH;
     vector<pair<int, vector<BreakpointReduced>::iterator>> dbHits{};
@@ -548,11 +557,14 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
                                        int distanceThreshold,
                                        int conservativeDistanceThreshold,
                                        vector<vector<MrefEntryAnno>> &mref) {
-    auto convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
+    auto convertedChrIndexO = GlobalAppConfig::getInstance().getChrConverter().
         compressedMrefIndexToIndex(bpIn.getChrIndex());
     vector<SuppAlignmentAnno> suppMatches{};
-    if (convertedChrIndex < 0) {
+    ChrIndex convertedChrIndex;
+    if (!convertedChrIndexO.has_value()) {
         return MrefMatch{0, 0, 10000, suppMatches};
+    } else {
+        convertedChrIndex = convertedChrIndexO.value();
     }
     auto itStart = lower_bound(mref[convertedChrIndex].begin(),
                                mref[convertedChrIndex].end(), bpIn);
@@ -685,10 +697,13 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
     if (NOCONTROLMODE) {
         return dummyMatchTrue;
     }
-    auto convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
+    auto convertedChrIndexO = GlobalAppConfig::getInstance().getChrConverter().
         compressedMrefIndexToIndex(bpIn.getChrIndex());
-    if (convertedChrIndex < 0) {
+    ChrIndex convertedChrIndex;
+    if (!convertedChrIndexO.has_value()) {
         return dummyMatchFalse;
+    } else {
+        convertedChrIndex = convertedChrIndexO.value();
     }
     if (controlResults[convertedChrIndex].empty()) {
         return dummyMatchFalse;

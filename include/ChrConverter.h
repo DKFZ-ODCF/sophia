@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <optional>
 
 
 namespace sophia {
@@ -60,7 +61,8 @@ namespace sophia {
         virtual std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
 
         /** Map the compressed mref index to the uncompressed mref index. */
-        virtual ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const = 0;
+        virtual std::optional<ChrIndex>
+        compressedMrefIndexToIndex(CompressedMrefIndex index) const = 0;
 
         /** Map compressed mref index to chromosome size. */
         virtual ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const = 0;

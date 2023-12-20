@@ -155,10 +155,13 @@ int main(int argc, char** argv) {
 		if (line.front() == '#') {
 			continue;
 		};
-		auto chrIndex =
-		    chrConverterTmp.compressedMrefIndexToIndex(chrConverterTmp.parseChrAndReturnIndex(line.cbegin(), '\t'));
-		if (chrIndex < 0) {
+		std::optional<ChrIndex> chrIndexO = chrConverterTmp.
+		    compressedMrefIndexToIndex(chrConverterTmp.parseChrAndReturnIndex(line.cbegin(), '\t'));
+		ChrIndex chrIndex;
+		if (!chrIndexO.has_value()) {
 			continue;
+		} else {
+		    chrIndex = chrIndexO.value();
 		}
 		mref[chrIndex].emplace_back(line);
 	}

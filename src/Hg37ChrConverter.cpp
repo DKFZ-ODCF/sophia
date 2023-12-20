@@ -20,6 +20,8 @@
 
 #include <vector>
 #include <string>
+#include <stdexcept>
+#include <optional>
 
 
 namespace sophia {
@@ -372,8 +374,10 @@ namespace sophia {
     }
 
     /** Map the compressed mref index to the uncompressed mref index. */
-    ChrIndex Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
-        return indexConverter[index];
+    std::optional<ChrIndex> Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
+        if (index >= indexConverter.size())
+            return std::nullopt;
+        return std::optional<ChrIndex>(indexConverter[index]);
     }
 
     /** Map compressed mref index to chromosome size. */
@@ -386,12 +390,15 @@ namespace sophia {
     }
 
     /* This is parsing code. It takes a position in a character stream, and translates the
-       following character(s) into index positions (see ChrConverter::indexToChr).
+       following character(s) into index positions (see ChrConverter::indexToChr). It is slightly
+       modified from the original implementation by Umut Toprak.
 
        If the first position is a digit, read up to the next stopChar.
-       If the first position is *not* a digit return indices according to the following rules:
 
          * (\d+)$ -> $1
+
+       If the first position is *not* a digit return indices according to the following rules:
+
          * h -> 999
          * X -> 40
          * Y -> 41
@@ -400,10 +407,9 @@ namespace sophia {
          * N -> 1000
          * p -> 1002
 
-       NOTE: In none of these cases, the termination by a stopChar is actually checked.
-
        NOTE: Most of the matches are eager matches, which means the algorithm does not check for
-             whether the end iterator or the stopChar is actually reached!
+             whether the end iterator or the stopChar is actually reached! The actual stopChar is
+             not actually checked in these cases.
 
        All identifiers not matching any of these rules, with throw an exception (domain_error).
     */

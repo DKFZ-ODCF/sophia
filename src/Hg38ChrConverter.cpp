@@ -21,6 +21,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <optional>
 #include <boost/unordered/unordered_map.hpp>
 
 namespace sophia {
@@ -146,13 +147,16 @@ namespace sophia {
     }
 
     /** Map the compressed mref index to the uncompressed mref index. */
-    ChrIndex Hg38ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
-        return compressedMrefIndexToIndexLookup.at(index);
+    std::optional<ChrIndex>
+    Hg38ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
+        if (index >= compressedMrefIndexToIndexLookup.size())
+            return std::nullopt;
+        return std::optional<ChrIndex>(compressedMrefIndexToIndexLookup.at(index));
     }
 
     /** Map compressed mref index to chromosome size. */
     ChrSize Hg38ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
-        return allChromosomeLengths.at(compressedMrefIndexToIndex(index));
+        return allChromosomeLengths.at(compressedMrefIndexToIndex(index).value());
     }
 
     /** Map a chromosome name to an index position. */

@@ -22,6 +22,7 @@
 #include "ChrConverter.h"
 #include <string>
 #include <vector>
+#include <optional>
 #include <boost/unordered/unordered_map.hpp>
 
 
@@ -85,7 +86,7 @@ namespace sophia {
         std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
 
         /** Map the compressed mref index to the uncompressed mref index. */
-        ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const;
+        std::optional<ChrIndex> compressedMrefIndexToIndex(CompressedMrefIndex index) const;
 
         /** Map compressed mref index to chromosome size. */
         ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const;
