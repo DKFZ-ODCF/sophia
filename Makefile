@@ -5,19 +5,12 @@ INCLUDE_DIR = ./include
 BUILD_DIR = ./build
 SRC_DIR = ./src
 
-
-INCLUDE_FLAGS= -Iinclude -I$$CONDA_PREFIX/include
-LIBDIR_FLAGS = -L$$CONDA_PREFIX/lib
-
 # Compiler flags
-CXXFLAGS = $(LIBDIR_FLAGS) -std=c++17 -O3 -Wall -Wextra -flto  -c -fmessage-length=0 -Wno-attributes $(INCLUDE_FLAGS)
-LDFLAGS = $(LIBDIR_FLAGS)
-ifeq ($(STATIC), "true")
-	$(info "Static compilation")
-	# Note that static compilation needs static libraries for boost, which are not available in
-	# conda!
+LDFLAGS := $(LDFLAGS)
+CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -O3 -Wall -Wextra -flto  -c -fmessage-length=0 -Wno-attributes
+ifeq ($(STATIC),true)
 	CXXFLAGS := $(CXXFLAGS) -static -static-libgcc -static-libstdc++
-	LDFLAGS := $(LIBDIR_FLAGS) -static -static-libgcc -static-libstdc++
+	LDFLAGS := $(LDFLAGS) -static -static-libgcc -static-libstdc++
 endif
 
 
@@ -49,8 +42,8 @@ $(INCLUDE_DIR)/strtk.hpp:
 #	$(CXX) $(LIBDIR_FLAGS) $(CXXFLAGS) -c $(INCLUDE_DIR)/strtk.hpp -o $@
 
 # General compilation rule for object files.
-$(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
-	$(CXX) $(LIBDIR_FLAGS) $(CXXFLAGS) -c $< -o $@
+$(BUILD_DIR)/%.o: %.cpp $(INCLUDE_DIR)/strtk.hpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Rule for sophia
 sophia: $(BUILD_DIR)/Alignment.o \
@@ -85,7 +78,7 @@ sophiaAnnotate: $(BUILD_DIR)/AnnotationProcessor.o \
 				$(BUILD_DIR)/HelperFunctions.o \
 				$(BUILD_DIR)/GlobalAppConfig.o \
 				$(BUILD_DIR)/sophiaAnnotate.o
-	$(CXX) $(LDFLAGS) -lz -lboost_system -lboost_iostreams -o $@ $^
+	$(CXX) $(LDFLAGS) -lz -lboost_system -lboost_iostreams -lboost_program_options -o $@ $^
 
 # Rule for sophiaMref
 sophiaMref: $(BUILD_DIR)/GlobalAppConfig.o \

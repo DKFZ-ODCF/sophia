@@ -57,18 +57,11 @@ To build you need to do
 
 ```bash
 source activate sophia
-
-cd Release_sophiaMref
-./build-sophiaMref.sh
-
-cd ../Release_sophia
-./build-sophia.sh
-
-cd ../Release_sophiaAnnotate
-./build-sophiaAnnotate.sh
+LD_FLAGS=-L$CONDA_PREFIX/lib \
+  make -j 4
 ```
 
-Note that the build-scripts are for when you manage your dependencies with Conda.
+The binaries will be located in the top-level directory.
 
 
 ### Static Build
@@ -81,12 +74,13 @@ Shortly, to install boost statically you need to do
 ./bootstrap.sh --prefix=build/
 ./b2 --prefix=build/ link=static runtime-link=static cxxflags="-std=c++11 -fPIC"
 ls build/lib
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/build/lib
+
 ```
 
 ```bash
 source activate sophia
-make STATIC=
+LD_FLAGS=-L$(pwd)/build/lib \
+  make -j 4 STATIC=true
 ```
 
 ## Changes
