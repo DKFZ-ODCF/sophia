@@ -28,6 +28,7 @@
 
 
 int main(int argc, char** argv) {
+    using namespace std;
     using namespace sophia;
 
 	ios_base::sync_with_stdio(false);
@@ -127,14 +128,14 @@ int main(int argc, char** argv) {
 
 	unique_ptr<ChrConverter> chrConverter;
 	if (!options.count("assemblyname") ||
-	      options["assemblyname"].as<string>() == Hg37ChrConverter::assemblyName) {
+	      options["assemblyname"].as<string>() == Hg37ChrConverter::assembly_name) {
 	    chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
-    } else if (options["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
+    } else if (options["assemblyname"].as<string>() == Hg38ChrConverter::assembly_name) {
         chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
     } else {
         cerr << "Unknown assembly name " << options["assemblyname"].as<string>() << ". I know "
-             << Hg37ChrConverter::assemblyName << " and "
-             << Hg38ChrConverter::assemblyName << endl;
+             << Hg37ChrConverter::assembly_name << " and "
+             << Hg38ChrConverter::assembly_name << endl;
         return 1;
     }
 
@@ -142,12 +143,8 @@ int main(int argc, char** argv) {
     const GlobalAppConfig &config = GlobalAppConfig::init(move(chrConverter));
 
 	MrefEntryAnno::PIDSINMREF = pidsInMref;
-	unique_ptr<ifstream> mrefInputHandle {
-	    make_unique<ifstream>(options["mref"].as<string>(), ios_base::in | ios_base::binary)
-	};
-	unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle {
-	    make_unique<boost::iostreams::filtering_istream>()
-	};
+	unique_ptr<ifstream> mrefInputHandle { make_unique<ifstream>(options["mref"].as<string>(), ios_base::in | ios_base::binary) };
+	unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle { make_unique<boost::iostreams::filtering_istream>() };
 	mrefGzHandle->push(boost::iostreams::gzip_decompressor());
 	mrefGzHandle->push(*mrefInputHandle);
 	cerr << "m\n";
@@ -159,8 +156,7 @@ int main(int argc, char** argv) {
 			continue;
 		};
 		auto chrIndex =
-		    chrConverterTmp.compressedMrefIndexToIndex(
-		        chrConverterTmp.parseChrAndReturnIndex(line.cbegin(), '\t'));
+		    chrConverterTmp.indexConverter[chrConverterTmp.parseChrAndReturnIndex(line.cbegin(), '\t')];
 		if (chrIndex < 0) {
 			continue;
 		}
@@ -205,23 +201,12 @@ int main(int argc, char** argv) {
 		auto pathogenInControl = false;
 		{
 			SvEvent::NOCONTROLMODE = true;
-			AnnotationProcessor annotationProcessorControlCheck {
-			    controlResults, mref, defaultReadLengthControl, true, germlineDbLimit
-			};
+			AnnotationProcessor annotationProcessorControlCheck { controlResults, mref, defaultReadLengthControl, true, germlineDbLimit };
 			lowQualControl = annotationProcessorControlCheck.getMassiveInvFilteringLevel();
 			pathogenInControl = annotationProcessorControlCheck.isContaminationObserved();
 			SvEvent::NOCONTROLMODE = false;
 		}
-		AnnotationProcessor annotationProcessor {
-		    tumorResults,
-		    mref,
-		    controlResults,
-		    defaultReadLengthTumor,
-		    defaultReadLengthControl,
-		    germlineDbLimit,
-		    lowQualControl,
-		    pathogenInControl
-		};
+		AnnotationProcessor annotationProcessor { tumorResults, mref, controlResults, defaultReadLengthTumor, defaultReadLengthControl, germlineDbLimit, lowQualControl, pathogenInControl };
 		annotationProcessor.printFilteredResults(pathogenInControl, lowQualControl);
 	} else {
 		SvEvent::NOCONTROLMODE = true;

@@ -10,20 +10,21 @@ INCLUDE_FLAGS= -Iinclude -I$$CONDA_PREFIX/include
 LIBDIR_FLAGS = -L$$CONDA_PREFIX/lib
 
 # Compiler flags
-CXXFLAGS = $(LIBDIR_FLAGS) -std=c++17 -O3 -Wall -Wextra -static -static-libgcc -static-libstdc++ -flto  -c -fmessage-length=0 -Wno-attributes $(INCLUDE_FLAGS)
+CXXFLAGS = $(LIBDIR_FLAGS) -std=c++17 -O3 -Wall -Wextra -flto  -c -fmessage-length=0 -Wno-attributes $(INCLUDE_FLAGS)
+LDFLAGS = $(LIBDIR_FLAGS)
 ifeq ($(STATIC), "true")
-	# Static compilation needs static libraries for boost, which are not available in conda.
+	# Note that static compilation needs static libraries for boost, which are not available in
+	# conda!
+	CXXFLAGS := $(CXXFLAGS) -static -static-libgcc -static-libstdc++
 	LDFLAGS := $(LIBDIR_FLAGS) -static -static-libgcc -static-libstdc++
-else
-	LDFLAGS := $(LIBDIR_FLAGS)
 endif
 
 
 # Source files
-SOURCES = $(wildcard src/*.cpp)
+SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 
 # Object files should have .o instead of .cpp.
-OBJECTS = $(SOURCES:.cpp=.o)
+OBJECTS = $(SOURCES: $(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 # Binaries
 BINARIES = sophia sophiaAnnotate sophiaMref
@@ -36,7 +37,7 @@ $(BUILD_DIR):
 
 # Rule for object files
 $(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
-	$(CXX) $(INCLUDE_FLAGS) $(LIBDIR_FLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(LIBDIR_FLAGS) $(CXXFLAGS) -c $< -o $@
 
 download_strtk: include/strtk.hpp
 	wget -c https://github.com/ArashPartow/strtk/raw/master/strtk.hpp -O include/strtk.hpp
@@ -104,4 +105,4 @@ sophiaMref: $(BUILD_DIR)/GlobalAppConfig.o \
 # Rule for clean
 .PHONY: clean
 clean:
-	rm -f $(OBJECTS) $(BINARIES)
+	rm -f $(BUILD_DIR)/*.o $(BINARIES)

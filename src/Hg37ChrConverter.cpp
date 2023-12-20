@@ -248,7 +248,7 @@ namespace sophia {
             "GL000242.1", "GL000243.1", "GL000244.1", "GL000245.1", "GL000246.1",
             "GL000247.1", "GL000248.1", "GL000249.1", "hs37d5",     "NC_007605"};
 
-        static const std::vector<int> chrSizesCompressedMref {
+        static const std::vector<ChrSize> chrSizesCompressedMref {
             249250622, 243199374, 198022431, 191154277, 180915261, 171115068,
             159138664, 146364023, 141213432, 135534748, 135006517, 133851896,
             115169879, 107349541, 102531393, 90354754,  81195211,  78077249,
@@ -265,7 +265,7 @@ namespace sophia {
             36652,     38155,     36423,     39787,     38503,     35477944,
             171824};
 
-        static const int NA = -2;
+        static const ChrIndex NA = -2;
 
         static const std::vector<ChrIndex> indexConverter {
             NA, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
@@ -328,7 +328,7 @@ namespace sophia {
 
     Hg37ChrConverter::Hg37ChrConverter(const std::vector<std::string> &indexToChr,
                                        const std::vector<std::string> &indexToChrCompressedMref,
-                                       const std::vector<int> &chrSizesCompressedMref,
+                                       const std::vector<ChrSize> &chrSizesCompressedMref,
                                        const std::vector<ChrIndex> &indexConverter) :
                     indexToChr(indexToChr),
                     indexToChrCompressedMref(indexToChrCompressedMref),
@@ -348,11 +348,11 @@ namespace sophia {
                            hg37::chrSizesCompressedMref,
                            hg37::indexConverter) {}
 
-    int Hg37ChrConverter::nChromosomes() const {
+    ChrIndex Hg37ChrConverter::nChromosomes() const {
         return indexToChr.size();
     }
 
-    int Hg37ChrConverter::nChromosomesCompressedMref() const {
+    CompressedMrefIndex Hg37ChrConverter::nChromosomesCompressedMref() const {
         return indexToChrCompressedMref.size();
     }
 
@@ -377,7 +377,7 @@ namespace sophia {
     }
 
     /** Map compressed mref index to chromosome size. */
-    int Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
+    ChrSize Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
         return chrSizesCompressedMref[index];
     }
 

@@ -30,6 +30,7 @@ namespace sophia {
     // or strongly type-checked typedefs in C++17.
     typedef size_t ChrIndex;
     typedef size_t CompressedMrefIndex;
+    typedef long unsigned int ChrSize;
 
     /** ChrConverter manages information on chromosomes names, sizes, and index positions in
         data arrays.
@@ -44,13 +45,13 @@ namespace sophia {
         virtual ~ChrConverter();
 
         /** The name of the assembly. */
-        static const std::string assemlyName;
+        static const std::string assemblyName;
 
         /** Number of chromosomes. */
-        virtual int nChromosomes() const = 0;
+        virtual ChrIndex nChromosomes() const = 0;
 
         /** Number of compressed mref chromosomes. */
-        virtual int nChromosomesCompressedMref() const = 0;
+        virtual CompressedMrefIndex nChromosomesCompressedMref() const = 0;
 
         /** Map an index position to a chromosome name. */
         virtual std::string indexToChrName(ChrIndex index) const = 0;
@@ -62,7 +63,7 @@ namespace sophia {
         virtual ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const = 0;
 
         /** Map compressed mref index to chromosome size. */
-        virtual int chrSizeCompressedMref(CompressedMrefIndex index) const = 0;
+        virtual ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const = 0;
 
         /** Map a chromosome name to an index position. */
         virtual ChrIndex chrNameToIndex(std::string chrName) const = 0;

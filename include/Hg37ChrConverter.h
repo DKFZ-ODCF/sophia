@@ -34,7 +34,7 @@ namespace sophia {
         /** The constructor does additional checks of the dimensions of the input vectors. */
         Hg37ChrConverter(const std::vector<std::string>& indexToChr,
                          const std::vector<std::string>& indexToChrCompressedMref,
-                         const std::vector<CompressedMrefIndex>& chrSizesCompressedMref,
+                         const std::vector<ChrSize>& chrSizesCompressedMref,
                          const std::vector<ChrIndex>& indexConverter);
 
         /** Mapping indices to chromosome names. */
@@ -56,10 +56,10 @@ namespace sophia {
         Hg37ChrConverter();
 
         /** Return the number of chromosomes. */
-        int nChromosomes() const;
+        ChrIndex nChromosomes() const;
 
         /** Number of compressed mref chromosomes. */
-        int nChromosomesCompressedMref() const;
+        CompressedMrefIndex nChromosomesCompressedMref() const;
 
         /** Map an index position to a chromosome name. */
         std::string indexToChrName(ChrIndex index) const;
@@ -71,7 +71,7 @@ namespace sophia {
         ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const;
 
         /** Map compressed mref index to chromosome size. */
-        int chrSizeCompressedMref(CompressedMrefIndex index) const;
+        ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const;
 
         /** Map a chromosome name to an index position for compressed mref files. */
         CompressedMrefIndex chrNameToIndexCompressedMref(std::string chrName) const;
