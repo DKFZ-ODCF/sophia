@@ -43,58 +43,62 @@ conda create -n sophia boost=1.82.0
 
 ## Building
 
+> Note that `make` will download one file from [StrTk](https://github.com/ArashPartow/strtk). If you want to delete an already downloaded file and download it again, run `make clean-all` before the compilation. See the `Makefile` for details.
+
 ### Dynamic Build
 
-With Conda you can do
+With [Conda](https://docs.conda.io/) you can do
 
 ```bash
-conda create -n sophia gxx_linux-64=8 boost=1.82.0
+conda create -n sophia gxx_linux-64=13 boost=1.82.0
 ```
 
-to create an environment to build the SOPHIA binaries binaries.
+to create an environment to build the SOPHIA binaries.
 
 To build you need to do
 
 ```bash
 source activate sophia
-
-cd Release_sophiaMref
-./build-sophiaMref.sh
-
-cd ../Release_sophia
-./build-sophia.sh
-
-cd ../Release_sophiaAnnotate
-./build-sophiaAnnotate.sh
+make -j 4
 ```
 
-Note that the build-scripts are for when you manage your dependencies with Conda.
+The binaries will be located in the top-level directory.
 
 
 ### Static Build
 
-If you want to compile statically you need to install glibc and boost static libraries (currently, not possible with Conda) and do
+If you want to compile statically you need to install glibc and boost static libraries. Conda does not provide a statically compiled version of boost, though. Please refer to the [boost documentation]() for detailed instructions or in case of problems.
+
+Shortly, to install boost statically (here without installing it system-wide) you need to do
+
+```bash
+./bootstrap.sh --prefix=build/
+./b2 --prefix=build/ link=static runtime-link=static cxxflags="-std=c++11 -fPIC"
+boost_lib_dir=$PWD/stage/lib
+```
+
+> NOTE: This requires that you have a C++11-compatible compiler installed.
+
+After that you can do:
 
 ```bash
 source activate sophia
-
-cd Release_sophia
-STATIC=true build-sophia.sh
-
-cd ../Release_sophiaAnnotate
-STATIC=true build-sophiaAnnotate.sh
+cd "$repoRoot"
+make -j 4 STATIC=true boost_lib_dir=$boost_lib_dir all
 ```
 
 ## Changes
 
 * 35.1.0 (upcoming)
-  * Minor: Nominally added support for hg38 (hg37 support remains)
-  * Minor: Added `--assemblyname` option, defaulting to "hg37" when omitted (old behaviour)
+  * Minor: Multiple assembly support 
+    * Added `--assemblyname` option, defaulting to "hg37" when omitted (old behaviour)
+    * Added support for hg38
     > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted.
-  * Minor: Build script for `sophiaMref`
+  * Minor: Build system
+    * Use `make` as build system. `Release_*` directories are removed.
+    * Allow static building with `make STATIC=true boost_lib_dir=/path/to/boost/lib`
+    * Build `sophiaMref`
   * Patch: Code readability improvements, `.editorconfig` file, and `clang-format` configuration
-  * Patch: Improved compilation instructions
-  * Patch: Use `namespace::std` to get rid of `std::` noise in the code
 
 * 9e3b6ed
   * Last version in [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)

@@ -20,6 +20,8 @@
 
 #include <vector>
 #include <string>
+#include <stdexcept>
+#include <optional>
 
 
 namespace sophia {
@@ -248,7 +250,7 @@ namespace sophia {
             "GL000242.1", "GL000243.1", "GL000244.1", "GL000245.1", "GL000246.1",
             "GL000247.1", "GL000248.1", "GL000249.1", "hs37d5",     "NC_007605"};
 
-        static const std::vector<int> chrSizesCompressedMref {
+        static const std::vector<ChrSize> chrSizesCompressedMref {
             249250622, 243199374, 198022431, 191154277, 180915261, 171115068,
             159138664, 146364023, 141213432, 135534748, 135006517, 133851896,
             115169879, 107349541, 102531393, 90354754,  81195211,  78077249,
@@ -265,7 +267,7 @@ namespace sophia {
             36652,     38155,     36423,     39787,     38503,     35477944,
             171824};
 
-        static const int NA = -2;
+        static const ChrIndex NA = -2;
 
         static const std::vector<ChrIndex> indexConverter {
             NA, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
@@ -328,7 +330,7 @@ namespace sophia {
 
     Hg37ChrConverter::Hg37ChrConverter(const std::vector<std::string> &indexToChr,
                                        const std::vector<std::string> &indexToChrCompressedMref,
-                                       const std::vector<int> &chrSizesCompressedMref,
+                                       const std::vector<ChrSize> &chrSizesCompressedMref,
                                        const std::vector<ChrIndex> &indexConverter) :
                     indexToChr(indexToChr),
                     indexToChrCompressedMref(indexToChrCompressedMref),
@@ -348,11 +350,11 @@ namespace sophia {
                            hg37::chrSizesCompressedMref,
                            hg37::indexConverter) {}
 
-    int Hg37ChrConverter::nChromosomes() const {
+    ChrIndex Hg37ChrConverter::nChromosomes() const {
         return indexToChr.size();
     }
 
-    int Hg37ChrConverter::nChromosomesCompressedMref() const {
+    CompressedMrefIndex Hg37ChrConverter::nChromosomesCompressedMref() const {
         return indexToChrCompressedMref.size();
     }
 
@@ -372,72 +374,92 @@ namespace sophia {
     }
 
     /** Map the compressed mref index to the uncompressed mref index. */
-    ChrIndex Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
-        return indexConverter[index];
+    std::optional<ChrIndex> Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
+        if (index >= indexConverter.size())
+            return std::nullopt;
+        return std::optional<ChrIndex>(indexConverter[index]);
     }
 
     /** Map compressed mref index to chromosome size. */
-    int Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
+    ChrSize Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
         return chrSizesCompressedMref[index];
     }
 
+    ChrIndex Hg37ChrConverter::chrNameToIndex(std::string chrName) const {
+        return parseChrAndReturnIndex(chrName.begin(), ' ');
+    }
+
     /* This is parsing code. It takes a position in a character stream, and translates the
-       following character(s) into index positions (see ChrConverter::indexToChr).
+       following character(s) into index positions (see ChrConverter::indexToChr). It is slightly
+       modified from the original implementation by Umut Toprak.
 
        If the first position is a digit, read up to the next stopChar.
+
+         * (\d+)$ -> $1
+
        If the first position is *not* a digit return indices according to the following rules:
 
          * h -> 999
          * X -> 40
          * Y -> 41
          * MT -> 1001
-         * G?(\d+)\. -> \d+
+         * G?(\d+)\. -> $1
          * N -> 1000
          * p -> 1002
 
-       NOTE: In none of these cases, the termination by a stopChar is actually checked.
+       NOTE: Most of the matches are eager matches, which means the algorithm does not check for
+             whether the end iterator or the stopChar is actually reached! The actual stopChar is
+             not actually checked in these cases.
 
        All identifiers not matching any of these rules, with throw an exception (domain_error).
     */
-    ChrIndex Hg37ChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
-                                                      char stopChar) const {
+    ChrIndex Hg37ChrConverter::parseChrAndReturnIndexImpl(std::string::const_iterator start,
+                                                          std::string::const_iterator end,
+                                                          char stopChar) const {
         int chrIndex {0};
-        if (isdigit(*startIt)) {
-            for (auto chr_cit = startIt; *chr_cit != stopChar; ++chr_cit) {
+        if (start == end) {
+            throw std::domain_error("Chromosome identifier is empty.");
+        } else if (isdigit(*start)) {
+            for (auto chr_cit = start; chr_cit != end && *chr_cit != stopChar; ++chr_cit) {
                 chrIndex = chrIndex * 10 + (*chr_cit - '0');
             }
             return chrIndex;
         } else {
-            switch (*startIt) {
-            case 'h':
-                return 999;
-            case 'X':
-                return 40;
-            case 'G':   // Match GL...... chromosomes.
-                for (auto cit = next(startIt, 2); *cit != '.'; ++cit) {
-                    chrIndex = 10 * chrIndex + *cit - '0';
-                }
-                return chrIndex;
-            case 'Y':
-                return 41;
-            case 'M':   // Match "MT"
-                ++startIt;
-                if (*startIt == 'T') {
-                    return 1001;
-                } else {
-                    throw std::domain_error("Chromosome identifier with invalid prefix 'M"
-                                            + std::to_string(*startIt) + "'.");
-                }
-            case 'N':
-                return 1000;
-            case 'p':
-                return 1002;
-            default:
-                throw std::domain_error("Chromosome identifier with invalid prefix '"
-                                        + std::to_string(*startIt) + "'.");
+            switch (*start) {
+                case 'h':
+                    return 999;
+                case 'X':
+                    return 40;
+                case 'G':   // Match GL...... chromosomes.
+                    for (auto cit = next(start, 2); *cit != '.'; ++cit) {
+                        chrIndex = 10 * chrIndex + *cit - '0';
+                    }
+                    return chrIndex;
+                case 'Y':
+                    return 41;
+                case 'M':   // Match "MT"
+                    ++start;
+                    if (start != end && *start == 'T') {
+                        return 1001;
+                    } else {
+                        throw std::domain_error("Chromosome identifier with invalid prefix 'M"
+                                                + std::to_string(*start) + "'.");
+                    }
+                case 'N':
+                    return 1000;
+                case 'p':
+                    return 1002;
+                default:
+                    throw std::domain_error("Chromosome identifier with invalid prefix '"
+                                            + std::to_string(*start) + "'.");
             }
         }
         throw std::runtime_error("Oops! This should not occur!");
+    }
+    
+    ChrIndex Hg37ChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
+                                                      char stopChar) const {
+        return parseChrAndReturnIndex(startIt, stopChar);
     }
 
 

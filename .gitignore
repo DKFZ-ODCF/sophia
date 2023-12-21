@@ -5,3 +5,7 @@ Release_sophia/sophia
 Release_sophiaAnnotate/sophiaAnnotate
 Release_sophiaMref/sophiaMref
 include/strtk.hpp
+sophia
+sophiaAnnotate
+sophiaMref
+boost/

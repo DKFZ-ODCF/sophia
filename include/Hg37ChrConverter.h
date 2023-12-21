@@ -22,6 +22,7 @@
 #include "ChrConverter.h"
 #include <vector>
 #include <string>
+#include <optional>
 
 
 namespace sophia {
@@ -34,7 +35,7 @@ namespace sophia {
         /** The constructor does additional checks of the dimensions of the input vectors. */
         Hg37ChrConverter(const std::vector<std::string>& indexToChr,
                          const std::vector<std::string>& indexToChrCompressedMref,
-                         const std::vector<CompressedMrefIndex>& chrSizesCompressedMref,
+                         const std::vector<ChrSize>& chrSizesCompressedMref,
                          const std::vector<ChrIndex>& indexConverter);
 
         /** Mapping indices to chromosome names. */
@@ -49,6 +50,10 @@ namespace sophia {
         /** Mapping compressed mref indices names to indices. */
         const std::vector<ChrIndex> indexConverter;
 
+        ChrIndex parseChrAndReturnIndexImpl(std::string::const_iterator start,
+                                            std::string::const_iterator end,
+                                            char stopChar) const;
+
       public:
 
         static const std::string assemblyName;
@@ -56,10 +61,10 @@ namespace sophia {
         Hg37ChrConverter();
 
         /** Return the number of chromosomes. */
-        int nChromosomes() const;
+        ChrIndex nChromosomes() const;
 
         /** Number of compressed mref chromosomes. */
-        int nChromosomesCompressedMref() const;
+        CompressedMrefIndex nChromosomesCompressedMref() const;
 
         /** Map an index position to a chromosome name. */
         std::string indexToChrName(ChrIndex index) const;
@@ -68,13 +73,16 @@ namespace sophia {
         std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
 
         /** Map the compressed mref index to the uncompressed mref index. */
-        ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const;
+        std::optional<ChrIndex> compressedMrefIndexToIndex(CompressedMrefIndex index) const;
 
         /** Map compressed mref index to chromosome size. */
-        int chrSizeCompressedMref(CompressedMrefIndex index) const;
+        ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const;
 
         /** Map a chromosome name to an index position for compressed mref files. */
         CompressedMrefIndex chrNameToIndexCompressedMref(std::string chrName) const;
+
+        /** Map a chromosome name to an index position. */
+        ChrIndex chrNameToIndex(std::string chrName) const;
 
         /** Parse chromosome name given a iterator (start) and termination character.
             Validate against the pre-declared chromosome names. */

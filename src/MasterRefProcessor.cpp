@@ -96,7 +96,6 @@ namespace sophia {
         }
         auto defuzzier = DeFuzzier{DEFAULTREADLENGTH * 3, true};
         auto i = 84;
-        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         while (!mrefDb.empty()) {
             mrefDb.back().erase(
                 remove_if(mrefDb.back().begin(), mrefDb.back().end(),
@@ -133,11 +132,14 @@ namespace sophia {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         while (error_terminating_getline(gzStream, sophiaLine)) {
             if (sophiaLine[0] != '#') {
-                auto chrIndex =
+                auto chrIndexO =
                     chrConverter.compressedMrefIndexToIndex(
                         chrConverter.parseChrAndReturnIndex(sophiaLine.cbegin(), '\t'));
-                if (chrIndex < 0) {
+                ChrIndex chrIndex;
+                if (!chrIndexO.has_value()) {
                     continue;
+                } else {
+                    chrIndex = chrIndexO.value();
                 }
                 Breakpoint tmpBp{sophiaLine, true};
                 fileBps[chrIndex].emplace_back(

@@ -5,25 +5,25 @@ INCLUDE_DIR = ./include
 BUILD_DIR = ./build
 SRC_DIR = ./src
 
-
-INCLUDE_FLAGS= -Iinclude -I$$CONDA_PREFIX/include
-LIBDIR_FLAGS = -L$$CONDA_PREFIX/lib
-
 # Compiler flags
-CXXFLAGS = $(LIBDIR_FLAGS) -std=c++17 -O3 -Wall -Wextra -static -static-libgcc -static-libstdc++ -flto  -c -fmessage-length=0 -Wno-attributes $(INCLUDE_FLAGS)
-ifeq ($(STATIC), "true")
-	# Static compilation needs static libraries for boost, which are not available in conda.
-	LDFLAGS := $(LIBDIR_FLAGS) -static -static-libgcc -static-libstdc++
+LDFLAGS := $(LDFLAGS) -flto=auto -lz -lboost_system -lboost_iostreams -lboost_program_options
+CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -O3 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
+ifeq ($(STATIC),true)
+	CXXFLAGS := $(CXXFLAGS) -static -static-libgcc -static-libstdc++
+	LD_BEGIN_FLAGS := -L$(boost_lib_dir)
+	# Note that without the additional -lrt flag, the static linking fails for sophiaMref.
+	LD_END_FLAGS := $(LDFLAGS) -static -static-libgcc -static-libstdc++ -lrt
 else
-	LDFLAGS := $(LIBDIR_FLAGS)
+    LD_BEGIN_FLAGS :=
+	LD_END_FLAGS := $(LDFLAGS)
 endif
 
 
 # Source files
-SOURCES = $(wildcard src/*.cpp)
+SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 
 # Object files should have .o instead of .cpp.
-OBJECTS = $(SOURCES:.cpp=.o)
+OBJECTS = $(SOURCES: $(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o) $(BUILD_DIR)/strtk.o
 
 # Binaries
 BINARIES = sophia sophiaAnnotate sophiaMref
@@ -31,18 +31,24 @@ BINARIES = sophia sophiaAnnotate sophiaMref
 # Default rule
 all: $(BINARIES)
 
+vpath %.h $(INCLUDE_DIR)
+vpath %.hpp $(INCLUDE_DIR)
+vpath %.cpp $(SRC_DIR)
+
+
 $(BUILD_DIR):
 	mkdir -p $@
 
-# Rule for object files
-$(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR)
-	$(CXX) $(INCLUDE_FLAGS) $(LIBDIR_FLAGS) $(CXXFLAGS) -c $< -o $@
+# Retrieve and build strtk.
+$(INCLUDE_DIR)/strtk.hpp:
+	wget -c https://raw.githubusercontent.com/ArashPartow/strtk/d2b446bf1f7854e8b08f5295ec6f6852cae066a2/strtk.hpp -O $(INCLUDE_DIR)/strtk.hpp
 
-download_strtk: include/strtk.hpp
-	wget -c https://github.com/ArashPartow/strtk/raw/master/strtk.hpp -O include/strtk.hpp
+#$(BUILD_DIR)/strtk.o: $(INCLUDE_DIR)/strtk.hpp | $(BUILD_DIR)
+#	$(CXX) $(LIBDIR_FLAGS) $(CXXFLAGS) -c $(INCLUDE_DIR)/strtk.hpp -o $@
 
-vpath %.h includes
-vpath %.cpp src
+# General compilation rule for object files.
+$(BUILD_DIR)/%.o: %.cpp $(INCLUDE_DIR)/strtk.hpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Rule for sophia
 sophia: $(BUILD_DIR)/Alignment.o \
@@ -56,9 +62,8 @@ sophia: $(BUILD_DIR)/Alignment.o \
         $(BUILD_DIR)/SuppAlignment.o \
         $(BUILD_DIR)/HelperFunctions.o \
         $(BUILD_DIR)/GlobalAppConfig.o \
-        $(BUILD_DIR)/sophia.o \
-        download_strtk
-	$(CXX) $(LDFLAGS) -lboost_program_options -o $@ $^
+        $(BUILD_DIR)/sophia.o
+	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
 
 # Rule for sophiaAnnotate
 sophiaAnnotate: $(BUILD_DIR)/AnnotationProcessor.o \
@@ -77,9 +82,8 @@ sophiaAnnotate: $(BUILD_DIR)/AnnotationProcessor.o \
 				$(BUILD_DIR)/SvEvent.o \
 				$(BUILD_DIR)/HelperFunctions.o \
 				$(BUILD_DIR)/GlobalAppConfig.o \
-				$(BUILD_DIR)/sophiaAnnotate.o \
-				download_strtk
-	$(CXX) $(LDFLAGS) -lz -lboost_system -lboost_iostreams -o $@ $^
+				$(BUILD_DIR)/sophiaAnnotate.o
+	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
 
 # Rule for sophiaMref
 sophiaMref: $(BUILD_DIR)/GlobalAppConfig.o \
@@ -97,11 +101,13 @@ sophiaMref: $(BUILD_DIR)/GlobalAppConfig.o \
 			$(BUILD_DIR)/BreakpointReduced.o \
 			$(BUILD_DIR)/GermlineMatch.o \
 			$(BUILD_DIR)/DeFuzzier.o \
-			$(BUILD_DIR)/sophiaMref.o \
-			download_strtk
-	$(CXX) $(LDFLAGS) -lz -lboost_system -lboost_iostreams -lboost_program_options -o $@ $^
+			$(BUILD_DIR)/sophiaMref.o
+	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
 
 # Rule for clean
-.PHONY: clean
+.PHONY: clean clean-all
 clean:
-	rm -f $(OBJECTS) $(BINARIES)
+	rm -f $(BUILD_DIR)/*.o $(BINARIES)
+
+clean-all: clean
+	rm -f $(INCLUDE_DIR)/strtk.hpp
