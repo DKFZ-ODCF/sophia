@@ -6,11 +6,16 @@ BUILD_DIR = ./build
 SRC_DIR = ./src
 
 # Compiler flags
-LDFLAGS := $(LDFLAGS)
-CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -O3 -Wall -Wextra -flto  -c -fmessage-length=0 -Wno-attributes
+LDFLAGS := $(LDFLAGS) -flto=auto -lz -lboost_system -lboost_iostreams -lboost_program_options
+CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -O3 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
 ifeq ($(STATIC),true)
 	CXXFLAGS := $(CXXFLAGS) -static -static-libgcc -static-libstdc++
-	LDFLAGS := $(LDFLAGS) -static -static-libgcc -static-libstdc++
+	LD_BEGIN_FLAGS := -L$(boost_lib_dir)
+	# Note that without the additional -lrt flag, the static linking fails for sophiaMref.
+	LD_END_FLAGS := $(LDFLAGS) -static -static-libgcc -static-libstdc++ -lrt
+else
+    LD_BEGIN_FLAGS :=
+	LD_END_FLAGS := $(LDFLAGS)
 endif
 
 
@@ -36,7 +41,7 @@ $(BUILD_DIR):
 
 # Retrieve and build strtk.
 $(INCLUDE_DIR)/strtk.hpp:
-	wget -c https://github.com/ArashPartow/strtk/raw/master/strtk.hpp -O $(INCLUDE_DIR)/strtk.hpp
+	wget -c https://raw.githubusercontent.com/ArashPartow/strtk/d2b446bf1f7854e8b08f5295ec6f6852cae066a2/strtk.hpp -O $(INCLUDE_DIR)/strtk.hpp
 
 #$(BUILD_DIR)/strtk.o: $(INCLUDE_DIR)/strtk.hpp | $(BUILD_DIR)
 #	$(CXX) $(LIBDIR_FLAGS) $(CXXFLAGS) -c $(INCLUDE_DIR)/strtk.hpp -o $@
@@ -58,7 +63,7 @@ sophia: $(BUILD_DIR)/Alignment.o \
         $(BUILD_DIR)/HelperFunctions.o \
         $(BUILD_DIR)/GlobalAppConfig.o \
         $(BUILD_DIR)/sophia.o
-	$(CXX) $(LDFLAGS) -lboost_program_options -o $@ $^
+	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
 
 # Rule for sophiaAnnotate
 sophiaAnnotate: $(BUILD_DIR)/AnnotationProcessor.o \
@@ -78,7 +83,7 @@ sophiaAnnotate: $(BUILD_DIR)/AnnotationProcessor.o \
 				$(BUILD_DIR)/HelperFunctions.o \
 				$(BUILD_DIR)/GlobalAppConfig.o \
 				$(BUILD_DIR)/sophiaAnnotate.o
-	$(CXX) $(LDFLAGS) -lz -lboost_system -lboost_iostreams -lboost_program_options -o $@ $^
+	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
 
 # Rule for sophiaMref
 sophiaMref: $(BUILD_DIR)/GlobalAppConfig.o \
@@ -97,12 +102,12 @@ sophiaMref: $(BUILD_DIR)/GlobalAppConfig.o \
 			$(BUILD_DIR)/GermlineMatch.o \
 			$(BUILD_DIR)/DeFuzzier.o \
 			$(BUILD_DIR)/sophiaMref.o
-	$(CXX) $(LDFLAGS) -lz -lboost_system -lboost_iostreams -lboost_program_options -o $@ $^
+	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
 
 # Rule for clean
-.PHONY: clean
+.PHONY: clean clean-all
 clean:
 	rm -f $(BUILD_DIR)/*.o $(BINARIES)
 
-clean_all: clean
+clean-all: clean
 	rm -f $(INCLUDE_DIR)/strtk.hpp

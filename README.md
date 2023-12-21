@@ -43,22 +43,23 @@ conda create -n sophia boost=1.82.0
 
 ## Building
 
+> Note that `make` will download one file from [StrTk](https://github.com/ArashPartow/strtk). If you want to delete an already downloaded file and download it again, run `make clean-all` before the compilation. See the `Makefile` for details.
+
 ### Dynamic Build
 
-With Conda you can do
+With [Conda](https://docs.conda.io/) you can do
 
 ```bash
-conda create -n sophia gxx_linux-64=8 boost=1.82.0
+conda create -n sophia gxx_linux-64=13 boost=1.82.0
 ```
 
-to create an environment to build the SOPHIA binaries binaries.
+to create an environment to build the SOPHIA binaries.
 
 To build you need to do
 
 ```bash
 source activate sophia
-LD_FLAGS=-L$CONDA_PREFIX/lib \
-  make -j 4
+make -j 4
 ```
 
 The binaries will be located in the top-level directory.
@@ -68,19 +69,22 @@ The binaries will be located in the top-level directory.
 
 If you want to compile statically you need to install glibc and boost static libraries. Conda does not provide a statically compiled version of boost, though. Please refer to the [boost documentation]() for detailed instructions or in case of problems.
 
-Shortly, to install boost statically you need to do
+Shortly, to install boost statically (here without installing it system-wide) you need to do
 
 ```bash
 ./bootstrap.sh --prefix=build/
 ./b2 --prefix=build/ link=static runtime-link=static cxxflags="-std=c++11 -fPIC"
-ls build/lib
-
+boost_lib_dir=$PWD/stage/lib
 ```
+
+> NOTE: This requires that you have a C++11-compatible compiler installed.
+
+After that you can do:
 
 ```bash
 source activate sophia
-LD_FLAGS=-L$(pwd)/build/lib \
-  make -j 4 STATIC=true
+cd "$repoRoot"
+make -j 4 STATIC=true boost_lib_dir=$boost_lib_dir all
 ```
 
 ## Changes
@@ -92,7 +96,7 @@ LD_FLAGS=-L$(pwd)/build/lib \
     > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted.
   * Minor: Build system
     * Use `make` as build system. `Release_*` directories are removed.
-    * Allow static building with `make STATIC=1`
+    * Allow static building with `make STATIC=true boost_lib_dir=/path/to/boost/lib`
     * Build `sophiaMref`
   * Patch: Code readability improvements, `.editorconfig` file, and `clang-format` configuration
 
