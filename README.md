@@ -84,7 +84,17 @@ After that you can do:
 ```bash
 source activate sophia
 cd "$repoRoot"
-make -j 4 STATIC=true boost_lib_dir=$boost_lib_dir all
+make -j 4 static=true boost_lib_dir=$boost_lib_dir all
+```
+
+### Development build
+
+The development build produces non-optimized binaries (`-O0`) with debug symbols:
+
+```bash
+source activate sophia
+cd "$repoRoot"
+make -j 4 static=true boost_lib_dir=$boost_lib_dir develop=true all
 ```
 
 ## Changes

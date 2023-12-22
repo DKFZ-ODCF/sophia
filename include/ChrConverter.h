@@ -58,7 +58,7 @@ namespace sophia {
         /** Whether the chromosome index is that of an ignored chromosome. Ignored chromosomes
           * are not the same as the ones that are not among the compressedMref chromosomes.
           * This should be the index of the phiX chromosomes. */
-        virtual bool isIgnoredChromosome(ChrIndex index) const;
+        virtual bool isIgnoredChromosome(ChrIndex index) const = 0;
 
         /** Map the compressed mref index to the uncompressed mref index. */
         virtual std::optional<ChrIndex>

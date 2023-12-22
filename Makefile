@@ -6,21 +6,24 @@ BUILD_DIR = ./build
 SRC_DIR = ./src
 
 # Compiler flags
-LDFLAGS := $(LDFLAGS) -flto=auto -lz -lboost_system -lboost_iostreams -lboost_program_options
-CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -O3 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
+LDFLAGS := $(LDFLAGS) -flto=auto -lz -lboost_system -lboost_iostreams -lboost_program_options -rdynamic
+CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
 
-ifeq ($(STATIC),true)
+ifeq ($(static),true)
 	CXXFLAGS := $(CXXFLAGS) -static -static-libgcc -static-libstdc++
 	LD_BEGIN_FLAGS := -L$(boost_lib_dir)
-	# Note that without the additional -lrt flag, the static linking fails for sophiaMref.
 	LD_END_FLAGS := $(LDFLAGS) -static -static-libgcc -static-libstdc++ -lrt
 else
     LD_BEGIN_FLAGS :=
 	LD_END_FLAGS := $(LDFLAGS)
 endif
 
-# Ignore some leftover unused variables from SvEvent::assessBreakpointClonalityStatus.
-CXXFLOGS := $(CXXFLAGS) -Wno-unused-variable
+ifeq ($(develop),true)
+	CXXFLAGS := $(CXXFLAGS) -Og -ggdb -DDEBUG
+else
+	# Ignore some leftover unused variables from SvEvent::assessBreakpointClonalityStatus.
+	CXXFLAGS := $(CXXFLAGS) -O3 -DNDEBUG -Wno-unused-variable
+endif
 
 # Source files
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
@@ -46,11 +49,13 @@ $(BUILD_DIR):
 $(INCLUDE_DIR)/strtk.hpp:
 	wget -c https://raw.githubusercontent.com/ArashPartow/strtk/d2b446bf1f7854e8b08f5295ec6f6852cae066a2/strtk.hpp -O $(INCLUDE_DIR)/strtk.hpp
 
-# General compilation rule for object files.
-$(BUILD_DIR)/%.o: %.cpp $(INCLUDE_DIR)/strtk.hpp | $(BUILD_DIR)
+# General compilation rule for object files that have matching .h files.
+$(BUILD_DIR)/%.o: %.cpp %.h $(INCLUDE_DIR)/strtk.hpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Rule for sophia
+# Rules for sophia
+$(BUILD_DIR)/sophia.o: $(SRC_DIR)/sophia.cpp Makefile | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 sophia: $(BUILD_DIR)/Alignment.o \
         $(BUILD_DIR)/Breakpoint.o \
         $(BUILD_DIR)/ChosenBp.o \
@@ -65,7 +70,9 @@ sophia: $(BUILD_DIR)/Alignment.o \
         $(BUILD_DIR)/sophia.o
 	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
 
-# Rule for sophiaAnnotate
+# Rules for sophiaAnnotate
+$(BUILD_DIR)/sophiaAnnotate.o: $(SRC_DIR)/sophiaAnnotate.cpp Makefile | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 sophiaAnnotate: $(BUILD_DIR)/AnnotationProcessor.o \
 				$(BUILD_DIR)/Breakpoint.o \
 				$(BUILD_DIR)/BreakpointReduced.o \
@@ -85,7 +92,9 @@ sophiaAnnotate: $(BUILD_DIR)/AnnotationProcessor.o \
 				$(BUILD_DIR)/sophiaAnnotate.o
 	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
 
-# Rule for sophiaMref
+# Rules for sophiaMref
+$(BUILD_DIR)/sophiaMref.o: $(SRC_DIR)/sophiaMref.cpp Makefile | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 sophiaMref: $(BUILD_DIR)/GlobalAppConfig.o \
 			$(BUILD_DIR)/ChrConverter.o \
 			$(BUILD_DIR)/Hg37ChrConverter.o \

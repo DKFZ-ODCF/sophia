@@ -25,7 +25,6 @@
 
 #include <iostream>
 #include <string>
-#include <boost/stacktrace.hpp>
 
 
 namespace sophia {

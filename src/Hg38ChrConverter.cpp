@@ -26,6 +26,8 @@
 #include <algorithm>
 #include <boost/unordered/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
+#include <boost/algorithm/string/join.hpp>
+
 
 namespace sophia {
 
@@ -127,12 +129,19 @@ namespace sophia {
         auto compressedMRefChromosomesCopy = compressedMrefChromosomes;
         std::sort(allChromosomesCopy.begin(), allChromosomesCopy.end());
         std::sort(compressedMRefChromosomesCopy.begin(), compressedMRefChromosomesCopy.end());
-        if (! std::includes(compressedMRefChromosomesCopy.begin(),
+        std::vector<std::string> difference;
+        difference.reserve(allChromosomes.size());
+        // Find the chromosomes in the mref set that are not in the all set.
+        std::set_difference(compressedMRefChromosomesCopy.begin(),
                             compressedMRefChromosomesCopy.end(),
                             allChromosomesCopy.begin(),
-                            allChromosomesCopy.end())) {
+                            allChromosomesCopy.end(),
+                            difference.begin());
+        if (! difference.empty()) {
+            std::string notFound = boost::algorithm::join(difference, ", ");
             throw std::invalid_argument(
-                "Compressed mref chromosomes not a subset of all chromosomes");
+                "Compressed mref chromosomes not a subset of all chromosomes. Could not find: " +
+                 notFound);
         }
     }
 
