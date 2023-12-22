@@ -21,11 +21,13 @@
  */
 
 #include "HelperFunctions.h"
+#include <iostream>
 
 namespace sophia {
 
-    istream &
-    error_terminating_getline(istream &is, string &str) {
+    std::istream &
+    error_terminating_getline(std::istream &is,
+                              std::string &str) {
         getline(is, str);
 
         if (is.bad()) {

@@ -23,7 +23,6 @@
  */
 
 #include "Alignment.h"
-#include "ChrConverter.h"
 #include "GlobalAppConfig.h"
 #include "HelperFunctions.h"
 #include "MateInfo.h"

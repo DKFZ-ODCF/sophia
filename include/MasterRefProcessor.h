@@ -26,7 +26,7 @@
 #define MASTERREFPROCESSOR_H_
 
 #include "SuppAlignment.h"
-#include "ChrConverter.h"
+#include "global.h"
 #include <BreakpointReduced.h>
 #include <MrefEntry.h>
 #include <array>

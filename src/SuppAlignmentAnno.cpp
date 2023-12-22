@@ -24,7 +24,6 @@
 
 #include "SuppAlignmentAnno.h"
 #include "GlobalAppConfig.h"
-#include "ChrConverter.h"
 #include "strtk-wrap.h"
 #include <algorithm>
 #include <cmath>

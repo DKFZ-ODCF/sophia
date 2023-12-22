@@ -24,7 +24,6 @@
 #include <vector>
 #include <algorithm>
 #include "strtk-wrap.h"
-#include "ChrConverter.h"
 #include "GlobalAppConfig.h"
 //#include <iostream>
 

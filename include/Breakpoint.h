@@ -28,7 +28,6 @@
 #include "MateInfo.h"
 #include "SuppAlignment.h"
 #include "SuppAlignmentAnno.h"
-#include "ChrConverter.h"
 #include <memory>
 #include <string>
 #include <utility>

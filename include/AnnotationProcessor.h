@@ -24,7 +24,6 @@
 
 #ifndef ANNOTATIONPROCESSOR_H_
 #define ANNOTATIONPROCESSOR_H_
-#include "ChrConverter.h"
 #include "GermlineMatch.h"
 #include "MrefMatch.h"
 #include "SuppAlignmentAnno.h"

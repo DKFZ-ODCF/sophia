@@ -23,7 +23,6 @@
  */
 
 #include "Breakpoint.h"
-#include "ChrConverter.h"
 #include "GlobalAppConfig.h"
 #include "strtk-wrap.h"
 #include <algorithm>

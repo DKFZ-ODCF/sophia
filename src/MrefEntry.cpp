@@ -26,7 +26,6 @@
 #include <boost/algorithm/string/join.hpp>
 #include <MrefEntry.h>
 #include <unordered_set>
-#include "ChrConverter.h"
 #include "BreakpointReduced.h"
 
 namespace sophia {

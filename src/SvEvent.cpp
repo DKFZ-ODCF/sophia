@@ -22,7 +22,6 @@
  *      LICENSE: GPL
  */
 
-#include "ChrConverter.h"
 #include "GlobalAppConfig.h"
 #include "strtk-wrap.h"
 #include <SvEvent.h>
