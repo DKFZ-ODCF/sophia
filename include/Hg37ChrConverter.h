@@ -20,6 +20,7 @@
 #define HG37CHRCONVERTER_H_
 
 #include "ChrConverter.h"
+#include "global.h"
 #include <vector>
 #include <string>
 #include <optional>
@@ -54,6 +55,8 @@ namespace sophia {
                                             std::string::const_iterator end,
                                             char stopChar) const;
 
+        static const ChrIndex phixChrIndex;
+
       public:
 
         static const std::string assemblyName;
@@ -71,6 +74,11 @@ namespace sophia {
 
         /** Map an index position to a chromosome name for compressed mref files. */
         std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
+
+        /** Whether the chromosome index is that of an ignored chromosome. Ignored chromosomes
+          * are not the same as the ones that are not among the compressedMref chromosomes.
+          * For hg37 this used to be phiX only. */
+        bool isIgnoredChromosome(ChrIndex index) const;
 
         /** Map the compressed mref index to the uncompressed mref index. */
         std::optional<ChrIndex> compressedMrefIndexToIndex(CompressedMrefIndex index) const;

@@ -25,7 +25,7 @@
 #include "Breakpoint.h"
 #include "ChrConverter.h"
 #include "GlobalAppConfig.h"
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
 #include <cmath>
@@ -54,7 +54,8 @@ namespace sophia {
     bool Breakpoint::PROPERPAIRCOMPENSATIONMODE{false};
     int Breakpoint::bpindex{0};
 
-    Breakpoint::Breakpoint(int chrIndexIn, int posIn)
+    Breakpoint::Breakpoint(int chrIndexIn,
+                           int posIn)
         : covFinalized{false},
           missingInfoBp{false},
           chrIndex{chrIndexIn},
@@ -254,10 +255,12 @@ namespace sophia {
     string
     Breakpoint::finalizeOverhangs() {
         ++bpindex;
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         for (auto i = 0u; i < supportingSoftAlignments.size(); ++i) {
             supportingSoftAlignments[i]->setChosenBp(pos, i);
             if (supportingSoftAlignments[i]->assessOutlierMateDistance()) {
-                if (supportingSoftAlignments[i]->getMateChrIndex() < 1002) {
+                if (!chrConverter.isIgnoredChromosome(
+                  supportingSoftAlignments[i]->getMateChrIndex())) {
                     if (supportingSoftAlignments[i]->isOverhangEncounteredM()) {
                         if (!(supportingSoftAlignments[i]->isNullMapq() ||
                               supportingSoftAlignments[i]->isLowMapq())) {
@@ -1140,6 +1143,10 @@ namespace sophia {
         }
     }
 
+    /**
+      *  @param bpIn            a line from the breakpoint tumorGz file
+      *  @param ignoreOverhang  whether to ignore overhangs
+      */
     Breakpoint::Breakpoint(const string &bpIn, bool ignoreOverhang)
         : covFinalized{true},
           missingInfoBp{false},
@@ -1170,7 +1177,8 @@ namespace sophia {
             }
             ++index;
         }
-        chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(bpIn.cbegin(), '\t');
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+        chrIndex = chrConverter.parseChrAndReturnIndex(bpIn.cbegin(), '\t');
 
         for (auto i = bpChunkPositions[0] + 1; i < bpChunkPositions[1]; ++i) {
             pos = pos * 10 + (bpIn[i] - '0');
@@ -1266,7 +1274,7 @@ namespace sophia {
                     }
                 }
                 SuppAlignment saTmp{saStr};
-                if (saTmp.getChrIndex() < 1002) {
+                if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
                     doubleSidedMatches.push_back(saTmp);
                 }
             }
@@ -1282,7 +1290,7 @@ namespace sophia {
                     }
                 }
                 SuppAlignment saTmp{saStr};
-                if (saTmp.getChrIndex() < 1002) {
+                if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
                     supplementsPrimary.push_back(saTmp);
                 }
             }
@@ -1303,6 +1311,8 @@ namespace sophia {
             }
         }
     }
+
+
     void
     Breakpoint::saHomologyClashSolver() {
         for (auto i = 0u; i < doubleSidedMatches.size(); ++i) {

@@ -19,6 +19,7 @@
 #ifndef _CHRCONVERTER_H_
 #define _CHRCONVERTER_H_
 
+#include "global.h"
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -27,18 +28,12 @@
 
 namespace sophia {
 
-    // These two are only to make the code clearer, but are not type checked. There are no opaque
-    // or strongly type-checked typedefs in C++17.
-    typedef size_t ChrIndex;
-    typedef size_t CompressedMrefIndex;
-    typedef long unsigned int ChrSize;
-
     /** ChrConverter manages information on chromosomes names, sizes, and index positions in
-        data arrays.
-
-        This probably needs a redesign. The current situation is just an intermediate step away
-        from the former completely procedural implementation that heavily leaked implementation
-        details into the calling code and was highly tuned but very inflexible. */
+      * data arrays.
+      *
+      * This probably needs a redesign. The current situation is just an intermediate step away
+      * from the former completely procedural implementation that heavily leaked implementation
+      * details into the calling code and was highly tuned but very inflexible. */
     class ChrConverter {
 
       public:
@@ -60,6 +55,11 @@ namespace sophia {
         /** Map an index position to a chromosome name for compressed mref files. */
         virtual std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
 
+        /** Whether the chromosome index is that of an ignored chromosome. Ignored chromosomes
+          * are not the same as the ones that are not among the compressedMref chromosomes.
+          * This should be the index of the phiX chromosomes. */
+        virtual bool isIgnoredChromosome(ChrIndex index) const;
+
         /** Map the compressed mref index to the uncompressed mref index. */
         virtual std::optional<ChrIndex>
         compressedMrefIndexToIndex(CompressedMrefIndex index) const = 0;
@@ -71,8 +71,12 @@ namespace sophia {
         virtual ChrIndex chrNameToIndex(std::string chrName) const = 0;
 
         /** Parse chromosome index. It takes a position in a character stream, and translates the
-            following character(s) into index positions (using ChrConverter::indexToChr).
-            If the name cannot be parsed, throws a domain_error exception. */
+          * following character(s) into index positions (using ChrConverter::indexToChr).
+          * If the name cannot be parsed, throws a domain_error exception.
+          *
+          * This function, although it has a side effect, is called all over the code. It throws
+          * a domain_error to ensure that no non-parsable chromosome names are processed by
+          * SOPHIA. */
         virtual ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
                                                 char stopChar) const = 0;
 

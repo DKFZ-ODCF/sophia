@@ -25,7 +25,7 @@
 #include "Breakpoint.h"
 #include "ChrConverter.h"
 #include "GlobalAppConfig.h"
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include <BreakpointReduced.h>
 #include <boost/algorithm/string/join.hpp>
 #include <unordered_set>
@@ -62,13 +62,14 @@ sophia::BreakpointReduced::BreakpointReduced(const Breakpoint &tmpBp,
       mrefHits{MrefMatch{-1, -1, 10000, {}, }},
       germlineInfo{GermlineMatch{0.0, 0.0, {}, }},
       suppAlignments{} {
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     for (const auto &sa : tmpBp.getDoubleSidedMatches()) {
-        if (sa.getChrIndex() < 1002) {
+        if (!chrConverter.isIgnoredChromosome(sa.getChrIndex())) {
             suppAlignments.emplace_back(sa);
         }
     }
     for (const auto &sa : tmpBp.getSupplementsPrimary()) {
-        if (sa.getChrIndex() < 1002) {
+        if (!chrConverter.isIgnoredChromosome(sa.getChrIndex())) {
             suppAlignments.emplace_back(sa);
         }
     }

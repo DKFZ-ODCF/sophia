@@ -8,6 +8,7 @@ SRC_DIR = ./src
 # Compiler flags
 LDFLAGS := $(LDFLAGS) -flto=auto -lz -lboost_system -lboost_iostreams -lboost_program_options
 CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -O3 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
+
 ifeq ($(STATIC),true)
 	CXXFLAGS := $(CXXFLAGS) -static -static-libgcc -static-libstdc++
 	LD_BEGIN_FLAGS := -L$(boost_lib_dir)
@@ -18,6 +19,8 @@ else
 	LD_END_FLAGS := $(LDFLAGS)
 endif
 
+# Ignore some leftover unused variables from SvEvent::assessBreakpointClonalityStatus.
+CXXFLOGS := $(CXXFLAGS) -Wno-unused-variable
 
 # Source files
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
@@ -42,9 +45,6 @@ $(BUILD_DIR):
 # Retrieve and build strtk.
 $(INCLUDE_DIR)/strtk.hpp:
 	wget -c https://raw.githubusercontent.com/ArashPartow/strtk/d2b446bf1f7854e8b08f5295ec6f6852cae066a2/strtk.hpp -O $(INCLUDE_DIR)/strtk.hpp
-
-#$(BUILD_DIR)/strtk.o: $(INCLUDE_DIR)/strtk.hpp | $(BUILD_DIR)
-#	$(CXX) $(LIBDIR_FLAGS) $(CXXFLAGS) -c $(INCLUDE_DIR)/strtk.hpp -o $@
 
 # General compilation rule for object files.
 $(BUILD_DIR)/%.o: %.cpp $(INCLUDE_DIR)/strtk.hpp | $(BUILD_DIR)

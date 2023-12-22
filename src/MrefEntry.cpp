@@ -21,7 +21,7 @@
  */
 
 #include "Breakpoint.h"
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include "GlobalAppConfig.h"
 #include <boost/algorithm/string/join.hpp>
 #include <MrefEntry.h>

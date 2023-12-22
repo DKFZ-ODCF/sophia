@@ -14,7 +14,7 @@
 #include "SuppAlignment.h"
 #include "SuppAlignmentAnno.h"
 #include "SvEvent.h"
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include <boost/filesystem.hpp>
 #include <vector>
 #include "MrefEntryAnno.h"
@@ -55,7 +55,21 @@ int main(int argc, char** argv) {
 
 	options.parse(argc, argv);
 
-	vector<vector<MrefEntryAnno>> mref { 85, vector<MrefEntryAnno> { } };
+    unique_ptr<ChrConverter> chrConverter;
+	if (!options.count("assemblyname") ||
+	      options["assemblyname"].as<string>() == Hg37ChrConverter::assemblyName) {
+	    chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
+    } else if (options["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
+        chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
+    } else {
+        cerr << "Unknown assembly name " << options["assemblyname"].as<string>() << ". I know "
+             << Hg37ChrConverter::assemblyName << " and "
+             << Hg38ChrConverter::assemblyName << endl;
+        return 1;
+    }
+
+	vector<vector<MrefEntryAnno>> mref
+	    { chrConverter->nChromosomesCompressedMref(), vector<MrefEntryAnno> { } };
 	if (!options.count("mref")) {
 		cerr << "No mref file given, exiting" << endl;
 		return 1;
@@ -126,37 +140,22 @@ int main(int argc, char** argv) {
 		germlineDbLimit = options["germlinedblimit"].as<int>();
 	}
 
-	unique_ptr<ChrConverter> chrConverter;
-	if (!options.count("assemblyname") ||
-	      options["assemblyname"].as<string>() == Hg37ChrConverter::assemblyName) {
-	    chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
-    } else if (options["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
-        chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
-    } else {
-        cerr << "Unknown assembly name " << options["assemblyname"].as<string>() << ". I know "
-             << Hg37ChrConverter::assemblyName << " and "
-             << Hg38ChrConverter::assemblyName << endl;
-        return 1;
-    }
-
-    // Initialize global application config.
-    const GlobalAppConfig &config = GlobalAppConfig::init(move(chrConverter));
-
 	MrefEntryAnno::PIDSINMREF = pidsInMref;
-	unique_ptr<ifstream> mrefInputHandle { make_unique<ifstream>(options["mref"].as<string>(), ios_base::in | ios_base::binary) };
-	unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle { make_unique<boost::iostreams::filtering_istream>() };
+	unique_ptr<ifstream> mrefInputHandle 
+	    { make_unique<ifstream>(options["mref"].as<string>(), ios_base::in | ios_base::binary) };
+	unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle 
+	    { make_unique<boost::iostreams::filtering_istream>() };
 	mrefGzHandle->push(boost::iostreams::gzip_decompressor());
 	mrefGzHandle->push(*mrefInputHandle);
 	cerr << "m\n";
 	string line { };
 
-    const ChrConverter &chrConverterTmp = config.getChrConverter();
 	while (error_terminating_getline(*mrefGzHandle, line)) {
 		if (line.front() == '#') {
 			continue;
 		};
-		std::optional<ChrIndex> chrIndexO = chrConverterTmp.
-		    compressedMrefIndexToIndex(chrConverterTmp.parseChrAndReturnIndex(line.cbegin(), '\t'));
+		std::optional<ChrIndex> chrIndexO = chrConverter->
+		    compressedMrefIndexToIndex(chrConverter->parseChrAndReturnIndex(line.cbegin(), '\t'));
 		ChrIndex chrIndex;
 		if (!chrIndexO.has_value()) {
 			continue;
@@ -216,6 +215,11 @@ int main(int argc, char** argv) {
 		AnnotationProcessor annotationProcessor { tumorResults, mref, defaultReadLengthTumor, false, germlineDbLimit };
 		annotationProcessor.printFilteredResults(false, 0);
 	}
+
+    // Initialize global application config.
+    // This will raise a warning with -Wextra or -Wdangling-reference, but that's probably a
+    // false positive. See https://stackoverflow.com/a/77103062/8784544.
+    const GlobalAppConfig &config = GlobalAppConfig::init(move(chrConverter));
 
 	return 0;
 }

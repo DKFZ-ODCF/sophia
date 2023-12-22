@@ -51,8 +51,12 @@ namespace sophia {
         ~MasterRefProcessor() = default;
 
       private:
+        // Note that all methods and fields are private.
+        // The MasterRefProcessor is does all the work during construction time.
+
         unsigned long long processFile(const string &gzPath, short fileIndex);
-        bool processBp(BreakpointReduced &bp, int chrIndex, short fileIndex);
+        bool processBp(BreakpointReduced &bp, ChrIndex chrIndex, short fileIndex);
+
         const int NUMPIDS;
         const int DEFAULTREADLENGTH;
         unique_ptr<ofstream> mergedBpsOutput;

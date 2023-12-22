@@ -24,7 +24,7 @@
 
 #include "ChrConverter.h"
 #include "GlobalAppConfig.h"
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include <SvEvent.h>
 
 namespace sophia {

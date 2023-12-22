@@ -21,7 +21,7 @@
  */
 
 #include "Breakpoint.h"
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include <boost/algorithm/string/join.hpp>
 #include <MrefEntryAnno.h>
 #include <unordered_set>

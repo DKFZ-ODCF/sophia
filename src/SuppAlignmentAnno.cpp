@@ -25,7 +25,7 @@
 #include "SuppAlignmentAnno.h"
 #include "GlobalAppConfig.h"
 #include "ChrConverter.h"
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include <algorithm>
 #include <cmath>
 #include <vector>
@@ -49,10 +49,9 @@ SuppAlignmentAnno::SuppAlignmentAnno(const string &saStrIn)
     if (encounteredM) {
         ++index;
     }
-    chrIndex =
-        GlobalAppConfig::getInstance().
-            getChrConverter().parseChrAndReturnIndex(next(saStrIn.cbegin(), index), ':');
-    if (chrIndex > 1001) {
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+    chrIndex = chrConverter.parseChrAndReturnIndex(next(saStrIn.cbegin(), index), ':');
+    if (chrConverter.isIgnoredChromosome(chrIndex)) {
         return;
     }
     while (saStrIn[index] != ':') {

@@ -20,10 +20,12 @@
 #define HG38CHRCONVERTER_H_
 
 #include "ChrConverter.h"
+#include "global.h"
 #include <string>
 #include <vector>
 #include <optional>
 #include <boost/unordered/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 
 
 namespace sophia {
@@ -61,9 +63,13 @@ namespace sophia {
         const std::vector<ChrIndex> compressedMrefIndexToIndexLookup;
         const std::vector<std::string> compressedMrefChromosomes;
 
+        // Ignored chromosomes.
+        const boost::unordered_set<std::string> ignoredChromosomes;
+
         Hg38ChrConverter(const std::vector<std::string> &allChromosomes,
                          const std::vector<ChrSize> &allChromosomeLengths,
-                         const std::vector<std::string> &compressedMrefChromosomes);
+                         const std::vector<std::string> &compressedMrefChromosomes,
+                         const std::vector<std::string> &ignoredChromosomes);
 
       public:
 
@@ -84,6 +90,11 @@ namespace sophia {
 
         /** Map an index position to a chromosome name for compressed mref files. */
         std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
+
+        /** Whether the chromosome index is that of an ignored chromosome. Ignored chromosomes
+          * are not the same as the ones that are not among the compressedMref chromosomes.
+          * This should include phiX. */
+        bool isIgnoredChromosome(ChrIndex index) const;
 
         /** Map the compressed mref index to the uncompressed mref index. */
         std::optional<ChrIndex> compressedMrefIndexToIndex(CompressedMrefIndex index) const;

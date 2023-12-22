@@ -40,9 +40,11 @@ using namespace std;
 
 class Breakpoint {
   public:
+
     Breakpoint(int chrIndexIn, int posIn);
     Breakpoint(const string &bpIn, bool ignoreOverhang);
     ~Breakpoint() = default;
+
     static const int PERMISSIBLEMISMATCHES = 2;
     static const int MAXPERMISSIBLESOFTCLIPS = 2000;
     static const int MAXPERMISSIBLEHARDCLIPS = 2000;

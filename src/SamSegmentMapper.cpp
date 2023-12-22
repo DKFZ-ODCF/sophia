@@ -26,7 +26,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
-// #include <chrono>
+#include "GlobalAppConfig.h"
 
 namespace sophia {
 
@@ -180,6 +180,7 @@ namespace sophia {
                 ++maxPos;
             }
         }
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         switch (alignment.getReadType()) {
         case 0:
         case 3:
@@ -216,7 +217,7 @@ namespace sophia {
                 coverageProfiles[i - minPos].incrementCoverage();
                 coverageProfiles[i - minPos].incrementNormalSpans();
             }
-            if (alignment.getMateChrIndex() < 1002 &&
+            if (!chrConverter.isIgnoredChromosome(alignment.getMateChrIndex()) &&
                 !(alignment.getMateChrIndex() == 2 &&
                   (alignment.getMatePos() / 10000 == 3314))) {
                 if (PROPERPARIRCOMPENSATIONMODE) {
@@ -267,7 +268,8 @@ namespace sophia {
                 coverageProfiles[i - minPos].incrementLowQualSpansSoft();
             }
             if (!alignment.isSupplementary() &&
-                alignment.getMateChrIndex() < 1002 && alignment.isDistantMate()) {
+                !chrConverter.isIgnoredChromosome(alignment.getMateChrIndex()) &&
+                alignment.isDistantMate()) {
                 if (!(alignment.getMateChrIndex() == 2 &&
                       (alignment.getMatePos() / 10000 == 3314))) {
                     discordantLowQualAlignmentsPool.emplace_back(

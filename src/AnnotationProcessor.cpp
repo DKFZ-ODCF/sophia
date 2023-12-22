@@ -46,10 +46,20 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
                                          int defaultReadLengthTumorIn,
                                          bool controlCheckMode,
                                          int germlineDbLimit)
-    : NOCONTROLMODE{true}, GERMLINEDBLIMIT{germlineDbLimit},
-      contaminationObserved{false}, massiveInvFilteringLevel{0},
-      filteredResults{}, tumorResults{85, vector<BreakpointReduced>{}},
-      controlResults{85, vector<BreakpointReduced>{}}, visitedLineIndices{} {
+    : NOCONTROLMODE{true},
+      GERMLINEDBLIMIT{germlineDbLimit},
+      contaminationObserved{false},
+      massiveInvFilteringLevel{0},
+      filteredResults{},
+      visitedLineIndices{} {
+
+    ChrIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
+        getChrConverter().nChromosomesCompressedMref();
+    tumorResults = vector<vector<BreakpointReduced>>
+        { nCompressedMrefChromosomes, vector<BreakpointReduced>{} };
+    controlResults = vector<vector<BreakpointReduced>>
+        { nCompressedMrefChromosomes, vector<BreakpointReduced>{} };
+
     unique_ptr<ifstream> tumorInputHandle{
         make_unique<ifstream>(tumorResultsIn, ios_base::in | ios_base::binary)};
     unique_ptr<boost::iostreams::filtering_istream> tumorGzHandle{
@@ -63,7 +73,8 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
         if (line.front() == '#') {
             continue;
         };
-        Breakpoint tmpBp{line, true};
+
+        Breakpoint tmpBp {line, true};  // This actually parses the line.
         auto chrIndexO = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
         ChrIndex chrIndex;
         if (!chrIndexO.has_value()) {
@@ -110,14 +121,27 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
 }
 
 AnnotationProcessor::AnnotationProcessor(
-    const string &tumorResultsIn, vector<vector<MrefEntryAnno>> &mref,
-    const string &controlResultsIn, int defaultReadLengthTumorIn,
-    int defaultReadLengthControlIn, int germlineDbLimit, int lowQualControlIn,
-    bool pathogenInControlIn)
-    : NOCONTROLMODE{false}, GERMLINEDBLIMIT{germlineDbLimit},
-      contaminationObserved{false}, massiveInvFilteringLevel{0},
-      filteredResults{}, tumorResults{85, vector<BreakpointReduced>{}},
-      controlResults{85, vector<BreakpointReduced>{}} {
+        const string &tumorResultsIn,
+        vector<vector<MrefEntryAnno>> &mref,
+        const string &controlResultsIn,
+        int defaultReadLengthTumorIn,
+        int defaultReadLengthControlIn,
+        int germlineDbLimit,
+        int lowQualControlIn,
+        bool pathogenInControlIn)
+    : NOCONTROLMODE{false},
+      GERMLINEDBLIMIT{germlineDbLimit},
+      contaminationObserved{false},
+      massiveInvFilteringLevel{0},
+      filteredResults{} {
+
+    ChrIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
+        getChrConverter().nChromosomesCompressedMref();
+    tumorResults = vector<vector<BreakpointReduced>>
+        { nCompressedMrefChromosomes, vector<BreakpointReduced>{} };
+    controlResults = vector<vector<BreakpointReduced>>
+        { nCompressedMrefChromosomes, vector<BreakpointReduced>{} };
+
     unique_ptr<ifstream> controlInputHandle{make_unique<ifstream>(
         controlResultsIn, ios_base::in | ios_base::binary)};
     unique_ptr<boost::iostreams::filtering_istream> controlGzHandle{
@@ -133,7 +157,7 @@ AnnotationProcessor::AnnotationProcessor(
         };
         Breakpoint tmpBpPre{line, true};
         BreakpointReduced tmpBp{tmpBpPre, lineIndex, false};
-        if (tmpBp.getChrIndex() > 1001) {
+        if (chrConverter.isIgnoredChromosome(tmpBp.getChrIndex())) {
             continue;
         }
         if (pathogenInControlIn) {
@@ -289,7 +313,9 @@ AnnotationProcessor::AnnotationProcessor(
 
 void
 AnnotationProcessor::searchMatches(vector<vector<MrefEntryAnno>> &mref) {
-    for (auto j = 0; j < 85; ++j) {
+    ChrIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
+        getChrConverter().nChromosomesCompressedMref();
+    for (ChrIndex j = 0; j < nCompressedMrefChromosomes; ++j) {
         for (auto i = 0u; i < tumorResults[j].size(); ++i) {
             for (const auto &sa : tumorResults[j][i].getSuppAlignments()) {
                 if (SvEvent::DEBUGMODE || !sa.isSuspicious()) {
@@ -740,6 +766,7 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
         }
         --it;
     }
+
     if (itStart != controlResults[convertedChrIndex].end()) {
         it = next(itStart);
         while (true) {
@@ -769,7 +796,7 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
         auto maxSupport = 0.0;
         for (const auto res : dbHitsConservative) {
             auto mateSupSa = 0;
-            for (const auto sa : res->getSuppAlignments()) {
+            for (const SuppAlignmentAnno &sa : res->getSuppAlignments()) {
                 if (sa.getMateSupport() > mateSupSa) {
                     mateSupSa = sa.getMateSupport();
                 }

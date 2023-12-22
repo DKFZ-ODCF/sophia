@@ -23,7 +23,7 @@
 #include "SuppAlignment.h"
 #include <vector>
 #include <algorithm>
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include "ChrConverter.h"
 #include "GlobalAppConfig.h"
 //#include <iostream>
@@ -92,9 +92,9 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
 	}
 	fieldEnds.push_back(saCend);
 
-	chrIndex = GlobalAppConfig::getInstance().
-	    getChrConverter().parseChrAndReturnIndex(fieldBegins[0], ',');
-	if (chrIndex > 1001) {
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+	chrIndex = chrConverter.parseChrAndReturnIndex(fieldBegins[0], ',');
+	if (chrConverter.isIgnoredChromosome(chrIndex)) {
 		return;
 	}
 	for (auto it = fieldBegins[1]; it != fieldEnds[1]; ++it) {
@@ -308,9 +308,9 @@ SuppAlignment::SuppAlignment(const string& saIn) :
 	if (encounteredM) {
 		++index;
 	}
-	chrIndex = GlobalAppConfig::getInstance().
-	    getChrConverter().parseChrAndReturnIndex(next(saIn.cbegin(), index), ':');
-	if (chrIndex > 1001) {
+	const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+	chrIndex = chrConverter.parseChrAndReturnIndex(next(saIn.cbegin(), index), ':');
+	if (chrConverter.isIgnoredChromosome(chrIndex)) {
 		return;
 	}
 	while (saIn[index] != ':') {

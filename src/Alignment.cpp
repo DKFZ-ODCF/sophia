@@ -28,7 +28,7 @@
 #include "HelperFunctions.h"
 #include "MateInfo.h"
 #include "Sdust.h"
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include <bitset>
 #include <iostream>
 
@@ -611,6 +611,7 @@ Alignment::setChosenBp(int chosenBpLoc, int alignmentIndex) {
 vector<SuppAlignment>
 Alignment::generateSuppAlignments(int bpChrIndex, int bpPos) {
     vector<SuppAlignment> suppAlignmentsTmp;
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     if (hasSa) {
         vector<string::const_iterator> saBegins = {saCbegin};
         vector<string::const_iterator> saEnds;
@@ -632,13 +633,13 @@ Alignment::generateSuppAlignments(int bpChrIndex, int bpPos) {
                                 chosenBp->selfNodeIndex,
                                 bpChrIndex,
                                 bpPos};
-            if (saTmp.getChrIndex() < 1002) {
+            if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
                 suppAlignmentsTmp.push_back(saTmp);
             }
         }
     }
     if (assessOutlierMateDistance()) {
-        if (getMateChrIndex() < 1002) {
+        if (!chrConverter.isIgnoredChromosome(getMateChrIndex())) {
             auto foundMatch = false;
             MateInfo tmpPairDummy{
                 0, 0, getMateChrIndex(), getMatePos(), true, invertedMate};

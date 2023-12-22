@@ -17,6 +17,7 @@
  */
 
 #include "Hg37ChrConverter.h"
+#include "global.h"
 
 #include <vector>
 #include <string>
@@ -231,6 +232,8 @@ namespace sophia {
             "995",        "996",        "997",        "998",        "hs37d5",
             "NC_007605",  "MT",         "phiX174",    "INVALID"};
 
+        static const ChrIndex phixChrIndex = 1002;
+
         static const std::vector<std::string> indexToChrCompressedMref {
             "1",          "2",          "3",          "4",          "5",
             "6",          "7",          "8",          "9",          "10",
@@ -369,24 +372,32 @@ namespace sophia {
     }
 
     /** Map an index position to a compressed mref index position. */
-    std::string Hg37ChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
+    std::string
+    Hg37ChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
         return indexToChrCompressedMref[index];
     }
 
     /** Map the compressed mref index to the uncompressed mref index. */
-    std::optional<ChrIndex> Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
+    std::optional<ChrIndex>
+    Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
         if (index >= indexConverter.size())
             return std::nullopt;
         return std::optional<ChrIndex>(indexConverter[index]);
     }
 
     /** Map compressed mref index to chromosome size. */
-    ChrSize Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
+    ChrSize
+    Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
         return chrSizesCompressedMref[index];
     }
 
-    ChrIndex Hg37ChrConverter::chrNameToIndex(std::string chrName) const {
+    ChrIndex
+    Hg37ChrConverter::chrNameToIndex(std::string chrName) const {
         return parseChrAndReturnIndex(chrName.begin(), ' ');
+    }
+
+    bool Hg37ChrConverter::isIgnoredChromosome(ChrIndex index) const {
+        return index == hg37::phixChrIndex;
     }
 
     /* This is parsing code. It takes a position in a character stream, and translates the
