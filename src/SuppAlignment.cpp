@@ -25,7 +25,7 @@
 #include <algorithm>
 #include "strtk-wrap.h"
 #include "GlobalAppConfig.h"
-//#include <iostream>
+
 
 namespace sophia {
 
@@ -100,7 +100,6 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
 		pos = 10 * pos + (*it - '0');
 	}
 
-    //cerr << "guessSupplementOffset" << endl;
 	vector<CigarChunk> cigarChunks;
 	auto cigarEncounteredM = false;
 	auto cumulativeNucleotideCount = 0, currentNucleotideCount = 0, chunkIndex = 0, bestChunkIndex = 0, indelAdjustment = 0;
@@ -158,7 +157,6 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
 		pos += cigarChunks[bestChunkIndex].startPosOnRead;
 	}
 	extendedPos = pos;
-	//cerr << "done" << endl;
 	for (auto it = fieldBegins[4]; it != fieldEnds[4]; ++it) {
 		mapq = 10 * mapq + (*it - '0');
 	}

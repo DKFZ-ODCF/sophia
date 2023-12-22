@@ -16,8 +16,8 @@
  *     LICENSE: GPL
  */
 
-#ifndef _CHRCONVERTER_H_
-#define _CHRCONVERTER_H_
+#ifndef CHRCONVERTER_H_
+#define CHRCONVERTER_H_
 
 #include "global.h"
 #include <stdexcept>
@@ -84,4 +84,4 @@ namespace sophia {
 
 }
 
-#endif /* _CHRCONVERTER_H_ */
+#endif /* CHRCONVERTER_H_ */

@@ -25,4 +25,4 @@ namespace sophia {
 
     ChrConverter::~ChrConverter() {}
 
-}
+} /* namespace sophia */
