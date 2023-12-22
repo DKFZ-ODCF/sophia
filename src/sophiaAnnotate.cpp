@@ -155,7 +155,8 @@ int main(int argc, char** argv) {
                 continue;
             };
             std::optional<ChrIndex> chrIndexO = chrConverter->
-                compressedMrefIndexToIndex(chrConverter->parseChrAndReturnIndex(line.cbegin(), '\t'));
+                compressedMrefIndexToIndex(chrConverter->parseChrAndReturnIndex(
+                    line.cbegin(), line.cend(), '\t'));
             ChrIndex chrIndex;
             if (!chrIndexO.has_value()) {
                 continue;
@@ -219,7 +220,7 @@ int main(int argc, char** argv) {
         // Initialize global application config.
         // This will raise a warning with -Wextra or -Wdangling-reference, but that's probably a
         // false positive. See https://stackoverflow.com/a/77103062/8784544.
-        const GlobalAppConfig &config = GlobalAppConfig::init(move(chrConverter));
+        GlobalAppConfig::init(move(chrConverter));
 
         return 0;
     } catch (exception& e) {

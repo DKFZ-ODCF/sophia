@@ -393,7 +393,7 @@ namespace sophia {
 
     ChrIndex
     Hg37ChrConverter::chrNameToIndex(std::string chrName) const {
-        return parseChrAndReturnIndex(chrName.begin(), ' ');
+        return parseChrAndReturnIndex(chrName.begin(), chrName.end(), ' ');
     }
 
     bool Hg37ChrConverter::isIgnoredChromosome(ChrIndex index) const {
@@ -424,9 +424,9 @@ namespace sophia {
 
        All identifiers not matching any of these rules, with throw an exception (domain_error).
     */
-    ChrIndex Hg37ChrConverter::parseChrAndReturnIndexImpl(std::string::const_iterator start,
-                                                          std::string::const_iterator end,
-                                                          char stopChar) const {
+    ChrIndex Hg37ChrConverter::parseChrAndReturnIndex(std::string::const_iterator start,
+                                                      std::string::const_iterator end,
+                                                      char stopChar) const {
         int chrIndex {0};
         if (start == end) {
             throw std::domain_error("Chromosome identifier is empty.");
@@ -467,11 +467,5 @@ namespace sophia {
         }
         throw std::runtime_error("Oops! This should not occur!");
     }
-    
-    ChrIndex Hg37ChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
-                                                      char stopChar) const {
-        return parseChrAndReturnIndex(startIt, stopChar);
-    }
-
 
 } /* namespace sophia */

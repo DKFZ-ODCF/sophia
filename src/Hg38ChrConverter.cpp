@@ -23,6 +23,7 @@
 #include <string>
 #include <stdexcept>
 #include <optional>
+#include <algorithm>
 #include <boost/unordered/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 
@@ -189,10 +190,17 @@ namespace sophia {
         following character(s) into index positions (using ChrConverter::indexToChr).
         If the name cannot be parsed, throws a domain_error exception. */
     ChrIndex Hg38ChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
+                                                      std::string::const_iterator endIt,
                                                       char stopChar) const {
-        // Read up to stop char
-        // Map to index using map
-        // return index
+        // Copy the characters until the stopChar into a string
+        std::string chrName;
+        chrName.reserve(50);   // Should be sufficient for most chromosome names.
+        auto isNotStopChar = [stopChar](char c) { return c != stopChar; };
+        auto endMatchIt = std::find_if_not(startIt, endIt, isNotStopChar);
+        std::copy(startIt, endMatchIt, std::back_inserter(chrName));
+
+        // Map to ChrIndex and return it.
+        return allChromosomeLookup.at(chrName);
     }
 
 

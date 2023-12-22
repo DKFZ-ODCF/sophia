@@ -49,7 +49,8 @@ SuppAlignmentAnno::SuppAlignmentAnno(const string &saStrIn)
         ++index;
     }
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-    chrIndex = chrConverter.parseChrAndReturnIndex(next(saStrIn.cbegin(), index), ':');
+    chrIndex = chrConverter.parseChrAndReturnIndex(
+        next(saStrIn.cbegin(), index), saStrIn.cend(), ':');
     if (chrConverter.isIgnoredChromosome(chrIndex)) {
         return;
     }

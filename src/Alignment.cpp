@@ -72,7 +72,9 @@ Alignment::Alignment()
             ++index;
         }
         chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
-            next(samLine.cbegin(), samChunkPositions[1] + 1), '\t');
+            next(samLine.cbegin(), samChunkPositions[1] + 1),
+            samLine.cend(),
+            '\t');
     }
 }
 
@@ -173,7 +175,10 @@ Alignment::continueConstruction() {
         mateChrIndex = chrIndex;
     } else {
         mateChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-            parseChrAndReturnIndex(next(samLine.cbegin(), 1 + samChunkPositions[5]), '\t');
+            parseChrAndReturnIndex(
+                next(samLine.cbegin(), 1 + samChunkPositions[5]),
+                samLine.cend(),
+                '\t');
     }
 }
 

@@ -92,7 +92,10 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
 	fieldEnds.push_back(saCend);
 
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-	chrIndex = chrConverter.parseChrAndReturnIndex(fieldBegins[0], ',');
+	chrIndex = chrConverter.parseChrAndReturnIndex(
+	    fieldBegins[0],
+	    fieldEnds[0],
+	    ',');
 	if (chrConverter.isIgnoredChromosome(chrIndex)) {
 		return;
 	}
@@ -306,7 +309,8 @@ SuppAlignment::SuppAlignment(const string& saIn) :
 		++index;
 	}
 	const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-	chrIndex = chrConverter.parseChrAndReturnIndex(next(saIn.cbegin(), index), ':');
+	chrIndex = chrConverter.parseChrAndReturnIndex(
+	    next(saIn.cbegin(), index), saIn.cend(), ':');
 	if (chrConverter.isIgnoredChromosome(chrIndex)) {
 		return;
 	}

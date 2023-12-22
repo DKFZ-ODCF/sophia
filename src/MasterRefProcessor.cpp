@@ -169,7 +169,10 @@ namespace sophia {
             if (sophiaLine[0] != '#') {
                 auto chrIndexO =
                     chrConverter.compressedMrefIndexToIndex(
-                        chrConverter.parseChrAndReturnIndex(sophiaLine.cbegin(), '\t'));
+                        chrConverter.parseChrAndReturnIndex(
+                            sophiaLine.cbegin(),
+                            sophiaLine.cend(),
+                            '\t'));
                 // Ignore chromosomes not in the compressedMref set.
                 if (chrIndexO.has_value()) {
                     ChrIndex chrIndex = chrIndexO.value();

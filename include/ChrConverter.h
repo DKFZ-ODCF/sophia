@@ -78,6 +78,7 @@ namespace sophia {
           * a domain_error to ensure that no non-parsable chromosome names are processed by
           * SOPHIA. */
         virtual ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
+                                                std::string::const_iterator endIt,
                                                 char stopChar) const = 0;
 
     };

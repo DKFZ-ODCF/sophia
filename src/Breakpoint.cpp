@@ -1177,7 +1177,7 @@ namespace sophia {
             ++index;
         }
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        chrIndex = chrConverter.parseChrAndReturnIndex(bpIn.cbegin(), '\t');
+        chrIndex = chrConverter.parseChrAndReturnIndex(bpIn.cbegin(), bpIn.cend(), '\t');
 
         for (auto i = bpChunkPositions[0] + 1; i < bpChunkPositions[1]; ++i) {
             pos = pos * 10 + (bpIn[i] - '0');

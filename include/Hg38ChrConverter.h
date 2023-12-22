@@ -109,6 +109,7 @@ namespace sophia {
             following character(s) into index positions (using ChrConverter::indexToChr).
             If the name cannot be parsed, throws a domain_error exception. */
         ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
+                                        std::string::const_iterator endIt,
                                         char stopChar) const;
 
     };
