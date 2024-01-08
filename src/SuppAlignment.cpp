@@ -251,6 +251,9 @@ SuppAlignment SuppAlignment::parse(string::const_iterator saCbegin,
 		}
 	}
 
+    // NOTE: If there are no supplementary alignments with no soft/hard-clipped segments, then
+    //       `cigarChunks` will be empty. In this case, we still return the SuppAlignment, even
+    //       if it is located on, e.g. a decoy chromosome.
 	if (cigarChunks.size() != 0) {
         // We found soft/hard-clipped segments. Update `pos` and `extendedPos` fields.
         if (cigarChunks[largestClipIndex].encounteredM) {
