@@ -502,8 +502,7 @@ namespace sophia {
                 supportingHardAlignments[i]->setChosenBp(pos, i);
             }
             for (auto hardAlignment : supportingHardAlignments) {
-                for (const auto &sa :
-                     hardAlignment->generateSuppAlignments(chrIndex, pos)) {
+                for (const auto &sa : hardAlignment->generateSuppAlignments(chrIndex, pos)) {
                     if (!(sa.isInverted() && sa.getPos() == pos &&
                           sa.getChrIndex() == chrIndex)) {
                         supplementsSecondary.push_back(sa);
@@ -554,8 +553,7 @@ namespace sophia {
             }
 
             for (auto hardAlignment : supportingHardLowMapqAlignments) {
-                for (const auto &sa :
-                     hardAlignment->generateSuppAlignments(chrIndex, pos)) {
+                for (const auto &sa : hardAlignment->generateSuppAlignments(chrIndex, pos)) {
                     if (!(sa.isInverted() && sa.getPos() == pos &&
                           sa.getChrIndex() == chrIndex)) {
                         saHardTmpLowQual.push_back(sa);
