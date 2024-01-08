@@ -1266,13 +1266,14 @@ namespace sophia {
                 for (auto i = bpChunkPositions[4] + 1; i < bpChunkPositions[5];
                      ++i) {
                     if (bpIn[i] == ';') {
-                        doubleSidedMatches.emplace_back(saStr);
+                        doubleSidedMatches.emplace_back(SuppAlignment::parse(saStr));
                         saStr.clear();
                     } else {
                         saStr.push_back(bpIn[i]);
                     }
                 }
-                SuppAlignment saTmp{saStr};
+                SuppAlignment saTmp = SuppAlignment::parse(saStr);
+
                 if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
                     doubleSidedMatches.push_back(saTmp);
                 }
@@ -1282,13 +1283,13 @@ namespace sophia {
                 for (auto i = bpChunkPositions[5] + 1; i < bpChunkPositions[6];
                      ++i) {
                     if (bpIn[i] == ';') {
-                        supplementsPrimary.emplace_back(saStr);
+                        supplementsPrimary.emplace_back(SuppAlignment::parse(saStr));
                         saStr.clear();
                     } else {
                         saStr.push_back(bpIn[i]);
                     }
                 }
-                SuppAlignment saTmp{saStr};
+                SuppAlignment saTmp = SuppAlignment::parse(saStr);
                 if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
                     supplementsPrimary.push_back(saTmp);
                 }

@@ -627,7 +627,8 @@ Alignment::generateSuppAlignments(int bpChrIndex, int bpPos) {
         }
         saEnds.push_back(saCend);
         for (auto i = 0u; i < saBegins.size(); ++i) {
-            SuppAlignment saTmp{saBegins[i],
+            SuppAlignment saTmp = SuppAlignment::parse(
+                                saBegins[i],
                                 saEnds[i],
                                 !supplementary,
                                 lowMapq,
@@ -636,7 +637,7 @@ Alignment::generateSuppAlignments(int bpChrIndex, int bpPos) {
                                 chosenBp->bpEncounteredM,
                                 chosenBp->selfNodeIndex,
                                 bpChrIndex,
-                                bpPos};
+                                bpPos);
             if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
                 suppAlignmentsTmp.push_back(saTmp);
             }

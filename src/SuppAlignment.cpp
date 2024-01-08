@@ -35,44 +35,92 @@ double SuppAlignment::ISIZEMAX { };
 
 int SuppAlignment::DEFAULTREADLENGTH { };
 
-SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
-                             string::const_iterator saCend,
+
+// Default constructor.
+SuppAlignment::SuppAlignment() :
+    matchFuzziness { 5 * DEFAULTREADLENGTH },
+    chrIndex { 0 },
+    pos { 0 },
+    extendedPos { 0 },
+    mapq { 0 },
+    supportingIndices { },
+    supportingIndicesSecondary { },
+    distinctReads { 1 },
+    support { 0 },
+    secondarySupport { 0 },
+    mateSupport { 0 },
+    expectedDiscordants { 0 },
+    encounteredM { false },
+    toRemove { false },
+    inverted { false },
+    fuzzy { false },
+    strictFuzzy { false },
+    distant { false },
+    lowMapqSource { false },
+    nullMapqSource { false },
+    suspicious { false },
+    semiSuspicious { false },
+    properPairErrorProne { false },
+    primary { true } {}
+
+
+SuppAlignment::SuppAlignment(int chrIndexIn,
+                             int posIn,
+                             int mateSupportIn,
+                             int expectedDiscordantsIn,
+                             bool encounteredMIn,
+                             bool invertedIn,
+                             int extendedPosIn,
                              bool primaryIn,
                              bool lowMapqSourceIn,
                              bool nullMapqSourceIn,
-                             bool alignmentOnForwardStrand,
-                             bool bpEncounteredM,
-                             int originIndexIn,
-                             int bpChrIndex,
-                             int bpPos) :
-				matchFuzziness { 5 * DEFAULTREADLENGTH },
-				chrIndex { 0 },
-				pos { 0 },
-				extendedPos { 0 },
-				mapq { 0 },
-				supportingIndices { },
-				supportingIndicesSecondary { },
-				distinctReads { 1 },
-				support { 0 },
-				secondarySupport { 0 },
-				mateSupport { 0 },
-				expectedDiscordants { 0 },
-				encounteredM { bpEncounteredM },
-				toRemove { false },
-				inverted { false },
-				fuzzy { false },
-				strictFuzzy { false },
-				distant { false },
-				lowMapqSource { lowMapqSourceIn },
-				nullMapqSource { nullMapqSourceIn },
-				suspicious { false },
-				semiSuspicious { false },
-				properPairErrorProne { false },
-				primary { primaryIn } {
-	if (primary) {
-		supportingIndices.push_back(originIndexIn);
+                             int originIndexIn) : SuppAlignment() {
+    chrIndex = chrIndexIn;
+    pos = posIn;
+    extendedPos = extendedPosIn;
+    mateSupport = mateSupportIn;
+    expectedDiscordants = expectedDiscordantsIn;
+    encounteredM = encounteredMIn;
+    inverted = invertedIn;
+    fuzzy = extendedPosIn != posIn;
+    distant = true;
+    lowMapqSource = lowMapqSourceIn;
+    nullMapqSource = nullMapqSourceIn;
+    primary = primaryIn;
+
+	if (originIndexIn != -1) {
+		if (primary) {
+			supportingIndices.push_back(originIndexIn);
+		} else {
+			supportingIndicesSecondary.push_back(originIndexIn);
+		}
 	} else {
-		supportingIndicesSecondary.push_back(originIndexIn);
+		distinctReads = 0;
+	}
+	strictFuzzy = fuzzy || (support + secondarySupport) < 3;
+}
+
+SuppAlignment SuppAlignment::parse(string::const_iterator saCbegin,
+                                   string::const_iterator saCend,
+                                   bool primaryIn,
+                                   bool lowMapqSourceIn,
+                                   bool nullMapqSourceIn,
+                                   bool alignmentOnForwardStrand,
+                                   bool bpEncounteredM,
+                                   int originIndexIn,
+                                   int bpChrIndex,
+                                   int bpPos) {
+
+    SuppAlignment result = SuppAlignment();
+    result.encounteredM = bpEncounteredM;
+    result.lowMapqSource = lowMapqSourceIn;
+    result.nullMapqSource = nullMapqSourceIn;
+    result.primary = primaryIn;
+
+	if (result.primary) {
+		result.supportingIndices.push_back(originIndexIn);
+	} else {
+		result.supportingIndicesSecondary.push_back(originIndexIn);
 	}
 //	//"SA:Z:10,24753146,+,68S33M,48,1;X,135742083,-,47S22M32S,0,0;8,72637925,-,29S19M53S,0,0;"
 //	//"10,24753146,+,68S33M,48,1"
@@ -80,6 +128,22 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
 //		cerr << *cigarString_cit;
 //	}
 //	cerr << endl;
+
+    // Split the SA tag into fields. From the SAM specification:
+    //   SA:Z:(rname ,pos ,strand ,CIGAR ,mapQ ,NM ;)+ Other canonical alignments in a chimeric alignment, for-
+    //   matted as a semicolon-delimited list. Each element in the list represents a part of the chimeric align-
+    //   ment. Conventionally, at a supplementary line, the first element points to the primary line. Strand is
+    //   either ‘+’ or ‘-’, indicating forward/reverse strand, corresponding to FLAG bit 0x10. Pos is a 1-based
+    //   coordinate.
+    //
+    // NOTE: This parser does *NOT* cover the case with multiple semicolon-separated alignments.
+    static const unsigned int
+        RNAME = 0,
+        POS = 1,
+        STRAND = 2,
+        CIGAR = 3,
+        MAPQ = 4,
+        NM = 5;
 
 	vector<string::const_iterator> fieldBegins = { saCbegin };
 	vector<string::const_iterator> fieldEnds;
@@ -91,24 +155,52 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
 	}
 	fieldEnds.push_back(saCend);
 
+    // Update `chrIndex` field.
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-	chrIndex = chrConverter.parseChrAndReturnIndex(
-	    fieldBegins[0],
-	    fieldEnds[0],
+	result.chrIndex = chrConverter.parseChrAndReturnIndex(
+	    fieldBegins[RNAME],
+	    fieldEnds[RNAME],
 	    ',');
-	if (chrConverter.isIgnoredChromosome(chrIndex)) {
-		return;
+
+    // If the chromosome is to be ignored, don't update any of the other fields.
+	if (chrConverter.isIgnoredChromosome(result.chrIndex)) {
+		return result;
 	}
-	for (auto it = fieldBegins[1]; it != fieldEnds[1]; ++it) {
-		pos = 10 * pos + (*it - '0');
+	// else
+
+    // Update `pos` field.
+	for (auto it = fieldBegins[POS]; it != fieldEnds[POS]; ++it) {
+		result.pos = 10 * result.pos + (*it - '0');
 	}
 
+    // Update `mapq` field.
+    for (auto it = fieldBegins[MAPQ]; it != fieldEnds[MAPQ]; ++it) {
+		result.mapq = 10 * result.mapq + (*it - '0');
+	}
+
+	// Update `inverted` field
+	if (alignmentOnForwardStrand) {
+		result.inverted = ('+' != *fieldBegins[STRAND]);
+	} else {
+		result.inverted = ('-' != *fieldBegins[STRAND]);
+	}
+
+	// Update `strictFuzzy` field.
+	result.strictFuzzy = result.fuzzy || (result.support + result.secondarySupport) < 3;
+
+    // Now, parse the CIGAR string and identify soft/hard-clipped segments.
 	vector<CigarChunk> cigarChunks;
 	auto cigarEncounteredM = false;
-	auto cumulativeNucleotideCount = 0, currentNucleotideCount = 0, chunkIndex = 0, bestChunkIndex = 0, indelAdjustment = 0;
-	auto largestClip = 0;
+	auto cumulativeNucleotideCount = 0,
+	     currentNucleotideCount = 0,
+	     chunkIndex = 0,
+	     largestClipIndex = 0,
+	     indelAdjustment = 0;
+	auto largestClipSize = 0;
 	auto leftClipAdjustment = 0;
-	for (auto cigarString_cit = fieldBegins[3]; cigarString_cit != fieldEnds[3]; ++cigarString_cit) {
+	for (auto cigarString_cit = fieldBegins[CIGAR];
+	     cigarString_cit != fieldEnds[CIGAR];
+	     ++cigarString_cit) {
 		if (isdigit(*cigarString_cit)) {
 			currentNucleotideCount = currentNucleotideCount * 10 + (*cigarString_cit - '0');
 		} else {
@@ -121,25 +213,27 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
 				if (!cigarEncounteredM) {
 					leftClipAdjustment = currentNucleotideCount;
 				}
-				cigarChunks.emplace_back(*cigarString_cit,
-				                         cigarEncounteredM,
-				                         cumulativeNucleotideCount + indelAdjustment - leftClipAdjustment,
-				                         currentNucleotideCount);
-				if (largestClip < currentNucleotideCount) {
-					largestClip = currentNucleotideCount;
-					bestChunkIndex = chunkIndex;
+				cigarChunks.emplace_back(
+				    *cigarString_cit,
+                    cigarEncounteredM,
+                    cumulativeNucleotideCount + indelAdjustment - leftClipAdjustment,
+                    currentNucleotideCount);
+				if (largestClipSize < currentNucleotideCount) {
+					largestClipSize = currentNucleotideCount;
+					largestClipIndex = chunkIndex;
 				}
 				++chunkIndex;
 				cumulativeNucleotideCount += currentNucleotideCount;
 				break;
 			case 'H':
-				cigarChunks.emplace_back(*cigarString_cit,
-				                         cigarEncounteredM,
-				                         cumulativeNucleotideCount + indelAdjustment - leftClipAdjustment,
-				                         currentNucleotideCount);
-				if (largestClip < currentNucleotideCount) {
-					largestClip = currentNucleotideCount;
-					bestChunkIndex = chunkIndex;
+				cigarChunks.emplace_back(
+				    *cigarString_cit,
+                    cigarEncounteredM,
+                    cumulativeNucleotideCount + indelAdjustment - leftClipAdjustment,
+                    currentNucleotideCount);
+				if (largestClipSize < currentNucleotideCount) {
+					largestClipSize = currentNucleotideCount;
+					largestClipIndex = chunkIndex;
 				}
 				++chunkIndex;
 				break;
@@ -156,23 +250,105 @@ SuppAlignment::SuppAlignment(string::const_iterator saCbegin,
 			currentNucleotideCount = 0;
 		}
 	}
-	if (cigarChunks[bestChunkIndex].encounteredM) {
-		pos += cigarChunks[bestChunkIndex].startPosOnRead;
+
+	if (cigarChunks.size() != 0) {
+        // We found soft/hard-clipped segments. Update `pos` and `extendedPos` fields.
+        if (cigarChunks[largestClipIndex].encounteredM) {
+            result.pos += cigarChunks[largestClipIndex].startPosOnRead;
+        }
+        result.extendedPos = result.pos;
+
+        result.distant = (bpChrIndex != result.chrIndex || (abs(bpPos - result.pos) > ISIZEMAX));
+        if (bpChrIndex == result.chrIndex) {
+            result.matchFuzziness = min(abs(bpPos - result.pos), result.matchFuzziness);
+        }
+    }
+
+	return result;
+}
+
+SuppAlignment SuppAlignment::parse(const string& saIn) {
+
+    SuppAlignment result = SuppAlignment();
+    result.properPairErrorProne = saIn.back() == '#';
+    result.encounteredM = saIn[0] == '|';
+
+	auto index = 0;
+	if (result.encounteredM) {
+		++index;
 	}
-	extendedPos = pos;
-	for (auto it = fieldBegins[4]; it != fieldEnds[4]; ++it) {
-		mapq = 10 * mapq + (*it - '0');
+
+	const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+	result.chrIndex = chrConverter.parseChrAndReturnIndex(
+	    next(saIn.cbegin(), index),
+	    saIn.cend(),
+	    ':');
+
+	if (chrConverter.isIgnoredChromosome(result.chrIndex)) {
+		return result;
 	}
-	if (alignmentOnForwardStrand) {
-		inverted = ('+' != *fieldBegins[2]);
+
+	// else
+	while (saIn[index] != ':') {
+		++index;
+	}
+	++index;
+
+	for (; saIn[index] != '('; ++index) {
+		if (saIn[index] == '-') {
+			result.fuzzy = true;
+		} else if (saIn[index] == '_') {
+			result.inverted = true;
+			while (saIn[index] != '(') {
+				++index;
+			}
+			break;
+		} else if (saIn[index] != '|') {
+			if (!result.fuzzy) {
+				result.pos = 10 * result.pos + (saIn[index] - '0');
+			} else {
+				result.extendedPos = 10 * result.extendedPos + (saIn[index] - '0');
+			}
+		}
+	}
+
+	if (!result.fuzzy) {
+		result.extendedPos = result.pos;
+	}
+	++index;
+
+	for (; saIn[index] != ','; ++index) {
+		result.support = 10 * result.support + (saIn[index] - '0');
+	}
+	++index;
+
+	for (; saIn[index] != ','; ++index) {
+		result.secondarySupport = 10 * result.secondarySupport + (saIn[index] - '0');
+	}
+
+	++index;
+	if (saIn[index] == '!') {
+		result.suspicious = true;
+		index += 2;
 	} else {
-		inverted = ('-' != *fieldBegins[2]);
+		for (; saIn[index] != '/'; ++index) {
+			if (saIn[index] == '?') {
+				result.semiSuspicious = true;
+			} else {
+				result.mateSupport = 10 * result.mateSupport + (saIn[index] - '0');
+			}
+		}
+		++index;
 	}
-	distant = (bpChrIndex != chrIndex || (abs(bpPos - pos) > ISIZEMAX));
-	if (bpChrIndex == chrIndex) {
-		matchFuzziness = min(abs(bpPos - pos), matchFuzziness);
+	for (; saIn[index] != ')'; ++index) {
+		result.expectedDiscordants = 10 * result.expectedDiscordants + (saIn[index] - '0');
 	}
-	strictFuzzy = fuzzy || (support + secondarySupport) < 3;
+
+	result.distant = result.expectedDiscordants > 0 || result.suspicious;
+
+	result.strictFuzzy = result.fuzzy || (result.support + result.secondarySupport) < 3;
+
+	return result;
 }
 
 void SuppAlignment::finalizeSupportingIndices() {
@@ -184,53 +360,6 @@ void SuppAlignment::finalizeSupportingIndices() {
 	                                        supportingIndicesSecondary.end());
 	support = static_cast<int>(supportingIndices.size());
 	secondarySupport = static_cast<int>(supportingIndicesSecondary.size());
-}
-
-SuppAlignment::SuppAlignment(int chrIndexIn,
-                             int posIn,
-                             int mateSupportIn,
-                             int expectedDiscordantsIn,
-                             bool encounteredMIn,
-                             bool invertedIn,
-                             int extendedPosIn,
-                             bool primaryIn,
-                             bool lowMapqSourceIn,
-                             bool nullMapqSourceIn,
-                             int originIndexIn) :
-				matchFuzziness { 5 * DEFAULTREADLENGTH },
-				chrIndex { chrIndexIn },
-				pos { posIn },
-				extendedPos { extendedPosIn },
-				mapq { 0 },
-				supportingIndices { },
-				supportingIndicesSecondary { },
-				distinctReads { 1 },
-				support { 0 },
-				secondarySupport { 0 },
-				mateSupport { mateSupportIn },
-				expectedDiscordants { expectedDiscordantsIn },
-				encounteredM { encounteredMIn },
-				toRemove { false },
-				inverted { invertedIn },
-				fuzzy { extendedPosIn != posIn },
-				strictFuzzy { false },
-				distant { true },
-				lowMapqSource { lowMapqSourceIn },
-				nullMapqSource { nullMapqSourceIn },
-				suspicious { false },
-				semiSuspicious { false },
-				properPairErrorProne { false },
-				primary { primaryIn } {
-	if (originIndexIn != -1) {
-		if (primary) {
-			supportingIndices.push_back(originIndexIn);
-		} else {
-			supportingIndicesSecondary.push_back(originIndexIn);
-		}
-	} else {
-		distinctReads = 0;
-	}
-	strictFuzzy = fuzzy || (support + secondarySupport) < 3;
 }
 
 string SuppAlignment::print() const {
@@ -279,92 +408,6 @@ string SuppAlignment::print() const {
 		outStr.append("#");
 	}
 	return outStr;
-}
-
-SuppAlignment::SuppAlignment(const string& saIn) :
-				matchFuzziness { 5 * DEFAULTREADLENGTH },
-				chrIndex { 0 },
-				pos { 0 },
-				extendedPos { 0 },
-				mapq { 0 },
-				distinctReads { 1 },
-				support { 0 },
-				secondarySupport { 0 },
-				mateSupport { 0 },
-				expectedDiscordants { 0 },
-				encounteredM { saIn[0] == '|' },
-				toRemove { false },
-				inverted { false },
-				fuzzy { false },
-				strictFuzzy { false },
-				distant { false },
-				lowMapqSource { false },
-				nullMapqSource { false },
-				suspicious { false },
-				semiSuspicious { false },
-				properPairErrorProne { saIn.back() == '#' },
-				primary { true } {
-	auto index = 0;
-	if (encounteredM) {
-		++index;
-	}
-	const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-	chrIndex = chrConverter.parseChrAndReturnIndex(
-	    next(saIn.cbegin(), index), saIn.cend(), ':');
-	if (chrConverter.isIgnoredChromosome(chrIndex)) {
-		return;
-	}
-	while (saIn[index] != ':') {
-		++index;
-	}
-	++index;
-	for (; saIn[index] != '('; ++index) {
-		if (saIn[index] == '-') {
-			fuzzy = true;
-		} else if (saIn[index] == '_') {
-			inverted = true;
-			while (saIn[index] != '(') {
-				++index;
-			}
-			break;
-		} else if (saIn[index] != '|') {
-			if (!fuzzy) {
-				pos = 10 * pos + (saIn[index] - '0');
-			} else {
-				extendedPos = 10 * extendedPos + (saIn[index] - '0');
-			}
-		}
-	}
-	if (!fuzzy) {
-		extendedPos = pos;
-	}
-	++index;
-	for (; saIn[index] != ','; ++index) {
-		support = 10 * support + (saIn[index] - '0');
-	}
-	++index;
-	for (; saIn[index] != ','; ++index) {
-		secondarySupport = 10 * secondarySupport + (saIn[index] - '0');
-	}
-	++index;
-	if (saIn[index] == '!') {
-		suspicious = true;
-		index += 2;
-	} else {
-		for (; saIn[index] != '/'; ++index) {
-			if (saIn[index] == '?') {
-				semiSuspicious = true;
-			} else {
-				mateSupport = 10 * mateSupport + (saIn[index] - '0');
-			}
-		}
-		++index;
-	}
-	for (; saIn[index] != ')'; ++index) {
-		expectedDiscordants = 10 * expectedDiscordants + (saIn[index] - '0');
-	}
-	distant = expectedDiscordants > 0 || suspicious;
-	strictFuzzy = fuzzy || (support + secondarySupport) < 3;
 }
 
 bool SuppAlignment::saCloseness(const SuppAlignment& rhs, int fuzziness) const {
