@@ -8,7 +8,6 @@
 #include <cmath>
 #include <string>
 #include <memory>
-#include "cxxopts.hpp"
 #include "BreakpointReduced.h"
 #include "AnnotationProcessor.h"
 #include "SuppAlignment.h"
@@ -16,6 +15,7 @@
 #include "SvEvent.h"
 #include "strtk-wrap.h"
 #include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
 #include <vector>
 #include "MrefEntryAnno.h"
 #include <boost/iostreams/filtering_stream.hpp>
@@ -30,39 +30,93 @@ int main(int argc, char** argv) {
     using namespace std;
     using namespace sophia;
 
+    string assemblyName = "hg37";
+    int artifactlofreq { 33 };
+    int artifacthifreq { 50 };
+    int clonalitylofreq { 5 };
+    int clonalitystrictlofreq { 20 };
+    int clonalityhifreq { 85 };
+    int bpFreq { 3 };
+    int germlineOffset { 5 };
+    int germlineDbLimit { 5 };
+    int pidsInMref { 0 };
+    int defaultReadLengthTumor { 0 };
+    int defaultReadLengthControl { 0 };
+
     try {
         ios_base::sync_with_stdio(false);
+        namespace po = boost::program_options;
         cin.tie(nullptr);
-        cxxopts::Options options("SophiaAnnotate", "Annotates SOPHIA output");
-        options.add_options() //
-        ("help", "produce help message") //
-        ("mref", "mref file", cxxopts::value<string>()) //
-        ("assemblyname", "assembly name", cxxopts::value<string>()) //
-        ("tumorresults", "_bps.bed.gz file from sophia for the tumor, or control for a no-tumor analysis", cxxopts::value<string>()) //
-        ("controlresults", "_bps.bed.gz file from sophia for the control", cxxopts::value<string>()) //
-        ("defaultreadlengthtumor", "Default read length for the technology used in sequencing 101,151 etc., tumor", cxxopts::value<int>()) //
-        ("defaultreadlengthcontrol", "Default read length for the technology used in sequencing 101,151 etc., tumor", cxxopts::value<int>()) //
-        ("pidsinmref", "Number of PIDs in the MREF", cxxopts::value<int>()) //
-        ("artifactlofreq", "PERCENTAGE frequency of artifact supports for bps to be considered as artifact_like (33)", cxxopts::value<int>()) //
-        ("artifacthifreq", "PERCENTAGE frequency of artifact supports for bps to be considered as artifacts (50)", cxxopts::value<int>()) //
-        ("clonalitylofreq", "PERCENTAGE clonality for bps to be considered as extreme_subclonal (10)", cxxopts::value<int>()) //
-        ("clonalitystrictlofreq", "PERCENTAGE clonality for bps to be considered as extreme_subclonal (20)", cxxopts::value<int>()) //
-        ("clonalityhifreq", "PERCENTAGE clonality for bps to be considered as homozygous (85)", cxxopts::value<int>()) //
-        ("bpfreq", "PERCENTAGE frequency of a BP for consideration as rare. (3)", cxxopts::value<int>()) //
-        ("germlineoffset", "Minimum offset a germline bp and a control bp. (5)", cxxopts::value<int>()) //
-        ("germlinedblimit", "Maximum occurrence of germline variants in the db. (5)", cxxopts::value<int>()) //
-        ("debugmode", "debugmode");
+        po::options_description options("Allowed options for sophiaAnnotate");
+        options.add_options()
+            ("help",
+                "produce help message")
+            ("mref",
+                po::value<string>(),
+                "path to mref file")
+            ("tumorresults",
+                po::value<string>(),
+                "path to _bps.bed.gz file from `sophia` for the tumor, or control for a no-tumor analysis")
+            ("controlresults",
+                po::value<string>(),
+                "path to _bps.bed.gz file from `sophia` for the control")
+            ("assemblyname",
+                po::value<string>(&assemblyName)->default_value("hg37"),
+                "assembly name")
+            ("defaultreadlengthtumor",
+                po::value<int>(&defaultReadLengthTumor)->default_value(defaultReadLengthTumor),
+                "Default read length for the technology used in sequencing 101,151 etc., tumor")
+            ("defaultreadlengthcontrol",
+                po::value<int>(&defaultReadLengthControl)->default_value(defaultReadLengthControl),
+                "Default read length for the technology used in sequencing 101,151 etc., tumor")
+            ("pidsinmref",
+                po::value<int>(&pidsInMref)->default_value(pidsInMref),
+                "Number of PIDs in the MREF")
+            ("artifactlofreq",
+                po::value<int>(&artifactlofreq)->default_value(artifactlofreq),
+                "PERCENTAGE frequency of artifact supports for bps to be considered as artifact_like")
+            ("artifacthifreq",
+                po::value<int>(&artifacthifreq)->default_value(artifacthifreq),
+                "PERCENTAGE frequency of artifact supports for bps to be considered as artifacts")
+            ("clonalitylofreq",
+                po::value<int>(&clonalitylofreq)->default_value(clonalitylofreq),
+                "PERCENTAGE clonality for bps to be considered as extreme_subclonal")
+            ("clonalitystrictlofreq",
+                po::value<int>(&clonalitystrictlofreq)->default_value(clonalitystrictlofreq),
+                "PERCENTAGE clonality for bps to be considered as extreme_subclonal")
+            ("clonalityhifreq",
+                po::value<int>(&clonalityhifreq)->default_value(clonalityhifreq),
+                "PERCENTAGE clonality for bps to be considered as homozygous")
+            ("bpfreq",
+                po::value<int>(&bpFreq)->default_value(bpFreq),
+                "PERCENTAGE frequency of a BP for consideration as rare")
+            ("germlineoffset",
+                po::value<int>(&germlineOffset)->default_value(germlineOffset),
+                "Minimum offset a germline bp and a control bp")
+            ("germlinedblimit",
+                po::value<int>(&germlineDbLimit)->default_value(germlineDbLimit),
+                "Maximum occurrence of germline variants in the db")
+            ("debugmode",
+                "debugmode")
+        ;
 
-        options.parse(argc, argv);
+        po::variables_map inputVariables { };
+        po::store(po::parse_command_line(argc, argv, options), inputVariables);
+        po::notify(inputVariables);
+
+        if (inputVariables.count("help")) {
+            cout << options << endl;
+            return 0;
+        }
 
         unique_ptr<ChrConverter> chrConverter;
-        if (!options.count("assemblyname") ||
-              options["assemblyname"].as<string>() == Hg37ChrConverter::assemblyName) {
+        if (!inputVariables.count("assemblyname") ||
+              inputVariables["assemblyname"].as<string>() == Hg37ChrConverter::assemblyName) {
             chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
-        } else if (options["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
+        } else if (inputVariables["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
             chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
         } else {
-            cerr << "Unknown assembly name " << options["assemblyname"].as<string>() << ". I know "
+            cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<string>() << ". I know "
                  << Hg37ChrConverter::assemblyName << " and "
                  << Hg38ChrConverter::assemblyName << endl;
             return 1;
@@ -70,79 +124,68 @@ int main(int argc, char** argv) {
 
         vector<vector<MrefEntryAnno>> mref
             { chrConverter->nChromosomesCompressedMref(), vector<MrefEntryAnno> { } };
-        if (!options.count("mref")) {
+        if (!inputVariables.count("mref")) {
             cerr << "No mref file given, exiting" << endl;
             return 1;
         }
 
         string tumorResults;
-        if (options.count("tumorresults")) {
-            tumorResults = options["tumorresults"].as<string>();
+        if (inputVariables.count("tumorresults")) {
+            tumorResults = inputVariables["tumorresults"].as<string>();
         } else {
             cerr << "No input file given, exiting" << endl;
             return 1;
         }
 
-        int pidsInMref { 0 };
-
-        if (options.count("pidsinmref")) {
-            pidsInMref = options["pidsinmref"].as<int>();
+        if (inputVariables.count("pidsinmref")) {
+            pidsInMref = inputVariables["pidsinmref"].as<int>();
         } else {
             cerr << "number of PIDS in the MREF not given, exiting" << endl;
             return 1;
         }
 
-        int defaultReadLengthTumor { 0 };
-        if (options.count("defaultreadlengthtumor")) {
-            defaultReadLengthTumor = options["defaultreadlengthtumor"].as<int>();
+        if (inputVariables.count("defaultreadlengthtumor")) {
+            defaultReadLengthTumor = inputVariables["defaultreadlengthtumor"].as<int>();
         } else {
             cerr << "Default read Length not given, exiting" << endl;
             return 1;
         }
 
-        int artifactlofreq { 33 };
-        if (options.count("artifactlofreq")) {
-            artifactlofreq = options["artifactlofreq"].as<int>();
+        if (inputVariables.count("artifactlofreq")) {
+            artifactlofreq = inputVariables["artifactlofreq"].as<int>();
         }
 
-        int artifacthifreq { 50 };
-        if (options.count("artifacthifreq")) {
-            artifacthifreq = options["artifacthifreq"].as<int>();
+        if (inputVariables.count("artifacthifreq")) {
+            artifacthifreq = inputVariables["artifacthifreq"].as<int>();
         }
 
-        int clonalitylofreq { 5 };
-        if (options.count("clonalitylofreq")) {
-            clonalitylofreq = options["clonalitylofreq"].as<int>();
+        if (inputVariables.count("clonalitylofreq")) {
+            clonalitylofreq = inputVariables["clonalitylofreq"].as<int>();
         }
 
-        int clonalitystrictlofreq { 20 };
-        if (options.count("clonalitystrictlofreq")) {
-            clonalitystrictlofreq = options["clonalitystrictlofreq"].as<int>();
+        if (inputVariables.count("clonalitystrictlofreq")) {
+            clonalitystrictlofreq = inputVariables["clonalitystrictlofreq"].as<int>();
         }
 
-        int clonalityhifreq { 85 };
-        if (options.count("clonalityhifreq")) {
-            clonalityhifreq = options["clonalityhifreq"].as<int>();
+        if (inputVariables.count("clonalityhifreq")) {
+            clonalityhifreq = inputVariables["clonalityhifreq"].as<int>();
         }
 
-        int bpFreq { 3 };
-        if (options.count("bpfreq")) {
-            bpFreq = options["bpfreq"].as<int>();
+        if (inputVariables.count("bpfreq")) {
+            bpFreq = inputVariables["bpfreq"].as<int>();
         }
 
-        int germlineOffset { 5 };
-        if (options.count("germlineoffset")) {
-            germlineOffset = options["germlineoffset"].as<int>();
+        if (inputVariables.count("germlineoffset")) {
+            germlineOffset = inputVariables["germlineoffset"].as<int>();
         }
 
-        int germlineDbLimit { 5 };
-        if (options.count("germlinedblimit")) {
-            germlineDbLimit = options["germlinedblimit"].as<int>();
+        if (inputVariables.count("germlinedblimit")) {
+            germlineDbLimit = inputVariables["germlinedblimit"].as<int>();
         }
 
         MrefEntryAnno::PIDSINMREF = pidsInMref;
         unique_ptr<ifstream> mrefInputHandle
-            { make_unique<ifstream>(options["mref"].as<string>(), ios_base::in | ios_base::binary) };
+            { make_unique<ifstream>(inputVariables["mref"].as<string>(), ios_base::in | ios_base::binary) };
         unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle
             { make_unique<boost::iostreams::filtering_istream>() };
         mrefGzHandle->push(boost::iostreams::gzip_decompressor());
@@ -184,18 +227,17 @@ int main(int argc, char** argv) {
         SvEvent::GERMLINEOFFSETTHRESHOLD = germlineOffset;
         SvEvent::GERMLINEDBLIMIT = germlineDbLimit;
         SvEvent::ABRIDGEDOUTPUT = true;
-        if (options.count("debugmode")) {
+        if (inputVariables.count("debugmode")) {
             SvEvent::DEBUGMODE = true;
         } else {
             SvEvent::DEBUGMODE = false;
         }
         AnnotationProcessor::ABRIDGEDOUTPUT = true;
         Breakpoint::BPSUPPORTTHRESHOLD = 3;
-        if (options.count("controlresults")) {
-            string controlResults { options["controlresults"].as<string>() };
-            int defaultReadLengthControl { 0 };
-            if (options.count("defaultreadlengthcontrol")) {
-                defaultReadLengthControl = options["defaultreadlengthtumor"].as<int>();
+        if (inputVariables.count("controlresults")) {
+            string controlResults { inputVariables["controlresults"].as<string>() };
+            if (inputVariables.count("defaultreadlengthcontrol")) {
+                defaultReadLengthControl = inputVariables["defaultreadlengthtumor"].as<int>();
             } else {
                 cerr << "Default read Length not given, exiting" << endl;
                 return 1;

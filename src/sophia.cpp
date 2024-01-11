@@ -25,45 +25,77 @@ std::pair<double, double> getIsizeParameters(const std::string &ISIZEFILE);
 int main(int argc, char** argv) {
     using namespace sophia;
 
+    int defaultReadLength = 0,
+        clipSize = 10,
+        baseQuality = 23,
+        baseQualityLow = 12,
+        lowQualClipSize = 5,
+        isizeSigmaLevel = 5,
+        bpSupport = 5;
+    double properPairPercentage = 100.0;
+    std::string assemblyName = "hg37";
+
     try {
         std::ios_base::sync_with_stdio(false);
         cin.tie(nullptr);
-        boost::program_options::options_description desc("Allowed options");
-        desc.add_options() //
-        ("help", "produce help message") //
-        ("assemblyname", boost::program_options::value<std::string>(), "assembly name (hg37, hg38)") //
-        ("mergedisizes", boost::program_options::value<std::string>(), "insertsize distribution file for the merged bam") //
-        ("medianisize", boost::program_options::value<double>(), "median insert size for the merged bam") //
-        ("stdisizepercentage", boost::program_options::value<double>(), "percentage standard deviation of the insert size for the merged bam") //
-        ("defaultreadlength", boost::program_options::value<int>(), "Default read length for the technology used in sequencing 101,151 etc.") //
-        ("clipsize", boost::program_options::value<int>(), "Minimum length of soft/hard clips in the alignment. (10)") //
-        ("basequality", boost::program_options::value<int>(), "Minimum median quality of split read overhangs. (23)") //
-        ("basequalitylow", boost::program_options::value<int>(), "If 5 consecutive bases in a split read overhang have lower quality than this strict threshold, it will be low-qual. (12)") //
-        ("lowqualclipsize", boost::program_options::value<int>(), "Maximum length of a low qality split read overhang for discarding. (5)") //
-        ("isizesigma", boost::program_options::value<int>(), "The number of sds a s's mate has to be away to be called as discordant. (5)") //
-        ("bpsupport", boost::program_options::value<int>(), "Minimum number of reads supporting a discordant contig. (5)") //
-        ("properpairpercentage", boost::program_options::value<double>(), "Proper pair ratio as a percentage (100.0)");
+        namespace po = boost::program_options;
+        po::options_description desc("Allowed options for sophia");
+        desc.add_options()
+            ("help", "printe help message")
+            ("assemblyname",
+                po::value<std::string>(&assemblyName)->default_value(assemblyName),
+                ("assembly name (hg37, hg38)"))
+            ("mergedisizes",
+                po::value<std::string>(),
+                "insertsize distribution file for the merged bam.")
+            ("medianisize",
+                po::value<double>(),
+                "median insert size for the merged bam")
+            ("stdisizepercentage",
+                po::value<double>(),
+               "percentage standard deviation of the insert size for the merged bam")
+            ("defaultreadlength",
+                po::value<int>(&defaultReadLength)->default_value(defaultReadLength),
+                "Default read length for the technology used in sequencing 101,151 etc.")
+            ("clipsize",
+                po::value<int>(&clipSize)->default_value(clipSize),
+                "Minimum length of soft/hard clips in the alignment.")
+            ("basequality",
+                po::value<int>(&baseQuality)->default_value(baseQuality),
+                "Minimum median quality of split read overhangs")
+            ("basequalitylow",
+                po::value<int>(&baseQualityLow)->default_value(baseQualityLow),
+               "If 5 consecutive bases in a split read overhang have lower quality than this strict threshold, it will be low-quality clipped")
+            ("lowqualclipsize",
+                po::value<int>(&lowQualClipSize)->default_value(lowQualClipSize),
+                "Maximum length of a low quality split read overhang for discarding")
+            ("isizesigma",
+                po::value<int>(&isizeSigmaLevel)->default_value(isizeSigmaLevel),
+                "The number of sds a s's mate has to be away to be called as discordant")
+            ("bpsupport",
+                po::value<int>(&bpSupport)->default_value(bpSupport),
+                "Minimum number of reads supporting a discordant contig")
+            ("properpairpercentage",
+                po::value<double>(&properPairPercentage)->default_value(properPairPercentage),
+                "Proper pair ratio as a percentage")
+        ;
+        double properPairRatio = properPairPercentage / 100.0;
 
-        boost::program_options::variables_map inputVariables { };
-        boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), inputVariables);
-        boost::program_options::notify(inputVariables);
+        po::variables_map inputVariables { };
+        po::store(po::parse_command_line(argc, argv, desc), inputVariables);
+        po::notify(inputVariables);
 
         if (inputVariables.count("help")) {
             cout << desc << endl;
             return 0;
         }
 
-        int defaultReadLength { 0 };
         if (inputVariables.count("defaultreadlength")) {
             defaultReadLength = inputVariables["defaultreadlength"].as<int>();
         } else {
             cerr << "Default read Length not given, exiting" << endl;
             return 1;
         }
-
-        auto clipSize = 10, baseQuality = 23, baseQualityLow = 12, lowQualClipSize = 5, isizeSigmaLevel = 5;
-        auto bpSupport = 5;
-        auto properPairRatio = 1.0;
 
         if (inputVariables.count("clipsize")) {
             clipSize = inputVariables["clipsize"].as<int>();

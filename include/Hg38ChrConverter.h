@@ -106,11 +106,19 @@ namespace sophia {
         ChrIndex chrNameToIndex(std::string chrName) const;
 
         /** Parse chromosome index. It takes a position in a character stream, and translates the
-            following character(s) into index positions (using ChrConverter::indexToChr).
-            If the name cannot be parsed, throws a domain_error exception. */
+          * following character(s) into index positions (using ChrConverter::indexToChr).
+          * If the name cannot be parsed, throws a domain_error exception.
+          *
+          * This method parses up to the first occurrence of the `stopCharExt`. Then within the
+          * identified start and end range, parses up to the last occurrence of `stopChar`. This
+          * allows to parse a chromosome name "HLA-DRB1*13:01:01" from a string
+          * "HLA-DRB1*13:01:01:2914|(4,0,0?/0)" by first separating out the `|` separator
+          * (stopCharExt), and then finding the last `:` separator (stopChar).
+          **/
         ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
                                         std::string::const_iterator endIt,
-                                        char stopChar) const;
+                                        char stopChar,
+                                        const std::string &stopCharExt = "\0") const;
 
     };
 

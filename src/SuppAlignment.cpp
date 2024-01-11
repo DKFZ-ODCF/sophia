@@ -270,33 +270,45 @@ SuppAlignment SuppAlignment::parse(string::const_iterator saCbegin,
 	return result;
 }
 
+static const string STOP_CHARS = "|(,!/?)";
+inline bool isStopChar(char c) {
+    return STOP_CHARS.find(c) != std::string::npos;
+};
+
 SuppAlignment SuppAlignment::parse(const string& saIn) {
+	const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 
     SuppAlignment result = SuppAlignment();
     result.properPairErrorProne = saIn.back() == '#';
-    result.encounteredM = saIn[0] == '|';
+    result.encounteredM = isStopChar(saIn[0]);
 
 	auto index = 0;
+
+	// If the current index the field separator '|', skip it.
 	if (result.encounteredM) {
 		++index;
 	}
 
-	const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+    // TODO Fix this
+	// Parse up to the first colon, and interpret that as the chromosome name.
 	result.chrIndex = chrConverter.parseChrAndReturnIndex(
 	    next(saIn.cbegin(), index),
 	    saIn.cend(),
-	    ':');
+	    ':',
+	    STOP_CHARS);
 
 	if (chrConverter.isIgnoredChromosome(result.chrIndex)) {
 		return result;
 	}
 
-	// else
-	while (saIn[index] != ':') {
+	// else, skip the colon ...
+	while (!isStopChar(saIn[index])) {
 		++index;
 	}
 	++index;
 
+    // ... and continue to parse the breakpoint specification, which gives information about the
+    // position, and whether the breakpoint is fuzzy or inverted.
 	for (; saIn[index] != '('; ++index) {
 		if (saIn[index] == '-') {
 			result.fuzzy = true;

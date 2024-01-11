@@ -36,59 +36,80 @@
 namespace sophia {
 
     /**
-      * This constructor has a sideeffect. It reads from the filesIn and write breakpoint
+      * This constructor has a side-effect. It reads from the filesIn and write breakpoint
       * information to
       *
       *    outputRootName + "_" + NUMPIDS + "_mergedBpCounts.bed"
       *
-      * @param filesIn            vector if input file names.
+      * @param filesIn            vector if input gzFile names.
       * @param outputRootName     base name/path for the output files
-      * @param version            ??
+      * @param version            the version is matched in the gzFile name to find the realPidName.
       * @param defaultReadLength  Value for the default read length used for the DeFuzzier.
       */
     MasterRefProcessor::MasterRefProcessor(const vector<string> &filesIn,
                                            const string &outputRootName,
                                            const string &version,
                                            const int defaultReadLengthIn)
-        : NUMPIDS{static_cast<int>(filesIn.size())},
-          DEFAULTREADLENGTH{defaultReadLengthIn},
-          mrefDb{} {
+        : NUMPIDS { static_cast<int>(filesIn.size()) },
+          DEFAULTREADLENGTH{ defaultReadLengthIn },
+          mrefDb {} {
 
         // Initialize the mrefDb with default values. Only for compressed Mref indices.
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         for (std::vector<int>::size_type i = 0;
              i < chrConverter.nChromosomesCompressedMref();
              ++i) {
+            // NOTE: This will allocate a lot of memory as the total size of the vectors is the
+            //       genome size (3.7GB for hg19).
             mrefDb.emplace_back(chrConverter.chrSizeCompressedMref(i) + 1, MrefEntry{});
         }
 
         // Construct the output file header. This collects the `realPidName`s from the gzFile
-        // and appends them to the header.
-        vector<string> header{"#chr", "start", "end"};
+        // and appends them to the header. The `version` is matched in the gzFile name.
+        vector<string> header {"#chr", "start", "end"};
         for (const auto &gzFile : filesIn) {
             int posOnVersion = version.size() - 1;
-            bool counting{false};
+            bool counting { false };
             string realPidName;
             for (auto rit = gzFile.crbegin(); rit != gzFile.crend(); ++rit) {
                 if (!counting) {
+                    // Match the version in the gzFile name. Note that we traverse the gzFile name
+                    // in reverse order (from end), and therefore the matching algorithm is
+                    // formulated in reverse order.
                     if (*rit != version[posOnVersion]) {
+                        // No match, means continue searching.
                         posOnVersion = version.size() - 1;
                     } else {
+                        // Match, means continue matching.
                         --posOnVersion;
                         if (posOnVersion == -1) {
+                            // We have a match, therefore continue in the other branch that
+                            // collects the letters for the realPidName.
                             ++rit;
                             counting = true;
                         }
                     }
                 } else {
                     if (*rit == '/') {
+                        // We matched a '/' character, i.e. a path separator. Therefore, we are done
+                        // with the realPidName. Stop collecting letters.
                         break;
                     } else {
+                        // Everything we see is part of the realPidName.
                         realPidName.push_back(*rit);
                     }
                 }
             }
+            if (realPidName.size() == 0) {
+                throw runtime_error("Could not match realPidName in gzFile '" + gzFile + "'. "
+                                    "The version value '" + version + "' has to be contained "
+                                    "in the gzFile name. Rename the gzFile to match the pattern "
+                                    "'.*/$realPidName?$version.+'.");
+            }
+
             reverse(realPidName.begin(), realPidName.end());
+            cerr << "Matched realPidName '" << realPidName
+                 << "' in gzFile '" << gzFile << "'" << endl;
             header.push_back(realPidName);
         }
 
@@ -151,6 +172,7 @@ namespace sophia {
       */
     unsigned long long
     MasterRefProcessor::processFile(const string &gzPath, short fileIndex) {
+        cerr << "Processing file '" << gzPath << "'" << endl;
         unsigned long long newBreakpoints{0};
         ifstream refHandle(gzPath, ios_base::in | ios_base::binary);
         boost::iostreams::filtering_istream gzStream{};
@@ -167,6 +189,7 @@ namespace sophia {
         while (error_terminating_getline(gzStream, sophiaLine)) {
             // Ignore comment lines.
             if (sophiaLine[0] != '#') {
+                // Parse the chromosome name in the first column of the gzip file.
                 auto chrIndexO =
                     chrConverter.compressedMrefIndexToIndex(
                         chrConverter.parseChrAndReturnIndex(
@@ -176,6 +199,7 @@ namespace sophia {
                 // Ignore chromosomes not in the compressedMref set.
                 if (chrIndexO.has_value()) {
                     ChrIndex chrIndex = chrIndexO.value();
+                    // Note: This instantiation parses information from the `sophiaLine`.
                     Breakpoint tmpBp{sophiaLine, true};
                     fileBps[chrIndex].emplace_back(
                         tmpBp, lineIndex++,

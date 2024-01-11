@@ -74,12 +74,21 @@ namespace sophia {
           * following character(s) into index positions (using ChrConverter::indexToChr).
           * If the name cannot be parsed, throws a domain_error exception.
           *
-          * This function, although it has a side effect, is called all over the code. It throws
-          * a domain_error to ensure that no non-parsable chromosome names are processed by
-          * SOPHIA. */
-        virtual ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
-                                                std::string::const_iterator endIt,
-                                                char stopChar) const = 0;
+          * IMPORTANT: Implementations may or may not use the `stopCharExt` parameter. Therefore,
+          *            the following behavior is optional. An implementation may not even actually
+          *            validate that the stopChar or string-end terminates the parsed identifier!
+          *
+          * This method parses up to the first occurrence of the `stopCharExt`. Then within the
+          * identified start and end range, parses up to the last occurrence of `stopChar`. This
+          * allows to parse a chromosome name "HLA-DRB1*13:01:01" from a string
+          * "HLA-DRB1*13:01:01:2914|(4,0,0?/0)" by first separating out the `|` separator
+          * (stopCharExt), and then finding the last `:` separator (stopChar).
+          **/
+        virtual ChrIndex
+        parseChrAndReturnIndex(std::string::const_iterator startIt,
+                               std::string::const_iterator endIt,
+                               char stopChar,
+                               const std::string &stopCharExt = "\0") const = 0;
 
     };
 

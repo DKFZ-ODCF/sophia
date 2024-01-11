@@ -25,10 +25,11 @@
 #include "SuppAlignmentAnno.h"
 #include "GlobalAppConfig.h"
 #include "strtk-wrap.h"
+
 #include <algorithm>
 #include <cmath>
 #include <vector>
-// #include <iostream>
+
 
 namespace sophia {
 
@@ -36,6 +37,11 @@ using namespace std;
 
 double SuppAlignmentAnno::ISIZEMAX{};
 int SuppAlignmentAnno::DEFAULTREADLENGTH{};
+
+static const string STOP_CHARS = "|(,!/?)";
+inline bool isStopChar(char c) {
+    return STOP_CHARS.find(c) != std::string::npos;
+};
 
 SuppAlignmentAnno::SuppAlignmentAnno(const string &saStrIn)
     : chrIndex{0}, pos{0}, extendedPos{0}, support{0}, secondarySupport{0},
@@ -49,15 +55,23 @@ SuppAlignmentAnno::SuppAlignmentAnno(const string &saStrIn)
         ++index;
     }
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+
+    // TODO Fix this
     chrIndex = chrConverter.parseChrAndReturnIndex(
-        next(saStrIn.cbegin(), index), saStrIn.cend(), ':');
+        next(saStrIn.cbegin(), index),
+        saStrIn.cend(),
+        ':',
+        STOP_CHARS);
+
     if (chrConverter.isIgnoredChromosome(chrIndex)) {
         return;
     }
-    while (saStrIn[index] != ':') {
+
+    while (!isStopChar(saStrIn[index])) {
         ++index;
     }
     ++index;
+
     for (; saStrIn[index] != '('; ++index) {
         if (saStrIn[index] == '-') {
             fuzzy = true;
@@ -75,18 +89,22 @@ SuppAlignmentAnno::SuppAlignmentAnno(const string &saStrIn)
             }
         }
     }
+
     if (!fuzzy) {
         extendedPos = pos;
     }
     ++index;
+
     for (; saStrIn[index] != ','; ++index) {
         support = 10 * support + (saStrIn[index] - '0');
     }
     ++index;
+
     for (; saStrIn[index] != ','; ++index) {
         secondarySupport = 10 * secondarySupport + (saStrIn[index] - '0');
     }
     ++index;
+
     if (saStrIn[index] == '!') {
         suspicious = true;
         index += 2;
@@ -100,9 +118,11 @@ SuppAlignmentAnno::SuppAlignmentAnno(const string &saStrIn)
         }
         ++index;
     }
+
     for (; saStrIn[index] != ')'; ++index) {
         expectedDiscordants = 10 * expectedDiscordants + (saStrIn[index] - '0');
     }
+
     if (support + secondarySupport == 0) {
         fuzzy = true;
     }

@@ -23,22 +23,34 @@ int main(int argc, char** argv) {
     using namespace std;
     using namespace sophia;
 
+    int defaultReadLength { 0 };
+    string assemblyName = "hg37";
+
     try {
-        boost::program_options::options_description desc("Allowed options");
-        desc.add_options() //
-        ("help", "produce help message") //
-        ("assemblyname", boost::program_options::value<string>(), "assembly name (hg37, hg38)") //
-        ("gzins", boost::program_options::value<string>(),
-            "list of all gzipped control beds") //
-        ("version", boost::program_options::value<string>(),
-            "version") //
-        ("defaultreadlength", boost::program_options::value<int>(),
-            "Default read length for the technology used in sequencing 101,151 etc.") //
-        ("outputrootname", boost::program_options::value<string>(),
-            "outputrootname");
+        boost::program_options::options_description desc("Allowed options for sophiaMref");
+            desc.add_options()
+            ("help",
+                "produce help message")
+            ("gzins",
+                boost::program_options::value<string>(),
+                "A file containing the the paths of the of all gzipped control beds, line-by-line")
+            ("outputrootname",
+                boost::program_options::value<string>(),
+                "base name/path for the output files")
+            ("version",
+                boost::program_options::value<string>(),
+                "version string used to match the PID in the BED files with the pattern\n  `.*/$pidName.{1}$version.+`")
+            ("assemblyname",
+                boost::program_options::value<string>(&assemblyName)->default_value("hg37"),
+                "assembly name (hg37, hg38)")
+            ("defaultreadlength",
+                boost::program_options::value<int>(&defaultReadLength)->default_value(defaultReadLength),
+                "Default read length for the technology used in sequencing, e.g. 101 or 151.")
+        ;
 
         boost::program_options::variables_map inputVariables { };
-        boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), inputVariables);
+        boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc),
+                                      inputVariables);
         boost::program_options::notify(inputVariables);
 
         if (inputVariables.count("help")) {
@@ -68,7 +80,6 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        int defaultReadLength { 0 };
         if (inputVariables.count("defaultreadlength")) {
             defaultReadLength = inputVariables["defaultreadlength"].as<int>();
         } else {

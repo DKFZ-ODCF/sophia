@@ -423,10 +423,14 @@ namespace sophia {
              not actually checked in these cases.
 
        All identifiers not matching any of these rules, with throw an exception (domain_error).
+
+       IMPORTANT: The hg37 parser here ignores the stopCharExt, but instead remains with the legacy
+                  behavior.
     */
     ChrIndex Hg37ChrConverter::parseChrAndReturnIndex(std::string::const_iterator start,
                                                       std::string::const_iterator end,
-                                                      char stopChar) const {
+                                                      char stopChar,
+                                                      const std::string &stopCharExt) const {
         int chrIndex {0};
         if (start == end) {
             throw std::domain_error("Chromosome identifier is empty.");

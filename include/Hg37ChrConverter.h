@@ -88,11 +88,37 @@ namespace sophia {
         /** Map a chromosome name to an index position. */
         ChrIndex chrNameToIndex(std::string chrName) const;
 
-        /** Parse chromosome name given a iterator (start) and termination character.
-            Validate against the pre-declared chromosome names. */
+        /* This is parsing code. It takes a position in a character stream, and translates the
+           following character(s) into index positions (see ChrConverter::indexToChr). It is slightly
+           modified from the original implementation by Umut Toprak.
+
+           If the first position is a digit, read up to the next stopChar.
+
+             * (\d+)$ -> $1
+
+           If the first position is *not* a digit return indices according to the following rules:
+
+             * h -> 999
+             * X -> 40
+             * Y -> 41
+             * MT -> 1001
+             * G?(\d+)\. -> $1
+             * N -> 1000
+             * p -> 1002
+
+           NOTE: Most of the matches are eager matches, which means the algorithm does not check for
+                 whether the end iterator or the stopChar is actually reached! The actual stopChar is
+                 not actually checked in these cases.
+
+           All identifiers not matching any of these rules, with throw an exception (domain_error).
+
+           IMPORTANT: The hg37 parser, here, ignores the `stopCharExt`, but instead keeps the
+                      legacy behavior only using the `stopChar`
+        */
         ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
                                         std::string::const_iterator endIt,
-                                        char stopChar) const;
+                                        char stopChar,
+                                        const std::string &stopCharFirst = "\0") const;
 
     };
 

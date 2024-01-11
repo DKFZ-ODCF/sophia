@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <optional>
 #include <algorithm>
+#include <iostream>
 #include <boost/unordered/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -192,25 +193,58 @@ namespace sophia {
 
     /** Map a chromosome name to an index position. */
     ChrIndex Hg38ChrConverter::chrNameToIndex(std::string chrName) const {
-        return allChromosomeLookup.at(chrName);
+        try {
+            return allChromosomeLookup.at(chrName);
+        } catch (std::out_of_range& e) {
+            throw std::domain_error("Hg38ChrConverter::chrNameToIndex:"
+                                    "Chromosome name not found: '" + chrName + "'");
+        }
     }
 
     /** Parse chromosome index. It takes a position in a character stream, and translates the
         following character(s) into index positions (using ChrConverter::indexToChr).
-        If the name cannot be parsed, throws a domain_error exception. */
+        If the name cannot be parsed, throws a domain_error exception.
+
+        This method parses up to the first occurrence of the `stopChar1`. Then within the identified
+        start and end positions, parses up to the last occurrence of `stopChar2`. This allows to
+        parse a chromosome name "HLA-DRB1*13:01:01" from a string
+        "HLA-DRB1*13:01:01:2914|(4,0,0?/0)" by first separating out the `|` separator, and then
+        finding the last `:` separator before position.
+        */
     ChrIndex Hg38ChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
                                                       std::string::const_iterator endIt,
-                                                      char stopChar) const {
+                                                      char stopChar,
+                                                      const std::string &stopCharsExt) const {
         // Copy the characters until the stopChar into a string
         std::string chrName;
         chrName.reserve(50);   // Should be sufficient for most chromosome names.
-        auto isNotStopChar = [stopChar](char c) { return c != stopChar; };
-        auto endMatchIt = std::find_if_not(startIt, endIt, isNotStopChar);
-        std::copy(startIt, endMatchIt, std::back_inserter(chrName));
+
+        // First find the outer separator (stopCharsExt).
+        auto isStopCharExt = [stopCharsExt](char c) {
+            return stopCharsExt.find(c) != std::string::npos;
+        };
+        auto endMatchIt = std::find_if(startIt, endIt, isStopCharExt);
+
+        // Then find the inner separator (stopChar).
+        auto isStopChar = [stopChar](char c) { return c == stopChar; };
+        auto reverseStartIt = std::reverse_iterator(endMatchIt);
+        auto reverseEndMatchIt = std::find_if(reverseStartIt,
+                                              std::reverse_iterator(startIt),
+                                              isStopChar);
+
+        std::copy(std::reverse_iterator(reverseEndMatchIt),
+                  std::reverse_iterator(reverseStartIt),
+                  std::back_inserter(chrName));
+
+        std::cerr << chrName << std::endl;
 
         // Map to ChrIndex and return it.
-        return allChromosomeLookup.at(chrName);
+        try {
+            return allChromosomeLookup.at(chrName);
+        } catch (std::out_of_range& e) {
+            throw std::domain_error("Hg38ChrConverter::parseChrAndReturnIndex: "
+                                    "Chromosome name not found: '" + chrName + "'");
+        }
     }
-
 
 } /* namespace sophia */
