@@ -118,7 +118,7 @@ namespace sophia {
         ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
                                         std::string::const_iterator endIt,
                                         char stopChar,
-                                        const std::string &stopCharFirst = "\0") const;
+                                        const std::string &stopCharFirst = "") const;
 
     };
 

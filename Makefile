@@ -4,6 +4,7 @@ CXX = x86_64-conda_cos6-linux-gnu-g++
 INCLUDE_DIR = ./include
 BUILD_DIR = ./build
 SRC_DIR = ./src
+TESTS_DIR = ./tests
 
 # Compiler flags
 LDFLAGS := $(LDFLAGS) -flto=auto -lz -lboost_system -lboost_iostreams -lboost_program_options -rdynamic
@@ -32,18 +33,22 @@ endif
 # Source files
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 
+# Test source files
+TESTS = $(wildcard $(TESTS_DIR)/*.cpp)
+
 # Object files should have .o instead of .cpp.
+# Note, we put the objects for production and tests both into the build directory.
 OBJECTS = $(SOURCES: $(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o) $(BUILD_DIR)/strtk.o
 
 # Binaries
 BINARIES = sophiaMref sophia sophiaAnnotate
 
 # Default rule
-all: $(BINARIES)
+all: test $(BINARIES)
 
 vpath %.h $(INCLUDE_DIR)
 vpath %.hpp $(INCLUDE_DIR)
-vpath %.cpp $(SRC_DIR)
+vpath %.cpp $(SRC_DIR) $(TESTS_DIR)
 
 
 $(BUILD_DIR):
@@ -122,6 +127,20 @@ sophiaMref: $(BUILD_DIR)/Alignment.o \
 			$(BUILD_DIR)/DeFuzzier.o \
 			$(BUILD_DIR)/sophiaMref.o
 	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
+
+# There are usually no .h files for test files, so we need a separate rule for them.
+$(BUILD_DIR)/%.o: $(TESTS_DIR)/%.cpp Makefile | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+testRunner: \
+		$(BUILD_DIR)/ChrConverter.o \
+		$(BUILD_DIR)/Hg38ChrConverter.o \
+		$(BUILD_DIR)/Hg38ChrConverter_test.o
+	$(CXX) $(LD_BEGIN_FLAGS) -lgtest -lgtest_main -pthread -o testRunner $^ $(LD_END_FLAGS)
+
+# Rule for running the tests
+test: testRunner
+	./testRunner
 
 # Rule for clean
 .PHONY: clean clean-all

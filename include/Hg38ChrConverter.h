@@ -71,6 +71,15 @@ namespace sophia {
                          const std::vector<std::string> &compressedMrefChromosomes,
                          const std::vector<std::string> &ignoredChromosomes);
 
+        std::string parseChrBreakPoint(std::string::const_iterator startIt,
+                                       std::string::const_iterator endIt,
+                                       char stopChar,
+                                       const std::string &stopCharExt) const;
+
+        std::string parseChrSimple(std::string::const_iterator startIt,
+                                   std::string::const_iterator endIt,
+                                   char stopChar) const;
+
       public:
 
         static const std::string assemblyName;
@@ -115,10 +124,14 @@ namespace sophia {
           * "HLA-DRB1*13:01:01:2914|(4,0,0?/0)" by first separating out the `|` separator
           * (stopCharExt), and then finding the last `:` separator (stopChar).
           **/
+        std::string parseChr(std::string::const_iterator startIt,
+                             std::string::const_iterator endIt,
+                             char stopChar,
+                             const std::string &stopCharExt = "") const;
         ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
                                         std::string::const_iterator endIt,
                                         char stopChar,
-                                        const std::string &stopCharExt = "\0") const;
+                                        const std::string &stopCharExt = nullptr) const;
 
     };
 
