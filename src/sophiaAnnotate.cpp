@@ -116,14 +116,21 @@ int main(int argc, char** argv) {
         } else if (inputVariables["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
             chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
         } else {
-            cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<string>() << ". I know "
-                 << Hg37ChrConverter::assemblyName << " and "
-                 << Hg38ChrConverter::assemblyName << endl;
+            cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<string>()
+                 << ". I know " << Hg37ChrConverter::assemblyName
+                 << " and "     << Hg38ChrConverter::assemblyName << endl;
             return 1;
         }
 
+
+        // Initialize global application config.
+        // This will raise a warning with -Wextra or -Wdangling-reference, but that's probably a
+        // false positive. See https://stackoverflow.com/a/77103062/8784544.
+        GlobalAppConfig::init(move(chrConverter));
+
         vector<vector<MrefEntryAnno>> mref
-            { chrConverter->nChromosomesCompressedMref(), vector<MrefEntryAnno> { } };
+            { GlobalAppConfig::getInstance().getChrConverter().
+                nChromosomesCompressedMref(), vector<MrefEntryAnno> { } };
         if (!inputVariables.count("mref")) {
             cerr << "No mref file given, exiting" << endl;
             return 1;
@@ -197,8 +204,9 @@ int main(int argc, char** argv) {
             if (line.front() == '#') {
                 continue;
             };
-            std::optional<ChrIndex> chrIndexO = chrConverter->
-                compressedMrefIndexToIndex(chrConverter->parseChrAndReturnIndex(
+            std::optional<ChrIndex> chrIndexO = GlobalAppConfig::getInstance().getChrConverter().
+                compressedMrefIndexToIndex(
+                    GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
                     line.cbegin(), line.cend(), '\t'));
             ChrIndex chrIndex;
             if (!chrIndexO.has_value()) {
@@ -258,11 +266,6 @@ int main(int argc, char** argv) {
             AnnotationProcessor annotationProcessor { tumorResults, mref, defaultReadLengthTumor, false, germlineDbLimit };
             annotationProcessor.printFilteredResults(false, 0);
         }
-
-        // Initialize global application config.
-        // This will raise a warning with -Wextra or -Wdangling-reference, but that's probably a
-        // false positive. See https://stackoverflow.com/a/77103062/8784544.
-        GlobalAppConfig::init(move(chrConverter));
 
         return 0;
     } catch (exception& e) {
