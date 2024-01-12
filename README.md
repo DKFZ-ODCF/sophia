@@ -112,3 +112,96 @@ make -j 4 static=true boost_lib_dir=$boost_lib_dir develop=true all
 
 * 9e3b6ed
   * Last version in [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)
+
+## How to run
+
+### Sophia
+Sophia takes a BAM file as input and outputs a list of breakpoints (BPs). The control and tumor BAM files have to be run separately. The outputs are merged in the annotation step.
+
+
+```bash
+samtools view -F 0x600 -f 0x001 {TUMOR_BAM_FILE} | \
+  sophia \
+  --assemblyname {ASSEMBLY} \
+  --medianisize {MEDIAN_SIZE} \
+  --stdisizepercentage {STD_PERC} \
+  --properpairpercentage {PP_PERC} \
+  --defaultreadlength {READ_LENGTH} | gzip --best > {PID-TUMOR}_{SOPHIA_VERSION}.bps.tsv.gz
+```
+
+#### Sophia annotation
+Sophia annotation takes the output of Sophia and annotates the breakpoints with gene information. The output is a BEDPE file.
+
+```bash
+sophiaAnnotate \
+  --tumorresults {PID-TUMOR}_{SOPHIA_VERSION}.bps.tsv.gz \
+  --controlresults {PID-CONTROL}_{SOPHIA_VERSION}.bps.tsv.gz \
+  --mref mergedMref_{SOPHIA_VERSION}_{NO_PIDs}_min3.bed.gz \
+  --pidsinmref {PID_COUNT_IN_MREF} \
+  --defaultreadlengthtumor {TUMOR_READ_LENGTH} \
+  --defaultreadlengthcontrol {CONTROL_READ_LENGTH}
+```
+
+#### Sophia Master reference (Mref)
+Sophia Mref takes a list of BP files from control samples and generates a background reference that can be used by Sophia annotation for annotating structural variants with the population information and filtering out common variants.
+
+```bash
+sophiaMref \
+  --assemblyname {ASSEMBLY} \
+  --gzins sophia_control_bps_paths.tsv \
+  --version {SOPHIA_VERSION} \
+  --defaultreadlength {READ_LENGTH} \
+  --outputrootname mergedMref
+```
+The `sophia_control_bps_paths.tsv` contains full paths to the BP files from the control samples.
+
+The `mergedMref` data can be further filtered based on the number of samples with a breakpoint (column 4 in the output file). The last column in the output file, which contains the PID indices, could be ignored (see below for details on the output formats).
+
+```bash
+module load htslib
+awk -F '\t' '$4 > 2' mergedMref_{SOPHIA_VERSION}_{NO_PIDs}.bed | \
+  cut -f1-9 | \
+  bgzip > mergedMref_{SOPHIA_VERSION}_{NO_PIDs}_min3.bed.gz
+```
+
+## Output Format
+
+### Sophia
+Sophia outputs a list of breakpoints (BPs) in a BED format file. The columns are as follows:
+
+1. Chromosome name
+2. Position of the breakpoint
+3. Position of the breakpoint + 1
+4. CovType (pairedBreaksSoft,pairedBreaksHard,mateReadSupport,unpairedBreaksSoft,unpairedBreaksHard,shortIndelReads,normalSpans,lowQualSpansSoft,lowQualSpansHard,lowQualBreaksSoft,lowQualBreaksHard,repetitiveOverhangs)
+5. leftCoverage,rightCoverage
+6. suppAlignmentsDoubleSupport(primary,secondary,mate)
+7. suppAlignments(primary,0,mate)
+8. significantOverhangs
+
+The supplementary alignments (SA) data structure in `suppAlignmentsDoubleSupport` and in `suppAlignments` have a similar data structure - eg 2:91647217-91647218|(0,1,2?/36);15:72741680|(0,2,2?/36);hs37d5:17985120-17985121_INV|(0,1,2?/36)
+
+The SA data structure starts with `chr` and `position`. If the SA is fuzzy, an `extended position` is added to the coordinates. Then, if SA is inverted, a "_INV" str is added. Within the brackets, counts are added for 'primary support', 'secondary support' and 'mate support'. If the SA is semi-suspicious, a "?" is added and if it is suspicious, a "!" is added. And the number of discordants are added after "/". Based on the "M" in the CIGAR string, "|" is added before or after the coordinate positions.
+
+A similar data structure is used for `suppAlignments` column as well. But the counts are only for 'primary support' and 'mate support'.
+
+### Sophia annotation
+
+### Sophia Master reference (Mref)
+
+Sophia Mref outputs a list of merged breakpoints (BPs) in a BED format file. The columns are as follows:
+
+1. Chromosome name
+2. Position of the breakpoint
+3. Position of the breakpoint + 1
+4. Number of file indices (BP bed files used for generating the Mref databases)
+5. Number of file indices with artifact ratios
+6. Ratio of the number of file indices to the total number of PIDs (NUMPIDS)
+7. Ratio of the number of file indices with artifact ratios to the total number of PIDs (PIDs are counted here if the sum of `artifactTotalRelaxed` and `eventTotalStrict` is greater than > 0. So in some cases, the AF ratio could be zero even when this ratio > 0.)
+8. Average of artifact ratios if they exist, otherwise "NA"
+9. If there are no supplementary alignments, a "." is added. If there are supplementary alignments, each one is finalized and printed if the total number of supplementary alignments is less than 11 or if the support of the alignment is greater than or equal to 20% of the number of file indices. The printed supplementary alignments are joined with a ";" separator.
+10. The file indices are converted to strings and joined with a "," separator.
+
+Artifact ratio: From each BPs, `artifactTotalRelaxed` is counted from the sum of `lowQualSpansSoft,lowQualBreaksSoft,repetitiveOverhangs`. And `eventTotalStrict` is calculated from the sum of `pairedBreaksSoft,pairedBreaksHard,unpairedBreaksSoft`. The artifact ratio is calculated by dividing the `artifactTotalRelaxed` by the sum of `eventTotalStrict` and `artifactTotalRelaxed`.
+
+
+
