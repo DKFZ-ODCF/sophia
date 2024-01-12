@@ -7,16 +7,16 @@ SRC_DIR = ./src
 TESTS_DIR = ./tests
 
 # Compiler flags
-LDFLAGS := $(LDFLAGS) -flto=auto -lz -lboost_system -lboost_iostreams -lboost_program_options -rdynamic
+LIBRARY_FLAGS := -lz -lm -lrt -lboost_system -lboost_iostreams -lboost_program_options
+LDFLAGS := $(LDFLAGS) -flto=auto -rdynamic -no-pie
 CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
 
 ifeq ($(static),true)
-	CXXFLAGS := $(CXXFLAGS) -static -static-libgcc -static-libstdc++
 	LD_BEGIN_FLAGS := -L$(boost_lib_dir)
-	LD_END_FLAGS := $(LDFLAGS) -static -static-libgcc -static-libstdc++ -lrt
+	LD_END_FLAGS := $(LDFLAGS) -static -static-libgcc -static-libstdc++ $(LIBRARY_FLAGS)
 else
     LD_BEGIN_FLAGS :=
-	LD_END_FLAGS := $(LDFLAGS)
+	LD_END_FLAGS := $(LDFLAGS) $(LIBRARY_FLAGS)
 endif
 
 ifeq ($(develop),true)
@@ -136,7 +136,7 @@ testRunner: \
 		$(BUILD_DIR)/ChrConverter.o \
 		$(BUILD_DIR)/Hg38ChrConverter.o \
 		$(BUILD_DIR)/Hg38ChrConverter_test.o
-	$(CXX) $(LD_BEGIN_FLAGS) -lgtest -lgtest_main -pthread -o testRunner $^ $(LD_END_FLAGS)
+	$(CXX) $(LD_BEGIN_FLAGS) -o testRunner $^ $(LDFLAGS) $(LIBRARY_FLAGS) -Wl,-Bdynamic -lgtest -lgtest_main -pthread
 
 # Rule for running the tests
 test: testRunner
