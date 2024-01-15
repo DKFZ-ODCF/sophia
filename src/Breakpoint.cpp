@@ -25,6 +25,7 @@
 #include "Breakpoint.h"
 #include "GlobalAppConfig.h"
 #include "strtk-wrap.h"
+#include "global.h"
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
 #include <cmath>
@@ -53,7 +54,7 @@ namespace sophia {
     bool Breakpoint::PROPERPAIRCOMPENSATIONMODE{false};
     int Breakpoint::bpindex{0};
 
-    Breakpoint::Breakpoint(int chrIndexIn,
+    Breakpoint::Breakpoint(ChrIndex chrIndexIn,
                            int posIn)
         : covFinalized{false},
           missingInfoBp{false},

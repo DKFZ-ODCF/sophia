@@ -22,6 +22,7 @@
  *      LICENSE: GPL
  */
 
+#include "global.h"
 #include "Breakpoint.h"
 #include "GlobalAppConfig.h"
 #include "strtk-wrap.h"
@@ -42,8 +43,11 @@ string BreakpointReduced::PIDSINMREFSTR{};
 sophia::BreakpointReduced::BreakpointReduced(const Breakpoint &tmpBp,
                                              int lineIndexIn,
                                              bool hasOverhangIn)
-    : hasOverhang{hasOverhangIn}, toRemove{false}, lineIndex{lineIndexIn},
-      chrIndex{tmpBp.getChrIndex()}, pos{tmpBp.getPos()},
+    : hasOverhang{hasOverhangIn},
+      toRemove{false},
+      lineIndex{lineIndexIn},
+      chrIndex{tmpBp.getChrIndex()},
+      pos{tmpBp.getPos()},
       normalSpans{tmpBp.getNormalSpans()},
       lowQualSpansSoft{tmpBp.getLowQualBreaksSoft()},
       lowQualSpansHard{tmpBp.getLowQualSpansHard()},
@@ -105,17 +109,31 @@ BreakpointReduced::complexRearrangementMateRatioRescue(bool encounteredM) {
 }
 
 sophia::BreakpointReduced::BreakpointReduced(
-    const SuppAlignmentAnno &sa, const BreakpointReduced &emittingBp,
+    const SuppAlignmentAnno &sa,
+    const BreakpointReduced &emittingBp,
     bool fuzzySecondary)
-    : hasOverhang{false}, toRemove{false}, lineIndex{-1},
-      chrIndex{sa.getChrIndex()}, pos{!fuzzySecondary ? sa.getPos()
-                                                      : sa.getExtendedPos()},
-      normalSpans{}, lowQualSpansSoft{}, lowQualSpansHard{},
-      unpairedBreaksSoft{}, unpairedBreaksHard{}, breaksShortIndel{},
-      lowQualBreaksSoft{}, lowQualBreaksHard{}, repetitiveOverhangBreaks{},
-      pairedBreaksSoft{}, pairedBreaksHard{}, mateSupport{}, leftCoverage{},
-      rightCoverage{}, mrefHits{MrefMatch{-1, -1, 10000, {}}},
-      germlineInfo{GermlineMatch{0.0, 0.0, {}}}, suppAlignments{} {
+    : hasOverhang{false},
+      toRemove{false},
+      lineIndex{-1},
+      chrIndex{sa.getChrIndex()},
+      pos{!fuzzySecondary ? sa.getPos(): sa.getExtendedPos()},
+      normalSpans{},
+      lowQualSpansSoft{},
+      lowQualSpansHard{},
+      unpairedBreaksSoft{},
+      unpairedBreaksHard{},
+      breaksShortIndel{},
+      lowQualBreaksSoft{},
+      lowQualBreaksHard{},
+      repetitiveOverhangBreaks{},
+      pairedBreaksSoft{},
+      pairedBreaksHard{},
+      mateSupport{},
+      leftCoverage{},
+      rightCoverage{},
+      mrefHits{MrefMatch{-1, -1, 10000, {}}},
+      germlineInfo{GermlineMatch{0.0, 0.0, {}}},
+      suppAlignments{} {
     addDummySa(sa, emittingBp);
 }
 

@@ -23,7 +23,7 @@ ifeq ($(develop),true)
 	# NOTE: Generally, it is a good idea to compile with -O0 during development, because it seems
 	#       that thus the compiler actually catches some binary dependencies during linking that
 	#       will otherwise be missed.
-	CXXFLAGS := $(CXXFLAGS) -O0 -ggdb3 -DDEBUG
+	CXXFLAGS := $(CXXFLAGS) -O0 -ggdb3 -DDEBUG -fno-inline
 	LD_END_FLAGS := $(LD_END_FLAGS) -Wl,-O0
 else
 	# Ignore some leftover unused variables from SvEvent::assessBreakpointClonalityStatus.
@@ -135,7 +135,10 @@ $(BUILD_DIR)/%.o: $(TESTS_DIR)/%.cpp Makefile | $(BUILD_DIR)
 testRunner: \
 		$(BUILD_DIR)/ChrConverter.o \
 		$(BUILD_DIR)/Hg38ChrConverter.o \
-		$(BUILD_DIR)/Hg38ChrConverter_test.o
+		$(BUILD_DIR)/Hg38ChrConverter_test.o \
+		$(BUILD_DIR)/SuppAlignment.o \
+		$(BUILD_DIR)/GlobalAppConfig.o \
+		$(BUILD_DIR)/SuppAlignment_test.o
 	$(CXX) $(LD_BEGIN_FLAGS) -o testRunner $^ $(LDFLAGS) $(LIBRARY_FLAGS) -Wl,-Bdynamic -lgtest -lgtest_main -pthread
 
 # Rule for running the tests

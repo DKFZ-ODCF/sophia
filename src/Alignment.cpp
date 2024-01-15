@@ -22,6 +22,7 @@
  *      LICENSE: GPL
  */
 
+#include "global.h"
 #include "Alignment.h"
 #include "GlobalAppConfig.h"
 #include "HelperFunctions.h"
@@ -613,7 +614,7 @@ Alignment::setChosenBp(int chosenBpLoc, int alignmentIndex) {
                                      alignmentIndex);
 }
 vector<SuppAlignment>
-Alignment::generateSuppAlignments(int bpChrIndex, int bpPos) {
+Alignment::generateSuppAlignments(ChrIndex bpChrIndex, int bpPos) {
     vector<SuppAlignment> suppAlignmentsTmp;
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     if (hasSa) {

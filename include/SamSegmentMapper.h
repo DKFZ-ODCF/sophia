@@ -24,6 +24,7 @@
 
 #ifndef SAMSEGMENTMAPPER_H_
 #define SAMSEGMENTMAPPER_H_
+#include "global.h"
 #include "Breakpoint.h"
 #include "CoverageAtBase.h"
 #include "MateInfo.h"
@@ -54,7 +55,7 @@ class SamSegmentMapper {
     const int DISCORDANTLEFTRANGE;
     const int DISCORDANTRIGHTRANGE;
     unsigned int printedBps;
-    int chrIndexCurrent;
+    ChrIndex chrIndexCurrent;
     int minPos, maxPos;
     map<int, Breakpoint> breakpointsCurrent;
     deque<CoverageAtBase> coverageProfiles;

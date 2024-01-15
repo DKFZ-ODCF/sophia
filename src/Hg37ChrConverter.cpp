@@ -371,6 +371,10 @@ namespace sophia {
         }
     }
 
+    bool Hg37ChrConverter::isCompressedMrefIndex(ChrIndex index) const {
+        return index <= 1000;  // 1000 == 'NC_007605' (i.e. excluding MT)
+    }
+
     /** Map an index position to a compressed mref index position. */
     std::string
     Hg37ChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {

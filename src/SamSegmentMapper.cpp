@@ -46,11 +46,14 @@ namespace sophia {
 
     void
     SamSegmentMapper::parseSamStream() {
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         while (true) {
             auto alignment = make_shared<Alignment>();
-            if (alignment->getChrIndex() > 1000) {
+
+            if (!chrConverter.isCompressedMrefIndex(alignment->getChrIndex())) {
                 continue;
             }
+
             if (alignment->isValidLine()) {
                 if (alignment->getChrIndex() != chrIndexCurrent) {
                     switchChromosome(*alignment);

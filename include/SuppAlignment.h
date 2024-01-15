@@ -25,6 +25,9 @@
 #ifndef SUPPALIGNMENT_H_
 #define SUPPALIGNMENT_H_
 #include "CigarChunk.h"
+#include "global.h"
+#include "ChrConverter.h"
+#include "GlobalAppConfig.h"
 #include <algorithm>
 #include <array>
 #include <string>
@@ -38,10 +41,11 @@ namespace sophia {
 
     class SuppAlignment {
       private:
+
         SuppAlignment();
 
       public:
-        SuppAlignment(int chrIndexIn,
+        SuppAlignment(ChrIndex chrIndexIn,
                       int posIn,
                       int mateSupportIn,
                       int expectedDiscordantsIn,
@@ -56,29 +60,35 @@ namespace sophia {
         static SuppAlignment parse(const string &saIn);
 
         static SuppAlignment parse(string::const_iterator saCbegin,
-                                   string::const_iterator saCend,
-                                   bool primaryIn,
-                                   bool lowMapqSourceIn,
-                                   bool nullMapqSourceIn,
-                                   bool alignmentOnForwardStrand,
-                                   bool bpEncounteredM,
-                                   int originIndexIn,
-                                   int bpChrIndex,
-                                   int bpPos);
+                            string::const_iterator saCend,
+                            bool primaryIn,
+                            bool lowMapqSourceIn,
+                            bool nullMapqSourceIn,
+                            bool alignmentOnForwardStrand,
+                            bool bpEncounteredM,
+                            int originIndexIn,
+                            ChrIndex bpChrIndex,
+                            int bpPos);
 
         ~SuppAlignment() = default;
 
         static double ISIZEMAX;
         static int DEFAULTREADLENGTH;
+
         string print() const;
+
         void extendSuppAlignment(int minPos, int maxPos) {
             pos = min(pos, minPos);
             extendedPos = max(extendedPos, maxPos);
         }
+
         bool saCloseness(const SuppAlignment &rhs, int fuzziness) const;
+
         bool saDistHomologyRescueCloseness(const SuppAlignment &rhs,
                                            int fuzziness) const;
+
         void padMateSupportHomologyRescue() { expectedDiscordants = mateSupport; }
+
         void removeFuzziness(const SuppAlignment &sa) {
             pos = sa.getPos();
             extendedPos = pos;
@@ -87,42 +97,66 @@ namespace sophia {
                 distant = true;
             }
         }
-        int getChrIndex() const { return chrIndex; }
+
+        ChrIndex getChrIndex() const { return chrIndex; }
+
         bool isEncounteredM() const { return encounteredM; }
+
         bool isInverted() const { return inverted; }
+
         int getMateSupport() const { return mateSupport; }
+
         void incrementDistinctReads() { ++distinctReads; }
+
         void incrementMateSupport(int incrementIn) { mateSupport += incrementIn; }
+
         void setMateSupport(int mateSupportIn) { mateSupport = mateSupportIn; }
+
         int getPos() const { return pos; }
+
         bool isPrimary() const { return primary; }
+
         int getSupport() const { return support; }
+
         void addSupportingIndices(const vector<int> &supportingIndicesIn) {
             supportingIndices.insert(supportingIndices.end(),
                                      supportingIndicesIn.cbegin(),
                                      supportingIndicesIn.cend());
         }
+
         void addSecondarySupportIndices(int supportingIndicesSecondaryIn) {
             supportingIndicesSecondary.push_back(supportingIndicesSecondaryIn);
         }
+
         void addSecondarySupportIndices(
             const vector<int> &supportingIndicesSecondaryIn) {
             supportingIndicesSecondary.insert(supportingIndicesSecondary.end(),
                                               supportingIndicesSecondaryIn.cbegin(),
                                               supportingIndicesSecondaryIn.cend());
         }
+
         void finalizeSupportingIndices();
+
         int getSecondarySupport() const { return secondarySupport; }
+
         bool isToRemove() const { return toRemove; }
+
         void setToRemove(bool toRemove) { this->toRemove = toRemove; }
+
         int getMapq() const { return mapq; }
+
         void setMapq(int mapq) { this->mapq = mapq; }
+
         bool isSuspicious() const { return suspicious; }
+
         void setSuspicious(bool suspicious) { this->suspicious = suspicious; }
+
         bool isDistant() const { return distant; }
+
         const vector<int> &getSupportingIndices() const {
             return supportingIndices;
         }
+
         const vector<int> &getSupportingIndicesSecondary() const {
             return supportingIndicesSecondary;
         }
@@ -138,22 +172,27 @@ namespace sophia {
         int getMatchFuzziness() const { return matchFuzziness; }
 
         bool isFuzzy() const { return fuzzy; }
+
         bool isStrictFuzzy() const { return strictFuzzy; }
+
         int getExtendedPos() const { return extendedPos; }
 
         bool isLowMapqSource() const { return lowMapqSource; }
+
         void mrefSaTransform(int fileIndex) {
             support = 0;
             secondarySupport = 0;
             supportingIndices.clear();
             supportingIndices.push_back(fileIndex);
         }
+
         void mrefSaConsensus(const unordered_set<short> &fileIndices) {
             supportingIndices.clear();
             for (const auto &index : fileIndices) {
                 supportingIndices.push_back(index);
             }
         }
+
         void mergeSa(const SuppAlignment &rhs) {
             support = max(support, rhs.getSupport());
             secondarySupport = max(secondarySupport, rhs.getSecondarySupport());
@@ -168,6 +207,7 @@ namespace sophia {
                 expectedDiscordants = rhs.getExpectedDiscordants();
             }
         }
+
         void mergeMrefSa(const SuppAlignment &mrefSa) {
             for (auto index : mrefSa.getSupportingIndices()) {
                 supportingIndices.push_back(index);
@@ -214,7 +254,7 @@ namespace sophia {
 
       private:
         int matchFuzziness;
-        int chrIndex;
+        ChrIndex chrIndex;
         int pos;
         int extendedPos;
         int mapq;

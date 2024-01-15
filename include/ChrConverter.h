@@ -54,6 +54,22 @@ namespace sophia {
 
         /** Map an index position to a chromosome name for compressed mref files. */
         virtual std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
+//
+//        /** phix index. */
+//        virtual bool isTechnical(ChrIndex index) const = 0;
+//
+//        /** NC_007605, EBV. */
+//        virtual bool isVirus(ChrIndex index) const = 0;
+//
+//        /** Mitochondrial chromosome index. */
+//        virtual bool isExtrachromosal(ChrIndex index) const = 0;
+//
+//          /** Decoy sequence index. */
+//          virtual bool isDecoy(ChrIndex index) const = 0;
+
+
+        /** Whether the chromosome index is that of a compressed mref chromosome. */
+        virtual bool isCompressedMrefIndex(ChrIndex index) const = 0;
 
         /** Whether the chromosome index is that of an ignored chromosome. Ignored chromosomes
           * are not the same as the ones that are not among the compressedMref chromosomes.

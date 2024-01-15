@@ -24,7 +24,6 @@
 #include <vector>
 #include <algorithm>
 #include "strtk-wrap.h"
-#include "GlobalAppConfig.h"
 
 
 namespace sophia {
@@ -64,7 +63,7 @@ SuppAlignment::SuppAlignment() :
     primary { true } {}
 
 
-SuppAlignment::SuppAlignment(int chrIndexIn,
+SuppAlignment::SuppAlignment(ChrIndex chrIndexIn,
                              int posIn,
                              int mateSupportIn,
                              int expectedDiscordantsIn,
@@ -108,7 +107,7 @@ SuppAlignment SuppAlignment::parse(string::const_iterator saCbegin,
                                    bool alignmentOnForwardStrand,
                                    bool bpEncounteredM,
                                    int originIndexIn,
-                                   int bpChrIndex,
+                                   ChrIndex bpChrIndex,
                                    int bpPos) {
 
     SuppAlignment result = SuppAlignment();
@@ -276,8 +275,7 @@ inline bool isStopChar(char c) {
 };
 
 SuppAlignment SuppAlignment::parse(const string& saIn) {
-	const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     SuppAlignment result = SuppAlignment();
     result.properPairErrorProne = saIn.back() == '#';
     result.encounteredM = isStopChar(saIn[0]);
@@ -389,7 +387,7 @@ string SuppAlignment::print() const {
 	} else {
 		invStr.append("|");
 	}
-	const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 	if (!fuzzy) {
 		outStr.
 		    append(chrConverter.indexToChrName(chrIndex)).

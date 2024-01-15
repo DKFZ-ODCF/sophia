@@ -28,6 +28,7 @@
 #include "CigarChunk.h"
 #include "CoverageAtBase.h"
 #include "SuppAlignment.h"
+#include "global.h"
 #include <OverhangRange.h>
 #include <algorithm>
 #include <deque>
@@ -37,173 +38,175 @@
 
 namespace sophia {
 
-using namespace std;
+    using namespace std;
 
-class Alignment {
+    class Alignment {
 
-  public:
-    Alignment();
+      public:
+        Alignment();
 
-    void continueConstruction();
+        void continueConstruction();
 
-    static int
-        LOWQUALCLIPTHRESHOLD,
-        BASEQUALITYTHRESHOLD,
-        BASEQUALITYTHRESHOLDLOW,
-        CLIPPEDNUCLEOTIDECOUNTTHRESHOLD,
-        INDELNUCLEOTIDECOUNTTHRESHOLD;
+        static int
+            LOWQUALCLIPTHRESHOLD,
+            BASEQUALITYTHRESHOLD,
+            BASEQUALITYTHRESHOLDLOW,
+            CLIPPEDNUCLEOTIDECOUNTTHRESHOLD,
+            INDELNUCLEOTIDECOUNTTHRESHOLD;
 
-    static double ISIZEMAX;
+        static double ISIZEMAX;
 
-    int getStartPos() const { return startPos; }
+        int getStartPos() const { return startPos; }
 
-    int getEndPos() const { return endPos; }
+        int getEndPos() const { return endPos; }
 
-    int getReadType() const { return readType; }
+        int getReadType() const { return readType; }
 
-    const vector<int> &getReadBreakpoints() const { return readBreakpoints; }
+        const vector<int> &getReadBreakpoints() const { return readBreakpoints; }
 
-    bool isValidLine() const { return validLine; }
+        bool isValidLine() const { return validLine; }
 
-    const string &getSamLine() const { return samLine; }
+        const string &getSamLine() const { return samLine; }
 
-    const vector<int> &getSamChunkPositions() const {
-        return samChunkPositions;
-    }
+        const vector<int> &getSamChunkPositions() const {
+            return samChunkPositions;
+        }
 
-    bool assessOutlierMateDistance();
+        bool assessOutlierMateDistance();
 
-    int getMateChrIndex() const { return mateChrIndex; }
+        ChrIndex getMateChrIndex() const { return mateChrIndex; }
 
-    int getMatePos() const { return matePos; }
+        int getMatePos() const { return matePos; }
 
-    const vector<char> &getReadBreakpointTypes() const {
-        return readBreakpointTypes;
-    }
+        const vector<char> &getReadBreakpointTypes() const {
+            return readBreakpointTypes;
+        }
 
-    void setChosenBp(int chosenBpLoc, int alignmentIndex);
+        void setChosenBp(int chosenBpLoc, int alignmentIndex);
 
-    bool isOverhangEncounteredM() const { return chosenBp->bpEncounteredM; }
+        bool isOverhangEncounteredM() const { return chosenBp->bpEncounteredM; }
 
-    int getOverhangLength() const { return chosenBp->overhangLength; }
+        int getOverhangLength() const { return chosenBp->overhangLength; }
 
-    int getOverhangStartIndex() const { return chosenBp->overhangStartIndex; }
+        int getOverhangStartIndex() const { return chosenBp->overhangStartIndex; }
 
-    vector<SuppAlignment> generateSuppAlignments(int bpChrIndex, int bpPos);
+        vector<SuppAlignment> generateSuppAlignments(ChrIndex bpChrIndex, int bpPos);
 
-    const vector<SuppAlignment> &getSupplementaryAlignments() const {
-        return chosenBp->supplementaryAlignments;
-    }
+        const vector<SuppAlignment> &getSupplementaryAlignments() const {
+            return chosenBp->supplementaryAlignments;
+        }
 
-    int getChrIndex() const { return chrIndex; }
+        ChrIndex getChrIndex() const { return chrIndex; }
 
-    const vector<int> &getReadBreakpointsSizes() const {
-        return readBreakpointSizes;
-    }
+        const vector<int> &getReadBreakpointsSizes() const {
+            return readBreakpointSizes;
+        }
 
-    bool isLowMapq() const { return lowMapq; }
+        bool isLowMapq() const { return lowMapq; }
 
-    bool isNullMapq() const { return nullMapq; }
+        bool isNullMapq() const { return nullMapq; }
 
-    bool isSupplementary() const { return supplementary; }
+        bool isSupplementary() const { return supplementary; }
 
-    void addChildNode(int indexIn) { chosenBp->addChildNode(indexIn); }
+        void addChildNode(int indexIn) { chosenBp->addChildNode(indexIn); }
 
-    void addSupplementaryAlignments(const vector<SuppAlignment> &suppAlignments) {
-        chosenBp->addSupplementaryAlignments(suppAlignments);
-    }
+        void addSupplementaryAlignments(const vector<SuppAlignment> &suppAlignments) {
+            chosenBp->addSupplementaryAlignments(suppAlignments);
+        }
 
-    const vector<int> &getChildrenNodes() const {
-        return chosenBp->childrenNodes;
-    }
+        const vector<int> &getChildrenNodes() const {
+            return chosenBp->childrenNodes;
+        }
 
-    int getOriginIndex() const { return chosenBp->selfNodeIndex; }
+        int getOriginIndex() const { return chosenBp->selfNodeIndex; }
 
-    string printOverhang() const;
+        string printOverhang() const;
 
-    double overhangComplexityMaskRatio() const;
+        double overhangComplexityMaskRatio() const;
 
-    bool isInvertedMate() const { return invertedMate; }
+        bool isInvertedMate() const { return invertedMate; }
 
-    bool isDistantMate() const { return distantMate == 1; }
+        bool isDistantMate() const { return distantMate == 1; }
 
 
-  private:
+      private:
 
-    void mappingQualityCheck();
+        void mappingQualityCheck();
 
-    bool isEventCandidate() const;
+        bool isEventCandidate() const;
 
-    void createCigarChunks();
+        void createCigarChunks();
 
-    void assignBreakpointsAndOverhangs();
+        void assignBreakpointsAndOverhangs();
 
-    void qualityCheckCascade();
+        void qualityCheckCascade();
 
-    bool clipCountCheck();
+        bool clipCountCheck();
 
-    bool uniqueSuppCheck();
+        bool uniqueSuppCheck();
 
-    double overhangMedianQuality(const CigarChunk &cigarChunk) const;
+        double overhangMedianQuality(const CigarChunk &cigarChunk) const;
 
-    template <typename Iterator>
-    void fullMedianQuality(Iterator qualBegin, Iterator qualEnd,
-                           vector<int> &overhangPerBaseQuality) const;
+        template <typename Iterator>
+        void fullMedianQuality(Iterator qualBegin, Iterator qualEnd,
+                               vector<int> &overhangPerBaseQuality) const;
 
-    template <typename Iterator>
-    double getMedian(Iterator begin, Iterator end) const;
+        template <typename Iterator>
+        double getMedian(Iterator begin, Iterator end) const;
 
-    void assessReadType();
+        void assessReadType();
 
-    bool lowMapq;
+        bool lowMapq;
 
-    bool nullMapq;
+        bool nullMapq;
 
-    int distantMate;
+        int distantMate;
 
-    unique_ptr<ChosenBp> chosenBp;
+        unique_ptr<ChosenBp> chosenBp;
 
-    int chrIndex;
+        ChrIndex chrIndex;
 
-    int readType;
+        int readType;
 
-    int startPos, endPos;
+        int startPos, endPos;
 
-    int mateChrIndex, matePos;
+        ChrIndex mateChrIndex;
 
-    string samLine;
+        int matePos;
 
-    bool validLine;
+        string samLine;
 
-    vector<int> samChunkPositions;
+        bool validLine;
 
-    string::const_iterator saCbegin, saCend;
+        vector<int> samChunkPositions;
 
-    bool hasSa;
+        string::const_iterator saCbegin, saCend;
 
-    bool supplementary;
+        bool hasSa;
 
-    bool fwdStrand;
+        bool supplementary;
 
-    bool invertedMate;
+        bool fwdStrand;
 
-    bool qualChecked;
+        bool invertedMate;
 
-    vector<CigarChunk> cigarChunks;
+        bool qualChecked;
 
-    vector<int> readBreakpoints;
+        vector<CigarChunk> cigarChunks;
 
-    vector<char> readBreakpointTypes;
+        vector<int> readBreakpoints;
 
-    vector<int> readBreakpointSizes;
+        vector<char> readBreakpointTypes;
 
-    vector<double> readBreakpointComplexityMaskRatios;
+        vector<int> readBreakpointSizes;
 
-    deque<bool> readBreakpointsEncounteredM;
+        vector<double> readBreakpointComplexityMaskRatios;
 
-    vector<OverhangRange> readOverhangCoords;
+        deque<bool> readBreakpointsEncounteredM;
 
-};
+        vector<OverhangRange> readOverhangCoords;
+
+    };
 
 } /* namespace sophia */
 

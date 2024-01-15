@@ -125,7 +125,7 @@ namespace sophia {
                                         + std::to_string(allChromosomes.size()) + " vs. "
                                         + std::to_string(allChromosomeLengths.size()));
         }
-
+        // TODO: compressedMref first. Then all but ignored. Then ignored. Track positions and switch to index-based logic (faster).
         auto allChromosomesCopy = allChromosomes;
         auto compressedMRefChromosomesCopy = compressedMrefChromosomes;
         std::sort(allChromosomesCopy.begin(), allChromosomesCopy.end());
@@ -171,6 +171,11 @@ namespace sophia {
     /** Map an index position to a chromosome name for compressed mref files. */
     std::string Hg38ChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
         return compressedMrefChromosomes.at(index);
+    }
+
+    bool Hg38ChrConverter::isCompressedMrefIndex(ChrIndex index) const {
+        return compressedMrefChromosomeLookup.find(indexToChrName(index)) !=
+            compressedMrefChromosomeLookup.end();
     }
 
     /** Check whether the chrIndex is one of an ignored chromosome. */

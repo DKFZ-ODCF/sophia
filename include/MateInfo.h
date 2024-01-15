@@ -25,6 +25,7 @@
 #ifndef MATEINFO_H_
 #define MATEINFO_H_
 #include "SuppAlignment.h"
+#include "global.h"
 #include <cmath>
 
 namespace sophia {
@@ -32,7 +33,7 @@ namespace sophia {
 struct MateInfo {
     int readStartPos;
     int readEndPos;
-    int mateChrIndex;
+    ChrIndex mateChrIndex;
     int mateStartPos;
     int mateEndPos;
     bool inverted;
@@ -67,23 +68,49 @@ struct MateInfo {
             }
         }
     }
-    MateInfo(int readStartPosIn, int readEndPosIn, int mateChrIndexIn,
-             int mateStartPosIn, int sourceType, bool invertedIn)
-        : readStartPos{readStartPosIn}, readEndPos{readEndPosIn},
-          mateChrIndex{mateChrIndexIn}, mateStartPos{mateStartPosIn},
-          mateEndPos{mateStartPosIn}, inverted{invertedIn}, source{sourceType},
-          evidenceLevel{sourceType == 2 ? 3 : 1}, matePower{1},
-          inversionSupport{invertedIn}, straightSupport{!invertedIn}, bpLocs{},
-          saSupporter{false}, toRemove{false} {}
-    MateInfo(int readStartPosIn, int readEndPosIn, int mateChrIndexIn,
-             int mateStartPosIn, int sourceType, bool invertedIn,
+
+    MateInfo(int readStartPosIn,
+             int readEndPosIn,
+             ChrIndex mateChrIndexIn,
+             int mateStartPosIn,
+             int sourceType,
+             bool invertedIn)
+        : readStartPos{readStartPosIn},
+          readEndPos{readEndPosIn},
+          mateChrIndex{mateChrIndexIn},
+          mateStartPos{mateStartPosIn},
+          mateEndPos{mateStartPosIn},
+          inverted{invertedIn},
+          source{sourceType},
+          evidenceLevel{sourceType == 2 ? 3 : 1},
+          matePower{1},
+          inversionSupport{invertedIn},
+          straightSupport{!invertedIn},
+          bpLocs{},
+          saSupporter{false},
+          toRemove{false} {}
+
+    MateInfo(int readStartPosIn,
+             int readEndPosIn,
+             ChrIndex mateChrIndexIn,
+             int mateStartPosIn,
+             int sourceType,
+             bool invertedIn,
              const std::vector<int> &bpLocsIn)
-        : readStartPos{readStartPosIn}, readEndPos{readEndPosIn},
-          mateChrIndex{mateChrIndexIn}, mateStartPos{mateStartPosIn},
-          mateEndPos{mateStartPosIn}, inverted{invertedIn}, source{sourceType},
-          evidenceLevel{sourceType == 2 ? 3 : 1}, matePower{1},
-          inversionSupport{invertedIn}, straightSupport{!invertedIn},
-          bpLocs{bpLocsIn}, saSupporter{false}, toRemove{false} {}
+        : readStartPos{readStartPosIn},
+          readEndPos{readEndPosIn},
+          mateChrIndex{mateChrIndexIn},
+          mateStartPos{mateStartPosIn},
+          mateEndPos{mateStartPosIn},
+          inverted{invertedIn},
+          source{sourceType},
+          evidenceLevel{sourceType == 2 ? 3 : 1},
+          matePower{1},
+          inversionSupport{invertedIn},
+          straightSupport{!invertedIn},
+          bpLocs{bpLocsIn},
+          saSupporter{false},
+          toRemove{false} {}
 
     bool isToRemove() const { return toRemove; }
 };

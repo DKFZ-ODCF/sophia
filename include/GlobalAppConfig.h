@@ -40,12 +40,12 @@ namespace sophia {
 
         GlobalAppConfig(std::unique_ptr<ChrConverter const> chrConverter);
 
-        ~GlobalAppConfig();
-
         /** The chromosome converter. */
         const std::unique_ptr<ChrConverter const> chrConverter;
 
       public:
+
+        ~GlobalAppConfig();
 
         const ChrConverter &getChrConverter() const;
 

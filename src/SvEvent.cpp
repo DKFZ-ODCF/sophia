@@ -50,14 +50,23 @@ namespace sophia {
                      const SuppAlignmentAnno &sa1In, const SuppAlignmentAnno &sa2In,
                      const vector<pair<int, string>> &overhangDb)
         : toRemove{false}, contaminationCandidate{0},
-          chrIndex1{bp1In.getChrIndex()}, pos1{bp1In.getPos()},
-          chrIndex2{bp2In.getChrIndex()}, pos2{bp2In.getPos()},
+          chrIndex1{bp1In.getChrIndex()},
+          pos1{bp1In.getPos()},
+          chrIndex2{bp2In.getChrIndex()},
+          pos2{bp2In.getPos()},
           lineIndex1{bp1In.getLineIndex()},
-          lineIndex2{bp2In.getLineIndex()}, eventType{0}, eventSize{0},
-          inverted{sa1In.isInverted() || sa2In.isInverted()}, distant{false},
-          overhang1Compensation{false}, overhang2Compensation{false},
-          overhang1Index{-1}, overhang2Index{-1}, overhang1lengthRatio{0},
-          overhang2lengthRatio{0}, inputScore{2}, eventScore{0},
+          lineIndex2{bp2In.getLineIndex()},
+          eventType{0},
+          eventSize{0},
+          inverted{sa1In.isInverted() || sa2In.isInverted()},
+          distant{false},
+          overhang1Compensation{false},
+          overhang2Compensation{false},
+          overhang1Index{-1}, overhang2Index{-1},
+           overhang1lengthRatio{0},
+          overhang2lengthRatio{0},
+          inputScore{2},
+          eventScore{0},
           totalEvidence1{sa1In.getSupport() + sa1In.getSecondarySupport() +
                          sa1In.getMateSupport()},
           span1{bp1In.getNormalSpans()},
@@ -85,8 +94,7 @@ namespace sophia {
                          : 1.0},
           suspicious{0}, semiSuspicious{sa1In.isSemiSuspicious() ||
                                         sa2In.isSemiSuspicious()} {
-        //	auto messageMode = selectedSa1.getChrIndex() == 11 &&
-        //(selectedSa1.getPos() == 2261373 && selectedSa2.getPos() == 2148480);
+
         auto posDifferential = pos1 - pos2;
         determineEventTypeAndSize(posDifferential, selectedSa2.isEncounteredM());
         if (chrIndex1 != chrIndex2) {
@@ -267,7 +275,8 @@ namespace sophia {
         }
     }
 
-    SvEvent::SvEvent(const BreakpointReduced &bp1In, const BreakpointReduced &bp2In,
+    SvEvent::SvEvent(const BreakpointReduced &bp1In,
+                     const BreakpointReduced &bp2In,
                      const SuppAlignmentAnno &sa1In,
                      const vector<pair<int, string>> &overhangDb,
                      const SuppAlignmentAnno &dummySaIn)
@@ -463,7 +472,8 @@ namespace sophia {
         }
     }
 
-    SvEvent::SvEvent(const BreakpointReduced &bp1In, const SuppAlignmentAnno &sa1In,
+    SvEvent::SvEvent(const BreakpointReduced &bp1In,
+                     const SuppAlignmentAnno &sa1In,
                      GermlineMatch germlineInfo2, MrefMatch hitsInMref2In,
                      const vector<pair<int, string>> &overhangDb,
                      const SuppAlignmentAnno &dummySaIn)
@@ -707,7 +717,8 @@ namespace sophia {
 
     pair<bool, int>
     SvEvent::assessOverhangQualityCompensation(
-        int lineIndex, const vector<pair<int, string>> &overhangDb) const {
+            int lineIndex,
+            const vector<pair<int, string>> &overhangDb) const {
         auto overhangIndex = -1;
         auto compensation = false;
         pair<int, string> dummy{lineIndex, ""};
@@ -992,10 +1003,12 @@ namespace sophia {
             return 2;
         }
         if (mrefHits1 > GERMLINEDBLIMIT &&
+            // TODO hg37:999 == 'hs37d5'; hg37:1000 == 'NC_007605'
             !(bp1.getChrIndex() == 999 || bp1.getChrIndex() == 1000)) {
             return 171;
         }
         if (mrefHits2 > GERMLINEDBLIMIT &&
+            // TODO hg37:999 == 'hs37d5'; hg37:1000 == 'NC_007605'
             !(bp2.getChrIndex() == 999 || bp2.getChrIndex() == 1000)) {
             return 171;
         }
@@ -1089,6 +1102,7 @@ namespace sophia {
             }
         }
         if (mrefHits1 > BPFREQTHRESHOLD) {
+            // TODO hg37:999 == 'hs37d5'
             if (chrIndex1 != 999 || chrIndex2 == 999 ||
                 mrefHits2 > BPFREQTHRESHOLD) {
                 return 431;
@@ -1099,6 +1113,7 @@ namespace sophia {
             }
         }
         if (mrefHits2 > BPFREQTHRESHOLD) {
+            // TODO hg37:999 == 'hs37d5'
             if (chrIndex1 == 999 || chrIndex2 != 999 ||
                 mrefHits1 > BPFREQTHRESHOLD) {
                 return 432;
@@ -1129,9 +1144,11 @@ namespace sophia {
             return 29;
         }
         if (mrefHits1 > GERMLINEDBLIMIT &&
+            // TODO hg37:999 == 'hs37d5'; hg37:1000 == 'NC_007605'
             !(bp1.getChrIndex() == 999 || bp1.getChrIndex() == 1000)) {
             return 301;
         }
+        // TODO hg37:999 == 'hs37d5'; hg37:1000 == 'NC_007605'
         if (mrefHits2 > GERMLINEDBLIMIT && !(selectedSa1.getChrIndex() == 999 ||
                                              selectedSa1.getChrIndex() == 1000)) {
             return 302;
@@ -1199,6 +1216,7 @@ namespace sophia {
             }
         }
         if (mrefHits1 > BPFREQTHRESHOLD) {
+            // TODO hg37:999 == 'hs37d5'
             if (chrIndex1 != 999 || selectedSa1.getChrIndex() == 999 ||
                 mrefHits2 > BPFREQTHRESHOLD) {
                 return 471;
@@ -1209,6 +1227,7 @@ namespace sophia {
             }
         }
         if (mrefHits2 > BPFREQTHRESHOLD) {
+            // TODO hg37:999 == 'hs37d5'
             if (chrIndex2 == 999 || selectedSa1.getChrIndex() != 999 ||
                 mrefHits1 > BPFREQTHRESHOLD) {
                 return 472;
