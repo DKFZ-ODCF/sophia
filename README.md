@@ -221,7 +221,7 @@ The `:` (colon) symbol can be used.
 ## Changes
 
 * 35.1.0 (upcoming)
-  * Minor: hg38 support 
+  * Minor: hg38 support
     * Added `--assemblyname` option, defaulting to "hg37" when omitted (old behaviour)
     > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted. Furthermore, the runtime will be longer than for hg37 and also hg37 runtime has increase.
   * Minor: Build system

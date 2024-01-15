@@ -101,10 +101,11 @@ namespace sophia {
                 }
             }
             if (realPidName.size() == 0) {
-                throw runtime_error("Could not match realPidName in gzFile '" + gzFile + "'. "
+                throw_with_trace(runtime_error(
+                                    "Could not match realPidName in gzFile '" + gzFile + "'. "
                                     "The version value '" + version + "' has to be contained "
                                     "in the gzFile name. Rename the gzFile to match the pattern "
-                                    "'.*/$realPidName?$version.+'.");
+                                    "'.*/$realPidName?$version.+'."));
             }
 
             reverse(realPidName.begin(), realPidName.end());

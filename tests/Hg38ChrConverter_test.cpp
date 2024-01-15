@@ -12,7 +12,7 @@ namespace sophia {
     }
 
     TEST(Hg38ChrConverterTest_ParseBreakPointStrings, BasicAssertions) {
-        const std::string stopChars = "|(,!/?";
+        const std::string stopChars = "|(,!/?;";
 
         const std::string test1 = "HLA-DRB1*13:01:01:2914|(4,0,0?/0)";
         EXPECT_EQ(converter.parseChr(test1.begin(), test1.end(), ':', stopChars),
@@ -25,6 +25,7 @@ namespace sophia {
         const std::string test3 = test1 + ";" + test2;
         EXPECT_EQ(converter.parseChr(test3.begin(), test3.end(), ':', stopChars),
                   "HLA-DRB1*13:01:01");
-    }
+
+      }
 
 } // namespace sophia

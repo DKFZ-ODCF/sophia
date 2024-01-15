@@ -268,8 +268,11 @@ int main(int argc, char** argv) {
         }
 
         return 0;
-    } catch (exception& e) {
-        cerr << "error: " << e.what() << endl;
+    } catch (boost::exception &e) {
+        cerr << get_trace(e) << endl;
+        return 1;
+    } catch (std::exception& e) {
+        cerr << "Error: " << e.what() << endl;
         return 1;
     }
 }

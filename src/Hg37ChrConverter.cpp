@@ -340,11 +340,11 @@ namespace sophia {
                     chrSizesCompressedMref(chrSizesCompressedMref),
                     indexConverter(indexConverter) {
             if (indexToChr.size() != indexConverter.size())
-                throw std::invalid_argument(
-                    "indexToChr and indexConverter must have the same size");
+                throw_with_trace(std::invalid_argument(
+                    "indexToChr and indexConverter must have the same size"));
             if (indexToChrCompressedMref.size() != chrSizesCompressedMref.size())
-                throw std::invalid_argument(
-                    "indexToChrCompressedMref and chrSizesCompressedMref must have the same size");
+                throw_with_trace(std::invalid_argument(
+                    "indexToChrCompressedMref and chrSizesCompressedMref must have the same size"));
         }
 
     Hg37ChrConverter::Hg37ChrConverter()
@@ -365,7 +365,8 @@ namespace sophia {
     std::string Hg37ChrConverter::indexToChrName(ChrIndex index) const {
         std::string name = indexToChr[index];
         if (name == "INVALID") {
-            throw std::runtime_error("Invalid chromosome index." + std::to_string(index));
+            throw_with_trace(std::runtime_error("Invalid chromosome index." +
+                             std::to_string(index)));
         } else {
             return name;
         }
@@ -437,7 +438,7 @@ namespace sophia {
                                                       const std::string &stopCharExt) const {
         int chrIndex {0};
         if (start == end) {
-            throw std::domain_error("Chromosome identifier is empty.");
+            throw_with_trace(std::domain_error("Chromosome identifier is empty."));
         } else if (isdigit(*start)) {
             for (auto chr_cit = start; chr_cit != end && *chr_cit != stopChar; ++chr_cit) {
                 chrIndex = chrIndex * 10 + (*chr_cit - '0');
@@ -461,19 +462,20 @@ namespace sophia {
                     if (start != end && *start == 'T') {
                         return 1001;
                     } else {
-                        throw std::domain_error("Chromosome identifier with invalid prefix 'M"
-                                                + std::to_string(*start) + "'.");
+                        throw_with_trace(
+                            std::domain_error("Chromosome identifier with invalid prefix 'M" +
+                                              std::to_string(*start) + "'."));
                     }
                 case 'N':
                     return 1000;
                 case 'p':
                     return 1002;
                 default:
-                    throw std::domain_error("Chromosome identifier with invalid prefix '"
-                                            + std::to_string(*start) + "'.");
+                    throw_with_trace(std::domain_error("Chromosome identifier with invalid prefix '"
+                                                       + std::to_string(*start) + "'."));
             }
         }
-        throw std::runtime_error("Oops! This should not occur!");
+        throw_with_trace(std::runtime_error("Oops! This should not occur!"));
     }
 
 } /* namespace sophia */

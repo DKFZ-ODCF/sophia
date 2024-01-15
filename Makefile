@@ -7,7 +7,7 @@ SRC_DIR = ./src
 TESTS_DIR = ./tests
 
 # Compiler flags
-LIBRARY_FLAGS := -lz -lm -lrt -lboost_system -lboost_iostreams -lboost_program_options
+LIBRARY_FLAGS := -lz -lm -lrt -lboost_system -lboost_iostreams -lboost_program_options -ldl
 LDFLAGS := $(LDFLAGS) -flto=auto -rdynamic -no-pie
 CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
 
@@ -24,7 +24,7 @@ ifeq ($(develop),true)
 	#       that thus the compiler actually catches some binary dependencies during linking that
 	#       will otherwise be missed.
 	CXXFLAGS := $(CXXFLAGS) -O0 -ggdb3 -DDEBUG -fno-inline
-	LD_END_FLAGS := $(LD_END_FLAGS) -Wl,-O0
+	LD_END_FLAGS := $(LD_END_FLAGS) -Wl,-O0 -ggdb3 -DDEBUG -fno-inline
 else
 	# Ignore some leftover unused variables from SvEvent::assessBreakpointClonalityStatus.
 	CXXFLAGS := $(CXXFLAGS) -O3 -DNDEBUG -Wno-unused-variable
@@ -133,6 +133,7 @@ $(BUILD_DIR)/%.o: $(TESTS_DIR)/%.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 testRunner: \
+		$(BUILD_DIR)/global.o \
 		$(BUILD_DIR)/ChrConverter.o \
 		$(BUILD_DIR)/Hg38ChrConverter.o \
 		$(BUILD_DIR)/Hg38ChrConverter_test.o \

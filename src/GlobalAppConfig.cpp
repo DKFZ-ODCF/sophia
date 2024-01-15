@@ -46,17 +46,16 @@ namespace sophia {
         if (GlobalAppConfig::instance_ == nullptr) {
             GlobalAppConfig::instance_ = new GlobalAppConfig(move(chrConverter));
         } else {
-            throw new logic_error("GlobalAppConfig already initialized");
+            throw_with_trace(logic_error("GlobalAppConfig already initialized"));
         }
         return *GlobalAppConfig::instance_;
     }
 
     const GlobalAppConfig &GlobalAppConfig::getInstance() {
         if (GlobalAppConfig::instance_ == nullptr) {
-            throw new logic_error("GlobalAppConfig not initialized");
-        } else {
-            return *GlobalAppConfig::instance_;
+            throw_with_trace(logic_error("GlobalAppConfig not initialized"));
         }
+        return *GlobalAppConfig::instance_;
     }
 
 }

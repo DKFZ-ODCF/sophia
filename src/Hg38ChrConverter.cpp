@@ -121,9 +121,10 @@ namespace sophia {
               } {
 
         if (allChromosomes.size() != allChromosomeLengths.size()) {
-            throw std::invalid_argument("Not the same number of chromosomes and lengths: "
-                                        + std::to_string(allChromosomes.size()) + " vs. "
-                                        + std::to_string(allChromosomeLengths.size()));
+            throw_with_trace(std::invalid_argument(
+                "Not the same number of chromosomes and lengths: "
+                + std::to_string(allChromosomes.size()) + " vs. "
+                + std::to_string(allChromosomeLengths.size())));
         }
         // TODO: compressedMref first. Then all but ignored. Then ignored. Track positions and switch to index-based logic (faster).
         auto allChromosomesCopy = allChromosomes;
@@ -140,9 +141,9 @@ namespace sophia {
                             difference.begin());
         if (! difference.empty()) {
             std::string notFound = boost::algorithm::join(difference, ", ");
-            throw std::invalid_argument(
+            throw_with_trace(std::invalid_argument(
                 "Compressed mref chromosomes not a subset of all chromosomes. Could not find: " +
-                 notFound);
+                 notFound));
         }
     }
 
@@ -200,10 +201,11 @@ namespace sophia {
     ChrIndex Hg38ChrConverter::chrNameToIndex(std::string chrName) const {
         try {
             return allChromosomeLookup.at(chrName);
-        } catch (std::out_of_range& e) {
-            throw std::domain_error("Hg38ChrConverter::chrNameToIndex:"
-                                    "Chromosome name not found: '" + chrName + "'");
+        } catch (std::out_of_range &e) {
+            throw_with_trace(std::domain_error("Chromosome name not found: '" + chrName + "'"));
         }
+        // Just to get rid of a warning.
+        return std::numeric_limits<ChrIndex>::max();
     }
 
     /** Parse chromosome index. It takes a position in a character stream, and translates the
@@ -221,8 +223,7 @@ namespace sophia {
                                                      char stopChar,
                                                      const std::string &stopCharsExt) const {
         if (stopCharsExt.empty()) {
-            throw std::invalid_argument("Hg38ChrConverter::parseChr: "
-                                        "stopCharsExt must not be empty.");
+            throw_with_trace(std::invalid_argument("stopCharsExt must not be empty."));
         }
 
         // First find the outer separator (one of `stopCharsExt`).
@@ -291,10 +292,12 @@ namespace sophia {
         try {
             return allChromosomeLookup.at(chrName);
         } catch (std::out_of_range& e) {
-            throw std::domain_error("Hg38ChrConverter::parseChrAndReturnIndex: "
-                                    "Chromosome name not found: '" + chrName + "'. "
-                                    "Parsed from '" + std::string(startIt, endIt) + "'.");
+            throw_with_trace(std::domain_error(
+                "Chromosome name not found: '" + chrName + "'. "
+                "Parsed from '" + std::string(startIt, endIt) + "'."));
         }
+        // Just to get rid of a warning.
+        return std::numeric_limits<ChrIndex>::max();
     }
 
 } /* namespace sophia */

@@ -186,8 +186,11 @@ int main(int argc, char** argv) {
         segmentRefMaster.parseSamStream();
 
         return 0;
+    } catch (boost::exception &e) {
+        cerr << get_trace(e) << endl;
+        return 1;
     } catch (std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
+        cerr << "Error: " << e.what() << endl;
         return 1;
     }
 }

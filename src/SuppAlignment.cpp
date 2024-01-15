@@ -269,7 +269,7 @@ SuppAlignment SuppAlignment::parse(string::const_iterator saCbegin,
 	return result;
 }
 
-static const string STOP_CHARS = "|(,!/?)";
+static const string STOP_CHARS = "|(,!/?)\t";
 inline bool isStopChar(char c) {
     return STOP_CHARS.find(c) != std::string::npos;
 };
@@ -278,29 +278,27 @@ SuppAlignment SuppAlignment::parse(const string& saIn) {
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     SuppAlignment result = SuppAlignment();
     result.properPairErrorProne = saIn.back() == '#';
-    result.encounteredM = isStopChar(saIn[0]);
+    result.encounteredM = saIn[0] == '|';
 
 	auto index = 0;
 
-	// If the current index the field separator '|', skip it.
+	// If the current index is the field separator '|', skip it.
 	if (result.encounteredM) {
 		++index;
 	}
 
-    // TODO Fix this
-	// Parse up to the first colon, and interpret that as the chromosome name.
+	// Parse the first column with the chromosome name (BED format)
 	result.chrIndex = chrConverter.parseChrAndReturnIndex(
 	    next(saIn.cbegin(), index),
 	    saIn.cend(),
-	    ':',
-	    STOP_CHARS);
+	    ':');
 
 	if (chrConverter.isIgnoredChromosome(result.chrIndex)) {
 		return result;
 	}
 
-	// else, skip the colon ...
-	while (!isStopChar(saIn[index])) {
+	// else, skip forward to the first colon ':' character.
+	while (saIn[index] != ':') {
 		++index;
 	}
 	++index;
