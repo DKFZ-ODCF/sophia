@@ -74,7 +74,7 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
             continue;
         };
 
-        Breakpoint tmpBp {line, true};  // This actually parses the line.
+        Breakpoint tmpBp = Breakpoint::parse(line, true);
         auto chrIndexO = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
         ChrIndex chrIndex;
         if (!chrIndexO.has_value()) {
@@ -155,7 +155,7 @@ AnnotationProcessor::AnnotationProcessor(
         if (line.front() == '#') {
             continue;
         };
-        Breakpoint tmpBpPre{line, true};
+        Breakpoint tmpBpPre = Breakpoint::parse(line, true);
         BreakpointReduced tmpBp{tmpBpPre, lineIndex, false};
         if (chrConverter.isIgnoredChromosome(tmpBp.getChrIndex())) {
             continue;
@@ -266,7 +266,7 @@ AnnotationProcessor::AnnotationProcessor(
         if (line.front() == '#') {
             continue;
         };
-        Breakpoint tmpBp{line, true};
+        Breakpoint tmpBp = Breakpoint::parse(line, true);
         auto chrIndexO = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
         ChrIndex chrIndex;
         if (!chrIndexO.has_value()) {

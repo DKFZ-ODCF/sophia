@@ -88,6 +88,10 @@ namespace sophia {
 
         /** Parse chromosome index.
           *
+          * 1. Input is a plain chromosome string separated from the following string by '\t' when
+          *    parsing a BED file (the chromosome identifier in the first column).
+          * 2. ...
+          *
           * If the `stopCharExt` parameter is an empty string, then it takes a position in a
           * character stream, and translates the following character(s) into index positions
           * (using ChrConverter::indexToChr). If the name cannot be parsed, throws a domain_error

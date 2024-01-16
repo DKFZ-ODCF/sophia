@@ -22,6 +22,7 @@
 #define GLOBALAPPCONFIG_H_
 
 #include <cstddef>
+#include <iostream>
 #include <boost/exception/all.hpp>
 #include <boost/stacktrace.hpp>
 
@@ -34,14 +35,14 @@ namespace sophia {
     using CompressedMrefIndex = size_t ;
     using ChrSize = long unsigned int;
 
+    std::string get_trace(const boost::exception &e);
+
     typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace> traced;
 
     template <class E>
     void throw_with_trace(const E &e) {
         throw boost::enable_error_info(e) << traced(boost::stacktrace::stacktrace());
     }
-
-    std::string get_trace(const boost::exception &e);
 
 }
 

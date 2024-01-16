@@ -44,8 +44,8 @@ namespace sophia {
         Breakpoint(ChrIndex chrIndexIn,
                    int posIn);
 
-        Breakpoint(const string &bpIn,
-                   bool ignoreOverhang);
+        static Breakpoint parse(const string &bpIn,
+                                bool ignoreOverhang);
 
         ~Breakpoint() = default;
 
@@ -245,8 +245,10 @@ namespace sophia {
 
       private:
 
+        // Compose the string that will be printed as column 8 into the breakpoint BED.
         string finalizeOverhangs();
 
+        // Actually prints to stdout.
         void printBreakpointReport(const string &overhangStr);
 
         bool matchDetector(const shared_ptr<Alignment> &longAlignment,

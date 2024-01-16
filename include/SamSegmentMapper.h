@@ -39,30 +39,46 @@ namespace sophia {
 
 using namespace std;
 
-class SamSegmentMapper {
-  public:
-    SamSegmentMapper(int defaultReadLengthIn);
-    ~SamSegmentMapper() = default;
-    void parseSamStream();
+    class SamSegmentMapper {
+      public:
 
-  private:
-    void printBps(int alignmentStart);
-    void switchChromosome(const Alignment &alignment);
-    void incrementCoverages(const Alignment &alignment);
-    void assignBps(shared_ptr<Alignment> &alignment);
-    const time_t STARTTIME;
-    const bool PROPERPARIRCOMPENSATIONMODE;
-    const int DISCORDANTLEFTRANGE;
-    const int DISCORDANTRIGHTRANGE;
-    unsigned int printedBps;
-    ChrIndex chrIndexCurrent;
-    int minPos, maxPos;
-    map<int, Breakpoint> breakpointsCurrent;
-    deque<CoverageAtBase> coverageProfiles;
-    deque<MateInfo> discordantAlignmentsPool;
-    deque<MateInfo> discordantAlignmentCandidatesPool;
-    deque<MateInfo> discordantLowQualAlignmentsPool;
-};
+        SamSegmentMapper(int defaultReadLengthIn);
+
+        ~SamSegmentMapper() = default;
+
+        void parseSamStream();
+
+      private:
+
+        // Does not print anything by itself, but lets via via another call to
+        // Breakpoint::finalizeBreakpoint and then Breakpoint::printBreakpointReport it
+        // prints to stdout.
+        void printBps(int alignmentStart);
+
+        void switchChromosome(const Alignment &alignment);
+
+        void incrementCoverages(const Alignment &alignment);
+
+        void assignBps(shared_ptr<Alignment> &alignment);
+
+        const time_t STARTTIME;
+
+        const bool PROPERPARIRCOMPENSATIONMODE;
+
+        const int DISCORDANTLEFTRANGE;
+
+        const int DISCORDANTRIGHTRANGE;
+
+        unsigned int printedBps;
+
+        ChrIndex chrIndexCurrent;
+        int minPos, maxPos;
+        map<int, Breakpoint> breakpointsCurrent;
+        deque<CoverageAtBase> coverageProfiles;
+        deque<MateInfo> discordantAlignmentsPool;
+        deque<MateInfo> discordantAlignmentCandidatesPool;
+        deque<MateInfo> discordantLowQualAlignmentsPool;
+    };
 
 } /* namespace sophia */
 

@@ -60,27 +60,36 @@ In extreme cases (like with chromothripsis) the runtime can jump to 120 hours, b
 Note that currently only very specific genome references/assemblies for hg37 and hg38 are supported.
 Please have a look at the [Hg37ChrConverter.cpp](src/Hg37ChrConverter.cpp) and [Hg38ChrConverter.cpp](src/Hg38ChrConverter.cpp) files, in which the sets of allowed chromosome names are (yet) hard-coded.
 
-The output is a BED file, which means the start and end positions are 0-based, and left-inclusive, right-exclusive. The columns are:
+The output is a BED file, which means the start and end positions are 0-based, and left-inclusive, right-exclusive. The 8 columns are:
 
-| Column | Description               | Format                                                     |
-|--------|---------------------------|------------------------------------------------------------|
-| 1      | chromosome identifier     | string w/o \{:space:, :tab:, :newline, :carriage_return:\} |
-| 2      | 0-based start (inclusive) | `\d+`                                                      |
-| 3      | 0-based end (exclusive)   | `\d+`                                                      |
-| 4      | ???                       | `\d+(,\d+)*`                                               |
-| 5      | ???                       | `.\|\d+(,\d+)*`                                            |
-| 6      | ???                       | `($chrName:$position)(;($chrName:$position))+`             |
-| 7      | ???                       | `#`: missing BP information; `.`: ???                      |
-| 8      | ???                       | ibd.                                                       |
-| 9      | ???                       | ibd.                                                       |
+| Column | Description                                                                                                                                                                                                                                                                                                                                | Format                                                                                                              |
+|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| 1      | chromosome identifier                                                                                                                                                                                                                                                                                                                      | string w/o \{:space:, :tab:, :newline, :carriage_return:\}                                                          |
+| 2      | 0-based start (inclusive)                                                                                                                                                                                                                                                                                                                  | `\d+`                                                                                                               |
+| 3      | 0-based end (exclusive). This is just start position + 1.                                                                                                                                                                                                                                                                                  | `\d+`                                                                                                               |
+| 4      | Various counts of different types of coverage, specifically (1) pairedBreaksSoft, (2) pairedBreaksHard, (3) mateSupport, (4) unpairedBreaksSoft, (5) unpairedBreaksHard, (6) breaksShortIndel, (7) normalSpans, (8) lowQualSpansSoft, (9) lowQualSpansHard, (10) lowQualBreaksSoft, (11) lowQualBreaksHard, (12) repetitiveOverhangBreaks. | `\d+(,\d+){11}`                                                                                                     |
+| 5      | Left and right coverage                                                                                                                                                                                                                                                                                                                    | `\d+,\d+`                                                                                                           |
+| 6      | suppAlignmentsDoubleSupport(primary,secondary,mate)                                                                                                                                                                                                                                                                                        | `#`: missing BP information; `.`: no supplementary alignments; `$support(;$support)+`                               |
+| 7      | suppAlignments(primary,0,mate)                                                                                                                                                                                                                                                                                                             | ibd.                                                                                                                |
+| 8      | Sequences of significant overhangs, if present                                                                                                                                                                                                                                                                                             | `#`: missing BP information; `.`: if the overhang is empty; `${overhangSpec}+` the overhang information (see below) |
 
-For column 6.
+Lines starting with `#` are comments and can be ignored.
 
-* The `$chrName` is the chromosome name as given in the input BAM file.
-* 
+For columns 6 and 7 the `$support` has a complex format. See `Breakpoint::collapseSuppRange` and `SuppAlignment::print` for details.
 
-[//]: # (TODO describe the other columns completely)
-[//]: # (TODO Describe the format of column 6, which has a more complex format)
+For column 8, the overhang information is of the following format
+
+* Each overhang specification has the form `>$id:$left$sequence$right\(\d+\);` where
+  * `$id` consisting of the BP index an underscore `_` and a counter
+  * `$left` is either empty or a pipe symbol `|`
+  * `$sequence` is the sequence of the overhang
+  * `$right` is either a pipe symbol `|` or empty (either `$left` or `$right` are a pipe symbol)
+  * `\(\d+\)` is the number of times the overhang was observed
+  > Developer note: See `Breakpoints::finalizeOverhangs` and `Alignment::printOverhang` for details.
+
+* Columns 6, 7, and 8 are set to `#` if there is missing breakpoint information.
+
+> Developer Note: See `Breakpoint::printBreakpointReport` for details.
 
 #### `sophiaAnnotate` Tool
 

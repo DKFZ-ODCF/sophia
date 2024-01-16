@@ -99,16 +99,21 @@ SuppAlignment::SuppAlignment(ChrIndex chrIndexIn,
 	strictFuzzy = fuzzy || (support + secondarySupport) < 3;
 }
 
-SuppAlignment SuppAlignment::parse(string::const_iterator saCbegin,
-                                   string::const_iterator saCend,
-                                   bool primaryIn,
-                                   bool lowMapqSourceIn,
-                                   bool nullMapqSourceIn,
-                                   bool alignmentOnForwardStrand,
-                                   bool bpEncounteredM,
-                                   int originIndexIn,
-                                   ChrIndex bpChrIndex,
-                                   int bpPos) {
+/** Parse the supplementary alignment information from an SA:Z: tag according to the a
+  * SAM specification, such as
+  *
+  * SA:Z:10,24753146,+,68S33M,48,1;X,135742083,-,47S22M32S,0,0;8,72637925,-,29S19M53S,0,0"
+  */
+SuppAlignment SuppAlignment::parseSamSaTag(string::const_iterator saCbegin,
+                                           string::const_iterator saCend,
+                                           bool primaryIn,
+                                           bool lowMapqSourceIn,
+                                           bool nullMapqSourceIn,
+                                           bool alignmentOnForwardStrand,
+                                           bool bpEncounteredM,
+                                           int originIndexIn,
+                                           ChrIndex bpChrIndex,
+                                           int bpPos) {
 
     SuppAlignment result = SuppAlignment();
     result.encounteredM = bpEncounteredM;
@@ -128,7 +133,8 @@ SuppAlignment SuppAlignment::parse(string::const_iterator saCbegin,
 //	}
 //	cerr << endl;
 
-    // Split the SA tag into fields. From the SAM specification:
+    // Split the SA tag (from a SAM file) into fields. From the SAM specification:
+    //
     //   SA:Z:(rname ,pos ,strand ,CIGAR ,mapQ ,NM ;)+ Other canonical alignments in a chimeric alignment, for-
     //   matted as a semicolon-delimited list. Each element in the list represents a part of the chimeric align-
     //   ment. Conventionally, at a supplementary line, the first element points to the primary line. Strand is
@@ -269,35 +275,44 @@ SuppAlignment SuppAlignment::parse(string::const_iterator saCbegin,
 	return result;
 }
 
-static const string STOP_CHARS = "|(,!/?)\t";
+static const string STOP_CHARS = "|(\t";
 inline bool isStopChar(char c) {
     return STOP_CHARS.find(c) != std::string::npos;
 };
 
-SuppAlignment SuppAlignment::parse(const string& saIn) {
+SuppAlignment SuppAlignment::parseSaSupport(const string& saIn) {
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     SuppAlignment result = SuppAlignment();
+
+    // If the last character is a `#` then properPairErrorProne is true.
     result.properPairErrorProne = saIn.back() == '#';
-    result.encounteredM = saIn[0] == '|';
 
 	auto index = 0;
 
-	// If the current index is the field separator '|', skip it.
-	if (result.encounteredM) {
+	// If the string starts with a `|` then encounteredM is true.
+	result.encounteredM = saIn[0] == '|';
+    if (result.encounteredM) {
 		++index;
 	}
 
-	// Parse the first column with the chromosome name (BED format)
+	// Parse chromosome name. The chromosome name will be separated from the position information
+	// by a colon ':' character, but as the chromosome name itself may also contain colons, we
+	// need to anchor first character after the position which is either a `|` or a `(`, and then
+	// track back to the *last* colon.
 	result.chrIndex = chrConverter.parseChrAndReturnIndex(
 	    next(saIn.cbegin(), index),
 	    saIn.cend(),
-	    ':');
+	    ':',
+	    STOP_CHARS);
 
+    // If this is an ignored chromosome, don't bother parsing the rest.
 	if (chrConverter.isIgnoredChromosome(result.chrIndex)) {
 		return result;
 	}
 
-	// else, skip forward to the first colon ':' character.
+	// else, skip forward to the first colon ':' character. This ':' will be in column 6 or 7,
+	// dependent on the support information there.
+	// TODO This fails, if the chromosome name contains colons!
 	while (saIn[index] != ':') {
 		++index;
 	}
@@ -373,18 +388,45 @@ void SuppAlignment::finalizeSupportingIndices() {
 	secondarySupport = static_cast<int>(supportingIndicesSecondary.size());
 }
 
+
+/** The syntax is as follows:
+ *
+ *  spec ::= encounteredM position inverted notEncounteredM
+ *             '(' support ',' secondarySupport ',' mateInfo '/' expectedDiscordants ')'
+ *             properPairErrorProne
+ *  encounteredM ::= <epsilon> | ('|'  iff sa.encounteredM == true)
+ *  position ::= chrName ':' position2
+ *  position2 ::= pos | pos '-' extendedPos
+ *  pos := [0-9]+
+ *  extendedPos := [0-9]+
+ *  inverted ::= <epsilon> | ('_INV' iff sa.inverted == true)
+ *  notEncounteredM ::= <epsilon> | ('|' iff sa.encounteredM == false)
+ *  support ::= [0-9]+
+ *  secondarySupport ::= [0-9]+
+ *  mateInfo ::= (`!` iff sa.suspicious == true) | mateSupport
+ *  mateSupport ::= [0-9]+ mateAddition
+ *  mateAddition ::= <epsilon> | (`?` iff sa.semiSuspicious == true or sa.nullMapqSource == true)
+ *  properPairErrorProne ::= <epsilon> | (`#` iff sa.properPairErrorProne == true)
+ *
+ * <epsilon> here refers to the empty string ""
+ **/
 string SuppAlignment::print() const {
 	string outStr;
 	outStr.reserve(36);
+
 	string invStr { };
 	if (inverted) {
 		invStr.append("_INV");
 	}
+
+    // If the encounteredM attribute is set then the string starts with a `|`, otherwise, the
+    // inv-string starts with a `|`.
 	if (encounteredM) {
 		outStr.append("|");
 	} else {
 		invStr.append("|");
 	}
+
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 	if (!fuzzy) {
 		outStr.

@@ -123,10 +123,8 @@ namespace sophia {
 
             // newBreakpoints contains only information for chromosomes from the compressedMref set.
             auto newBreakpoints = processFile(gzFile, fileIndex);
-            chrono::time_point<chrono::steady_clock> end =
-                chrono::steady_clock::now();
-            chrono::seconds diff =
-                chrono::duration_cast<chrono::seconds>(end - start);
+            chrono::time_point<chrono::steady_clock> end = chrono::steady_clock::now();
+            chrono::seconds diff = chrono::duration_cast<chrono::seconds>(end - start);
             ++fileIndex;
             cerr << gzFile << "\t" << diff.count() << "\t" << newBreakpoints << "\t"
                  << fileIndex << "\t" << 100 * (fileIndex + 0.0) / NUMPIDS << "%\n";
@@ -170,6 +168,7 @@ namespace sophia {
 
     /**
       * Process the file at gzPath. Chromosomes not in the compressedMref set are ignored.
+      * The file format the one produced by the `sophia` tool.
       */
     unsigned long long
     MasterRefProcessor::processFile(const string &gzPath, short fileIndex) {
@@ -200,8 +199,8 @@ namespace sophia {
                 // Ignore chromosomes not in the compressedMref set.
                 if (chrIndexO.has_value()) {
                     ChrIndex chrIndex = chrIndexO.value();
-                    // Note: This instantiation parses information from the `sophiaLine`.
-                    Breakpoint tmpBp{sophiaLine, true};
+                    // Note: This instantiation actually parses `sophiaLine`.
+                    Breakpoint tmpBp = Breakpoint::parse(sophiaLine, true);
                     fileBps[chrIndex].emplace_back(
                         tmpBp, lineIndex++,
                         (sophiaLine.back() != '.' && sophiaLine.back() != '#'));

@@ -65,7 +65,8 @@ $(BUILD_DIR)/%.o: %.cpp %.h $(INCLUDE_DIR)/strtk.hpp Makefile | $(BUILD_DIR)
 # Rules for sophia
 $(BUILD_DIR)/sophia.o: $(SRC_DIR)/sophia.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-sophia: $(BUILD_DIR)/Alignment.o \
+sophia: $(BUILD_DIR)/global.o \
+		$(BUILD_DIR)/Alignment.o \
 		$(BUILD_DIR)/Breakpoint.o \
 		$(BUILD_DIR)/ChosenBp.o \
 		$(BUILD_DIR)/ChrConverter.o \
@@ -82,7 +83,8 @@ sophia: $(BUILD_DIR)/Alignment.o \
 # Rules for sophiaAnnotate
 $(BUILD_DIR)/sophiaAnnotate.o: $(SRC_DIR)/sophiaAnnotate.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-sophiaAnnotate: $(BUILD_DIR)/Alignment.o \
+sophiaAnnotate: $(BUILD_DIR)/global.o \
+				$(BUILD_DIR)/Alignment.o \
 				$(BUILD_DIR)/AnnotationProcessor.o \
 				$(BUILD_DIR)/Breakpoint.o \
 				$(BUILD_DIR)/BreakpointReduced.o \
@@ -107,7 +109,8 @@ sophiaAnnotate: $(BUILD_DIR)/Alignment.o \
 # Rules for sophiaMref
 $(BUILD_DIR)/sophiaMref.o: $(SRC_DIR)/sophiaMref.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-sophiaMref: $(BUILD_DIR)/Alignment.o \
+sophiaMref: $(BUILD_DIR)/global.o \
+			$(BUILD_DIR)/Alignment.o \
 			$(BUILD_DIR)/GlobalAppConfig.o \
 			$(BUILD_DIR)/ChrConverter.o \
 			$(BUILD_DIR)/Hg37ChrConverter.o \

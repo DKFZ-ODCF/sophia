@@ -36,13 +36,12 @@ namespace sophia {
 
     const string Breakpoint::COLUMNSSTR = boost::join(
         vector<string>{
-            //
-            "#chr", "start", "end",   //
+            "#chr", "start", "end",
             "covTypes(pairedBreaksSoft,pairedBreaksHard,mateReadSupport,"
             "unpairedBreaksSoft,unpairedBreaksHard,shortIndelReads,normalSpans,"
             "lowQualSpansSoft,lowQualSpansHard,lowQualBreaksSoft,lowQualBreaksHard,"
-            "repetitiveOverhangs)",         //
-            "leftCoverage,rightCoverage",   //
+            "repetitiveOverhangs)",
+            "leftCoverage,rightCoverage",
             "suppAlignmentsDoubleSupport(primary,secondary,mate)",
             "suppAlignments(primary,0,mate)", "significantOverhangs\n"},
         "\t");
@@ -53,36 +52,6 @@ namespace sophia {
     double Breakpoint::IMPROPERPAIRRATIO{0.0};
     bool Breakpoint::PROPERPAIRCOMPENSATIONMODE{false};
     int Breakpoint::bpindex{0};
-
-    Breakpoint::Breakpoint(ChrIndex chrIndexIn,
-                           int posIn)
-        : covFinalized{false},
-          missingInfoBp{false},
-          chrIndex{chrIndexIn},
-          pos{posIn},
-          normalSpans{0},
-          lowQualSpansSoft{0},
-          lowQualSpansHard{0},
-          unpairedBreaksSoft{0},
-          unpairedBreaksHard{0},
-          breaksShortIndel{0},
-          lowQualBreaksSoft{0},
-          lowQualBreaksHard{0},
-          repetitiveOverhangBreaks{0},
-          pairedBreaksSoft{0},
-          pairedBreaksHard{0},
-          leftSideDiscordantCandidates{0},
-          rightSideDiscordantCandidates{0},
-          mateSupport{0},
-          leftCoverage{0},
-          rightCoverage{0},
-          totalLowMapqHardClips{0},
-          hitsInMref{-1},
-          germline{false},
-          poolLeft{},
-          poolRight{},
-          poolLowQualLeft{},
-          poolLowQualRight{} {}
 
 
     template <typename T>
@@ -223,6 +192,7 @@ namespace sophia {
 
         res.append(strtk::type_to_string<int>(leftCoverage)).append(",");
         res.append(strtk::type_to_string<int>(rightCoverage)).append("\t");
+
         if (missingInfoBp) {
             res.append("#\t#\t#\n");
         } else {
@@ -307,8 +277,7 @@ namespace sophia {
         vector<shared_ptr<Alignment>> supportingSoftParentAlignments{};
         while (!supportingSoftAlignments.empty()) {
             auto substrCheck = false;
-            auto tmpSas = supportingSoftAlignments.back()->generateSuppAlignments(
-                chrIndex, pos);
+            auto tmpSas = supportingSoftAlignments.back()->generateSuppAlignments(chrIndex, pos);
             for (auto overhangParent : supportingSoftParentAlignments) {
                 if (matchDetector(overhangParent,
                                   supportingSoftAlignments.back())) {
@@ -325,12 +294,9 @@ namespace sophia {
                            [](const SuppAlignment &sa) { return sa.isDistant(); });
                 if (allDistant || supportingSoftAlignments.back()
                                           ->overhangComplexityMaskRatio() <= 0.5) {
-                    if (supportingSoftAlignments.back()->getOverhangLength() >=
-                        20) {
-                        supportingSoftAlignments.back()->addSupplementaryAlignments(
-                            tmpSas);
-                        supportingSoftParentAlignments.push_back(
-                            supportingSoftAlignments.back());
+                    if (supportingSoftAlignments.back()->getOverhangLength() >= 20) {
+                        supportingSoftAlignments.back()->addSupplementaryAlignments(tmpSas);
+                        supportingSoftParentAlignments.push_back(supportingSoftAlignments.back());
                     } else {
                         for (const auto &sa : tmpSas) {
                             auto it =
@@ -366,7 +332,7 @@ namespace sophia {
             }
             supportingSoftAlignments.pop_back();
         }
-        string consensusOverhangsTmp{};
+        string consensusOverhangsTmp {};
         consensusOverhangsTmp.reserve(250);
         {
             auto i = 1;
@@ -581,7 +547,7 @@ namespace sophia {
             supportingHardLowMapqAlignments.clear();
         }
         {
-            vector<int> lowMapqHardSupportWhitelistIndices{};
+            vector<int> lowMapqHardSupportWhitelistIndices {};
             for (auto primarySupptIt = supplementsPrimary.begin();
                  primarySupptIt != supplementsPrimary.end(); ++primarySupptIt) {
                 auto foundMatch = false;
@@ -606,6 +572,7 @@ namespace sophia {
                 }
                 for (auto secondarySuppIt = saHardTmpLowQual.begin();
                      secondarySuppIt != saHardTmpLowQual.end(); ++secondarySuppIt) {
+                    // TODO Centralize fuzziness cutoff 100
                     if (primarySupptIt->saCloseness(*secondarySuppIt, 100)) {
                         if (primarySupptIt->isFuzzy() &&
                             !secondarySuppIt->isFuzzy()) {
@@ -659,6 +626,7 @@ namespace sophia {
         }
         for (auto &sa : supplementsPrimary) {
             if (sa.getMapq() > 0) {
+                // TODO Centralize the mapq threshold
                 if (sa.getMapq() < 13 && sa.getMapq() < maxMapq) {
                     sa.setToRemove(true);
                 }
@@ -1141,15 +1109,13 @@ namespace sophia {
         }
     }
 
-    /**
-      *  @param bpIn            a line from the breakpoint tumorGz file
-      *  @param ignoreOverhang  whether to ignore overhangs
-      */
-    Breakpoint::Breakpoint(const string &bpIn, bool ignoreOverhang)
-        : covFinalized{true},
+
+    Breakpoint::Breakpoint(ChrIndex chrIndexIn,
+                           int posIn)
+        : covFinalized{false},
           missingInfoBp{false},
-          chrIndex{0},
-          pos{0},
+          chrIndex{chrIndexIn},
+          pos{posIn},
           normalSpans{0},
           lowQualSpansSoft{0},
           lowQualSpansHard{0},
@@ -1161,85 +1127,154 @@ namespace sophia {
           repetitiveOverhangBreaks{0},
           pairedBreaksSoft{0},
           pairedBreaksHard{0},
+          leftSideDiscordantCandidates{0},
+          rightSideDiscordantCandidates{0},
           mateSupport{0},
           leftCoverage{0},
           rightCoverage{0},
-          hitsInMref{0},
-          germline{false} {
+          totalLowMapqHardClips{0},
+          hitsInMref{-1},
+          germline{false},
+          poolLeft{},
+          poolRight{},
+          poolLowQualLeft{},
+          poolLowQualRight{} {}
+
+    /**
+      *  @param bpIn            a line from the breakpoint tumorGz file
+      *  @param ignoreOverhang  whether to ignore overhangs
+      */
+    Breakpoint Breakpoint::parse(const string &bpIn, bool ignoreOverhang) {
+        Breakpoint result = Breakpoint(0, 0);
+        result.covFinalized = true;
+        result.hitsInMref = 0;
+
         auto index = 0;
-        vector<int> bpChunkPositions{};
-        bpChunkPositions.reserve(7);
+
+        // Collect ends of the columns in BED file. The end of the last column won't be contained.
+        vector<int> columnSeparatorPos {};
+        columnSeparatorPos.reserve(7);
         for (auto it = bpIn.cbegin(); it != bpIn.cend(); ++it) {
             if (*it == '\t') {
-                bpChunkPositions.push_back(index);
+                columnSeparatorPos.push_back(index);
             }
             ++index;
         }
-        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        chrIndex = chrConverter.parseChrAndReturnIndex(bpIn.cbegin(), bpIn.cend(), '\t');
+        const unsigned int startStart = columnSeparatorPos[0] + 1,
+                           startEnd = columnSeparatorPos[1],
+//                           endStart = columnSeparatorPos[1] + 1,
+//                           endEnd = columnSeparatorPos[2],
+                           typeCountsStart = columnSeparatorPos[2] + 1,
+                           typeCountsEnd = columnSeparatorPos[3],
+                           leftRightCovStart =  columnSeparatorPos[3] + 1,
+                           leftRightCovEnd = columnSeparatorPos[4],
+                           supportStart = columnSeparatorPos[4] + 1,
+                           supportEnd = columnSeparatorPos[5],
+                           supplementsPrimaryStart = columnSeparatorPos[5] + 1,
+                           supplementsPrimaryEnd = columnSeparatorPos[6],
+                           overhangsStart = columnSeparatorPos[6] + 1;
+//                           overhangsEnd = columnSeparatorPos[7],
 
-        for (auto i = bpChunkPositions[0] + 1; i < bpChunkPositions[1]; ++i) {
-            pos = pos * 10 + (bpIn[i] - '0');
+        // Column 1: chrIndex. 
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+        result.chrIndex = chrConverter.parseChrAndReturnIndex(bpIn.cbegin(), bpIn.cend(), '\t');
+
+        // Column 2: start position
+        for (auto i = startStart; i < startEnd; ++i) {
+            // TODO Centralize this parsing code into global.h as inline function.
+            result.pos = result.pos * 10 + (bpIn[i] - '0');
         }
+
+        // Column 3: end position (not parsed)
+
+        // Now parse column 4, which contain a list of counts for different categories in the order
+        //
+        // 0: pairedBreaksSoft
+        // 1: pairedBreaksHard
+        // 2: mateSupport
+        // 3: unpairedBreaksSoft
+        // 4: unpairedBreaksHard
+        // 5: breaksShortIndel
+        // 6: normalSpans
+        // 7: lowQualSpansSoft
+        // 8: lowQualSpansHard
+        // 9: lowQualBreaksSoft
+        // 10: lowQualBreaksHard
+        // 11: repetitiveOverhangBreaks
         auto mode = 0;
-        for (auto i = bpChunkPositions[2] + 1; i < bpChunkPositions[3]; ++i) {
+        for (auto i = typeCountsStart; i < typeCountsEnd; ++i) {
             if (bpIn[i] == ',') {
                 ++mode;
             } else {
                 switch (mode) {
                 case 0:
-                    pairedBreaksSoft = 10 * pairedBreaksSoft + (bpIn[i] - '0');
+                    result.pairedBreaksSoft =
+                        10 * result.pairedBreaksSoft + (bpIn[i] - '0');
                     break;
                 case 1:
-                    pairedBreaksHard = 10 * pairedBreaksHard + (bpIn[i] - '0');
+                    result.pairedBreaksHard =
+                        10 * result.pairedBreaksHard + (bpIn[i] - '0');
                     break;
                 case 2:
-                    mateSupport = 10 * mateSupport + (bpIn[i] - '0');
+                    result.mateSupport =
+                        10 * result.mateSupport + (bpIn[i] - '0');
                     break;
                 case 3:
-                    unpairedBreaksSoft = 10 * unpairedBreaksSoft + (bpIn[i] - '0');
+                    result.unpairedBreaksSoft =
+                        10 * result.unpairedBreaksSoft + (bpIn[i] - '0');
                     break;
                 case 4:
-                    unpairedBreaksHard = 10 * unpairedBreaksHard + (bpIn[i] - '0');
+                    result.unpairedBreaksHard =
+                        10 * result.unpairedBreaksHard + (bpIn[i] - '0');
                     break;
                 case 5:
-                    breaksShortIndel = 10 * breaksShortIndel + (bpIn[i] - '0');
+                    result.breaksShortIndel =
+                        10 * result.breaksShortIndel + (bpIn[i] - '0');
                     break;
                 case 6:
-                    normalSpans = 10 * normalSpans + (bpIn[i] - '0');
+                    result.normalSpans =
+                        10 * result.normalSpans + (bpIn[i] - '0');
                     break;
                 case 7:
-                    lowQualSpansSoft = 10 * lowQualSpansSoft + (bpIn[i] - '0');
+                    result.lowQualSpansSoft =
+                        10 * result.lowQualSpansSoft + (bpIn[i] - '0');
                     break;
                 case 8:
-                    lowQualSpansHard = 10 * lowQualSpansHard + (bpIn[i] - '0');
+                    result.lowQualSpansHard =
+                        10 * result.lowQualSpansHard + (bpIn[i] - '0');
                     break;
                 case 9:
-                    lowQualBreaksSoft = 10 * lowQualBreaksSoft + (bpIn[i] - '0');
+                    result.lowQualBreaksSoft =
+                        10 * result.lowQualBreaksSoft + (bpIn[i] - '0');
                     break;
                 case 10:
-                    lowQualBreaksHard = 10 * lowQualBreaksHard + (bpIn[i] - '0');
+                    result.lowQualBreaksHard =
+                        10 * result.lowQualBreaksHard + (bpIn[i] - '0');
                     break;
                 case 11:
-                    repetitiveOverhangBreaks =
-                        10 * repetitiveOverhangBreaks + (bpIn[i] - '0');
+                    result.repetitiveOverhangBreaks =
+                        10 * result.repetitiveOverhangBreaks + (bpIn[i] - '0');
                     break;
                 default:
                     break;
                 }
             }
         }
+
+        // Parse column 5, which contains the left and right coverage.
         mode = 0;
-        for (auto i = bpChunkPositions[3] + 1; i < bpChunkPositions[4]; ++i) {
+        for (auto i = leftRightCovStart; i < leftRightCovEnd; ++i) {
             if (bpIn[i] == ',') {
                 ++mode;
             } else {
                 switch (mode) {
                 case 0:
-                    leftCoverage = 10 * leftCoverage + (bpIn[i] - '0');
+                    result.leftCoverage =
+                        10 * result.leftCoverage + (bpIn[i] - '0');
                     break;
                 case 1:
-                    rightCoverage = 10 * rightCoverage + (bpIn[i] - '0');
+                    result.rightCoverage =
+                        10 * result.rightCoverage + (bpIn[i] - '0');
                     break;
                 default:
                     break;
@@ -1247,68 +1282,79 @@ namespace sophia {
             }
         }
 
-        auto shortClipTotal = normalSpans - min(leftCoverage, rightCoverage);
+        // Some calculations.
+        auto shortClipTotal = result.normalSpans - min(result.leftCoverage, result.rightCoverage);
         if (shortClipTotal > 0) {
-            normalSpans -= shortClipTotal;
-            if (pairedBreaksSoft > 0) {
-                pairedBreaksSoft += shortClipTotal;
+            result.normalSpans -= shortClipTotal;
+            if (result.pairedBreaksSoft > 0) {
+                result.pairedBreaksSoft += shortClipTotal;
             } else {
-                unpairedBreaksSoft += shortClipTotal;
+                result.unpairedBreaksSoft += shortClipTotal;
             }
         }
 
-        if (bpIn[bpChunkPositions[4] + 1] == '#') {
-            missingInfoBp = true;
+        // Parse column 6 and 7, which contains the overhang information.
+        if (bpIn[supportStart] == '#') {
+            result.missingInfoBp = true;
         } else {
-            if (bpIn[bpChunkPositions[4] + 1] != '.') {
+            //
+            if (bpIn[supportStart] != '.') {
                 string saStr{};
-                for (auto i = bpChunkPositions[4] + 1; i < bpChunkPositions[5];
+                for (auto i = supportStart; i < supportEnd;
                      ++i) {
                     if (bpIn[i] == ';') {
-                        doubleSidedMatches.emplace_back(SuppAlignment::parse(saStr));
+                        result.doubleSidedMatches.emplace_back(SuppAlignment::parseSaSupport(saStr));
                         saStr.clear();
                     } else {
                         saStr.push_back(bpIn[i]);
                     }
                 }
-                SuppAlignment saTmp = SuppAlignment::parse(saStr);
+                SuppAlignment saTmp = SuppAlignment::parseSaSupport(saStr);
 
                 if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
-                    doubleSidedMatches.push_back(saTmp);
+                    result.doubleSidedMatches.push_back(saTmp);
                 }
             }
-            if (bpIn[bpChunkPositions[5] + 1] != '.') {
+
+            // Column 7: supplementsPrimary
+            if (bpIn[supplementsPrimaryStart] != '.') {
                 string saStr{};
-                for (auto i = bpChunkPositions[5] + 1; i < bpChunkPositions[6];
+                for (auto i = supplementsPrimaryStart; i < supplementsPrimaryEnd;
                      ++i) {
                     if (bpIn[i] == ';') {
-                        supplementsPrimary.emplace_back(SuppAlignment::parse(saStr));
+                        result.supplementsPrimary.emplace_back(SuppAlignment::parseSaSupport(saStr));
                         saStr.clear();
                     } else {
                         saStr.push_back(bpIn[i]);
                     }
                 }
-                SuppAlignment saTmp = SuppAlignment::parse(saStr);
+                SuppAlignment saTmp = SuppAlignment::parseSaSupport(saStr);
                 if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
-                    supplementsPrimary.push_back(saTmp);
+                    result.supplementsPrimary.push_back(saTmp);
                 }
             }
-            cleanUpVector(supplementsPrimary);
-            saHomologyClashSolver();
-            if (!ignoreOverhang && bpIn[bpChunkPositions[6] + 1] != '.') {
+            result.cleanUpVector(result.supplementsPrimary);
+
+            // Some calculations.
+            result.saHomologyClashSolver();
+
+            // Column 8: significantOverhangs
+            if (!ignoreOverhang && bpIn[overhangsStart] != '.') {
                 string overhang{};
-                for (auto i = bpChunkPositions[6] + 1;
-                     i < static_cast<int>(bpIn.length()); ++i) {
+                for (auto i = overhangsStart;
+                     i < static_cast<string::size_type>(bpIn.length());
+                     ++i) {
                     if (bpIn[i] == ';') {
-                        consensusOverhangs.emplace_back(overhang);
+                        result.consensusOverhangs.emplace_back(overhang);
                         overhang.clear();
                     } else {
                         overhang.push_back(bpIn[i]);
                     }
                 }
-                consensusOverhangs.emplace_back(overhang);
+                result.consensusOverhangs.emplace_back(overhang);
             }
         }
+        return result;
     }
 
 
@@ -1326,6 +1372,7 @@ namespace sophia {
                     continue;
                 }
                 if (doubleSidedMatches[i].saDistHomologyRescueCloseness(
+                        // TODO Centralize
                         doubleSidedMatches[j], 200000)) {
                     if (!semiSuspiciousRescue &&
                         doubleSidedMatches[i].isSemiSuspicious() &&
@@ -1339,6 +1386,7 @@ namespace sophia {
             if (!anyMatch) {
                 for (auto j = 0u; j < supplementsPrimary.size(); ++j) {
                     if (doubleSidedMatches[i].saDistHomologyRescueCloseness(
+                            // TODO Centralize
                             supplementsPrimary[j], 200000)) {
                         if (!semiSuspiciousRescue &&
                             doubleSidedMatches[i].isSemiSuspicious() &&
@@ -1369,6 +1417,7 @@ namespace sophia {
                     continue;
                 }
                 if (supplementsPrimary[i].saDistHomologyRescueCloseness(
+                        // TODO Centralize this fuzziness cutoff
                         supplementsPrimary[j], 100000)) {
                     if (!semiSuspiciousRescue &&
                         supplementsPrimary[i].isSemiSuspicious() &&
@@ -1382,6 +1431,7 @@ namespace sophia {
             if (!anyMatch) {
                 for (auto j = 0u; j < doubleSidedMatches.size(); ++j) {
                     if (supplementsPrimary[i].saDistHomologyRescueCloseness(
+                            // TODO Centralize
                             doubleSidedMatches[j], 100000)) {
                         if (!semiSuspiciousRescue &&
                             supplementsPrimary[i].isSemiSuspicious() &&

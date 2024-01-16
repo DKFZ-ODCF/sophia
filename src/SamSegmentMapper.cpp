@@ -90,6 +90,8 @@ namespace sophia {
         maxPos = -1;
     }
 
+    /** Does a lot of stuff, and -- just by the way -- also prints the results to stdout :(.
+      **/
     void
     SamSegmentMapper::printBps(int alignmentStart) {
         for (auto &bp : breakpointsCurrent) {
@@ -101,7 +103,8 @@ namespace sophia {
                 } else {
                     bp.second.setLeftCoverage(0);
                 }
-                bp.second.setRightCoverage(coverageProfiles[posDiff].getCoverage());
+                bp.second.setRightCoverage(
+                    coverageProfiles[posDiff].getCoverage());
                 bp.second.setNormalSpans(
                     coverageProfiles[posDiff].getNormalSpans());
                 bp.second.setLowQualSpansSoft(
@@ -137,7 +140,7 @@ namespace sophia {
         for (auto bpIt = breakpointsCurrent.begin();
              bpIt != breakpointsCurrent.end();) {
             if ((bpIt->first) + DISCORDANTRIGHTRANGE < alignmentStart) {
-                if (bpIt->second.finalizeBreakpoint(
+                if (bpIt->second.finalizeBreakpoint(   // Sideeffect: prints the breakpoint!
                         discordantAlignmentsPool, discordantLowQualAlignmentsPool,
                         discordantAlignmentCandidatesPool)) {
                     ++printedBps;
