@@ -33,24 +33,25 @@ endif
 # Source files
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
 
-# Test source files
-TESTS = $(wildcard $(TESTS_DIR)/*.cpp)
-
 # Object files should have .o instead of .cpp.
 # Note, we put the objects for production and tests both into the build directory.
-OBJECTS = $(SOURCES: $(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o) $(BUILD_DIR)/strtk.o
+OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
 # Binaries
 BINARIES = sophiaMref sophia sophiaAnnotate
 
+OBJECTS_WITH_MAIN = $(BUILD_DIR)/sophia.o $(BUILD_DIR)/sophiaMref.o $(BUILD_DIR)/sophiaAnnotate.o
+
 # Default rule
 all: test $(BINARIES)
 
+# Define search paths for different file suffices
 vpath %.h $(INCLUDE_DIR)
 vpath %.hpp $(INCLUDE_DIR)
-vpath %.cpp $(SRC_DIR) $(TESTS_DIR)
+vpath %.cpp $(SRC_DIR)
+vpath %_test.cpp $(TESTS_DIR)
 
-
+# Ensure the build/ directory exists.
 $(BUILD_DIR):
 	mkdir -p $@
 
@@ -61,6 +62,24 @@ $(INCLUDE_DIR)/strtk.hpp:
 # General compilation rule for object files that have matching .h files.
 $(BUILD_DIR)/%.o: %.cpp %.h $(INCLUDE_DIR)/strtk.hpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Test source files with the suffix _test.cpp
+TEST_SOURCES = $(wildcard $(TESTS_DIR)/*_test.cpp)
+
+# ... and the corresponding object files, all with the suffix _test.o.
+TEST_OBJECTS = $(TEST_SOURCES:$(TESTS_DIR)/%_test.cpp=$(BUILD_DIR)/%_test.o)
+
+# There are usually no .h files for test files, so we need a separate rule for test files.
+$(BUILD_DIR)/%_test.o: $(TESTS_DIR)/%_test.cpp Makefile | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Link the testRunner.
+testRunner: $(TEST_OBJECTS) $(filter-out $(OBJECTS_WITH_MAIN),$(OBJECTS))
+	$(CXX) $(LD_BEGIN_FLAGS) -o testRunner $^ $(LDFLAGS) $(LIBRARY_FLAGS) -Wl,-Bdynamic -lgtest -lgtest_main -pthread
+
+# Rule for running the tests
+test: testRunner
+	./testRunner
 
 # Rules for sophia
 $(BUILD_DIR)/sophia.o: $(SRC_DIR)/sophia.cpp Makefile | $(BUILD_DIR)
@@ -130,24 +149,6 @@ sophiaMref: $(BUILD_DIR)/global.o \
 			$(BUILD_DIR)/DeFuzzier.o \
 			$(BUILD_DIR)/sophiaMref.o
 	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
-
-# There are usually no .h files for test files, so we need a separate rule for them.
-$(BUILD_DIR)/%.o: $(TESTS_DIR)/%.cpp Makefile | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-testRunner: \
-		$(BUILD_DIR)/global.o \
-		$(BUILD_DIR)/ChrConverter.o \
-		$(BUILD_DIR)/Hg38ChrConverter.o \
-		$(BUILD_DIR)/Hg38ChrConverter_test.o \
-		$(BUILD_DIR)/SuppAlignment.o \
-		$(BUILD_DIR)/GlobalAppConfig.o \
-		$(BUILD_DIR)/SuppAlignment_test.o
-	$(CXX) $(LD_BEGIN_FLAGS) -o testRunner $^ $(LDFLAGS) $(LIBRARY_FLAGS) -Wl,-Bdynamic -lgtest -lgtest_main -pthread
-
-# Rule for running the tests
-test: testRunner
-	./testRunner
 
 # Rule for clean
 .PHONY: clean clean-all

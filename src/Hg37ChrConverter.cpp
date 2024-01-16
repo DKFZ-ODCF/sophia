@@ -367,9 +367,8 @@ namespace sophia {
         if (name == "INVALID") {
             throw_with_trace(std::runtime_error("Invalid chromosome index." +
                              std::to_string(index)));
-        } else {
-            return name;
         }
+        return name;
     }
 
     bool Hg37ChrConverter::isCompressedMrefIndex(ChrIndex index) const {
