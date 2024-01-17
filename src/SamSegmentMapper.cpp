@@ -223,7 +223,7 @@ namespace sophia {
                 coverageProfiles[i - minPos].incrementCoverage();
                 coverageProfiles[i - minPos].incrementNormalSpans();
             }
-            if (!chrConverter.isIgnoredChromosome(alignment.getMateChrIndex()) &&
+            if (!chrConverter.isTechnical(alignment.getMateChrIndex()) &&
                 !(alignment.getMateChrIndex() == 2 &&
                   (alignment.getMatePos() / 10000 == 3314))) {
                 if (PROPERPARIRCOMPENSATIONMODE) {
@@ -274,7 +274,7 @@ namespace sophia {
                 coverageProfiles[i - minPos].incrementLowQualSpansSoft();
             }
             if (!alignment.isSupplementary() &&
-                !chrConverter.isIgnoredChromosome(alignment.getMateChrIndex()) &&
+                !chrConverter.isTechnical(alignment.getMateChrIndex()) &&
                 alignment.isDistantMate()) {
                 if (!(alignment.getMateChrIndex() == 2 &&
                       (alignment.getMatePos() / 10000 == 3314))) {

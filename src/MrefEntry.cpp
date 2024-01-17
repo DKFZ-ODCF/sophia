@@ -58,12 +58,6 @@ namespace sophia {
                 if (saPtr->isSuspicious()
                     || saPtr->isToRemove()
                     || chrConverter.isCompressedMrefIndex(saPtr->getChrIndex())
-                    // The following ignores ONLY the mitochrondrial genome and unknown chromosome names (NA)
-                    // I guess (!) that here actually all chromsomes with hg37-index > 1000 should be
-                    // ignored, i.e. all non-mref chromosomes. Otherwise the second check, mapping
-                    // a compressMrefIndex back to a raw index wouldn't make sense.
-//                    || (isCompressedMref(saPtr->getChrIndex() != 1001      // TODO hg37:1001 == "MT"
-//                        && chrConverter.compressedMrefIndexToIndex(saPtr->getChrIndex()) < 0))
                     ) {
                     continue;
                 }

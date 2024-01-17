@@ -229,7 +229,7 @@ namespace sophia {
         for (auto i = 0u; i < supportingSoftAlignments.size(); ++i) {
             supportingSoftAlignments[i]->setChosenBp(pos, i);
             if (supportingSoftAlignments[i]->assessOutlierMateDistance()) {
-                if (!chrConverter.isIgnoredChromosome(
+                if (!chrConverter.isTechnical(
                   supportingSoftAlignments[i]->getMateChrIndex())) {
                     if (supportingSoftAlignments[i]->isOverhangEncounteredM()) {
                         if (!(supportingSoftAlignments[i]->isNullMapq() ||
@@ -1311,7 +1311,7 @@ namespace sophia {
                 }
                 SuppAlignment saTmp = SuppAlignment::parseSaSupport(saStr);
 
-                if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
+                if (!chrConverter.isTechnical(saTmp.getChrIndex())) {
                     result.doubleSidedMatches.push_back(saTmp);
                 }
             }
@@ -1329,7 +1329,7 @@ namespace sophia {
                     }
                 }
                 SuppAlignment saTmp = SuppAlignment::parseSaSupport(saStr);
-                if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
+                if (!chrConverter.isTechnical(saTmp.getChrIndex())) {
                     result.supplementsPrimary.push_back(saTmp);
                 }
             }

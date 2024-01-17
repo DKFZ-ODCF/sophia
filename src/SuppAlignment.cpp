@@ -168,7 +168,7 @@ SuppAlignment SuppAlignment::parseSamSaTag(string::const_iterator saCbegin,
 	    ',');
 
     // If the chromosome is to be ignored, don't update any of the other fields.
-	if (chrConverter.isIgnoredChromosome(result.chrIndex)) {
+	if (chrConverter.isTechnical(result.chrIndex)) {
 		return result;
 	}
 	// else
@@ -306,7 +306,7 @@ SuppAlignment SuppAlignment::parseSaSupport(const string& saIn) {
 	    STOP_CHARS);
 
     // If this is an ignored chromosome, don't bother parsing the rest.
-	if (chrConverter.isIgnoredChromosome(result.chrIndex)) {
+	if (chrConverter.isTechnical(result.chrIndex)) {
 		return result;
 	}
 

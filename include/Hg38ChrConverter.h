@@ -21,6 +21,7 @@
 
 #include "ChrConverter.h"
 #include "global.h"
+#include "IndexRange.h"
 #include <string>
 #include <vector>
 #include <optional>
@@ -32,57 +33,108 @@ namespace sophia {
 
     class Hg38ChrConverter: public ChrConverter {
 
+      public:
+
+        using ChrNames = std::vector<ChrName>;
+        using ChrSizes = std::vector<ChrSize>;
+        using ChrIndexMap = boost::unordered::unordered_map<ChrName, ChrIndex>;
+        using ChrCompressIndexMap = boost::unordered::unordered_map<ChrName, CompressedMrefIndex>;
+        using ChrSizeMap = boost::unordered::unordered_map<ChrName, ChrSize>;
+
+
       protected:
 
-        /* This makes a search structure to map chromosome names to index positions in an array.
-           This is useful mostly during the initial parsing of chromosome names from the input.
-           Afterwards, we continue working with the positions. */
-        boost::unordered::unordered_map<std::string, std::vector<std::string>::size_type>
-        makeChrToIndex(const std::vector<std::string>& chromosomes) const;
+        // ChrIndex -> ChrName
+        const ChrNames allChromosomes;
 
-        /** Given the index-maps for all chromosomes, and the selected "compressed mref" chromosomes,
-            create a mapping of mref indices to all chromosome indices. */
-        std::vector<ChrIndex> makeCompressedMrefIndexToIndexConverter(
-            const boost::unordered::unordered_map<std::string, ChrIndex>
-            &allChromosomeLookup,
-            const boost::unordered::unordered_map<std::string, CompressedMrefIndex>
-            &compressedMrefChromosomeLookup
-            ) const;
+        // ChrName -> ChrIndex
+        const ChrIndexMap allChromosomeLookup;
 
-        // All chromosomes mappings.
-        const std::vector<std::string> allChromosomes;
-        const boost::unordered::unordered_map<std::string, ChrIndex>
-            allChromosomeLookup;
-        const std::vector<ChrSize> allChromosomeLengths;
+        // ChrIndex -> ChrSize
+        const ChrSizes allChromosomeLengths;
 
-        // Mapping compressed Mref chromosome indices to all chromosome indices.
-        const boost::unordered::unordered_map<std::string, CompressedMrefIndex>
-            compressedMrefChromosomeLookup;
+        // These are used for efficient membership checks of chromosomes in the different sets.
+        const IndexRange primaryContigRange;
+        const IndexRange extrachromosomalContigRange;
+        const IndexRange virusContigRange;
+        const IndexRange decoyContigRange;
+        const IndexRange technicalContigRange;
 
-        // Compressed Mref chromosome mappings.
-        const std::vector<ChrIndex> compressedMrefIndexToIndexLookup;
-        const std::vector<std::string> compressedMrefChromosomes;
+        /** Initialize the hg38 chromosome converter with different types of contig/chromosome
+          * names and the sizes of the corresponding chromosomes.
+          *
+          * @param primaryContigs           Primary contigs, e.g. chr1, chr2, ..., chr22, chrX, chrY
+          *                                 Must not be empty.
+          * @param extrachromosomalContigs  Extrachromosomal contigs, e.g. chrM, chrMT
+          *                                 May be empty.
+          * @param virusContigs             Virus contigs, e.g. NC_007605, EBV. This is for viruses
+          *                                 that may insert into the nuclear genome.
+          *                                 May be empty.
+          * @param technicalContigs         Technical contigs, e.g. phiX
+          *                                 May be empty.
+          * @param decoyContigs             Decoy contigs.
+          *                                 May be empty.
+          *
+          * These sets must be mutually non-overlapping, i.e. no chromosome name may be in more than
+          * one set.
+          *
+          * The compressedMref chromosomes will be the union of
+          *  - primaryContigs
+          *  - extrachromosomalContigs
+          *  - virusContigs
+          **/
+        Hg38ChrConverter(std::string assemblyName,
+                         const ChrSizeMap &primaryContigs,
+                         const ChrSizeMap &extrachromosomalContigs,
+                         const ChrSizeMap &virusContigs,
+                         const ChrSizeMap &technicalContigs,
+                         const ChrSizeMap &decoyContigs);
 
-        // Ignored chromosomes.
-        const boost::unordered_set<std::string> ignoredChromosomes;
+        // Helper functions
 
-        Hg38ChrConverter(const std::vector<std::string> &allChromosomes,
-                         const std::vector<ChrSize> &allChromosomeLengths,
-                         const std::vector<std::string> &compressedMrefChromosomes,
-                         const std::vector<std::string> &ignoredChromosomes);
+        // ... for parsing
+        static
+        ChrName
+        parseChrBreakPoint(std::string::const_iterator startIt,
+                           std::string::const_iterator endIt,
+                           char stopChar,
+                           const std::string &stopCharExt);
 
-        std::string parseChrBreakPoint(std::string::const_iterator startIt,
-                                       std::string::const_iterator endIt,
-                                       char stopChar,
-                                       const std::string &stopCharExt) const;
+        static
+        ChrName
+        parseChrSimple(std::string::const_iterator startIt,
+                       std::string::const_iterator endIt,
+                       char stopChar);
 
-        std::string parseChrSimple(std::string::const_iterator startIt,
-                                   std::string::const_iterator endIt,
-                                   char stopChar) const;
+        // ... for building an instance
+        static
+        ChrIndexMap
+        buildChrToIndex(const std::vector<ChrName> &chromosomes);
+
+        static
+        ChrSizeMap
+        mergeChrSizeMaps(const ChrSizeMap &primaryContigs,
+                         const ChrSizeMap &extrachromosomalContigs,
+                         const ChrSizeMap &virusContigs,
+                         const ChrSizeMap &decoyContigs,
+                         const ChrSizeMap &technicalContigs);
+
+        static
+        ChrNames
+        collect(const ChrSizeMap &map,
+                std::function<ChrName(std::pair<ChrName, ChrSize>)> fun);
+
+        ChrSizes
+        buildAllChromosomeLengths(const std::vector<ChrName> &allChromosomesIn,
+                                  const ChrSizeMap &primaryContigs,
+                                  const ChrSizeMap &extrachromosomalContigs,
+                                  const ChrSizeMap &virusContigs,
+                                  const ChrSizeMap &decoyContigs,
+                                  const ChrSizeMap &technicalContigs) const;
 
       public:
 
-        static const std::string assemblyName;
+        const std::string assemblyName;
 
         /** This default constructor only makes sense, as long as the hg38 chromosome names are
             hard-coded. */
@@ -95,18 +147,28 @@ namespace sophia {
         CompressedMrefIndex nChromosomesCompressedMref() const;
 
         /** Map an index position to a chromosome name. */
-        std::string indexToChrName(ChrIndex index) const;
+        ChrName indexToChrName(ChrIndex index) const;
 
         /** Map an index position to a chromosome name for compressed mref files. */
-        std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
+        ChrName indexToChrNameCompressedMref(CompressedMrefIndex index) const;
+
+        /** chr1-chr22, chrX, chrY. */
+        bool isPrimary(ChrIndex index) const;
+
+        /** phix index. */
+        bool isTechnical(ChrIndex index) const;
+
+        /** NC_007605, EBV. */
+        bool isVirus(ChrIndex index) const;
+
+        /** Mitochondrial chromosome index. */
+        bool isExtrachromosal(ChrIndex index) const;
+
+        /** Decoy sequence index. */
+        bool isDecoy(ChrIndex index) const;
 
         /** Whether the chromosome index is that of a compressed mref chromosome. */
         bool isCompressedMrefIndex(ChrIndex index) const;
-
-        /** Whether the chromosome index is that of an ignored chromosome. Ignored chromosomes
-          * are not the same as the ones that are not among the compressedMref chromosomes.
-          * This should include phiX. */
-        bool isIgnoredChromosome(ChrIndex index) const;
 
         /** Map the compressed mref index to the uncompressed mref index. */
         std::optional<ChrIndex> compressedMrefIndexToIndex(CompressedMrefIndex index) const;
@@ -115,7 +177,7 @@ namespace sophia {
         ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const;
 
         /** Map a chromosome name to an index position. */
-        ChrIndex chrNameToIndex(std::string chrName) const;
+        ChrIndex chrNameToIndex(ChrName chrName) const;
 
         /** Parse chromosome index. It takes a position in a character stream, and translates the
           * following character(s) into index positions (using ChrConverter::indexToChr).
@@ -127,10 +189,13 @@ namespace sophia {
           * "HLA-DRB1*13:01:01:2914|(4,0,0?/0)" by first separating out the `|` separator
           * (stopCharExt), and then finding the last `:` separator (stopChar).
           **/
-        std::string parseChr(std::string::const_iterator startIt,
-                             std::string::const_iterator endIt,
-                             char stopChar,
-                             const std::string &stopCharExt = "") const;
+        static
+        ChrName parseChr(std::string::const_iterator startIt,
+                         std::string::const_iterator endIt,
+                         char stopChar,
+                         const std::string &stopCharExt = "");
+
+        // The same as `parseChr`, but returns the index instead of the name.
         ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
                                         std::string::const_iterator endIt,
                                         char stopChar,

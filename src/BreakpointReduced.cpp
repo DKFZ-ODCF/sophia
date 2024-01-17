@@ -67,12 +67,12 @@ sophia::BreakpointReduced::BreakpointReduced(const Breakpoint &tmpBp,
       suppAlignments{} {
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     for (const auto &sa : tmpBp.getDoubleSidedMatches()) {
-        if (!chrConverter.isIgnoredChromosome(sa.getChrIndex())) {
+        if (!chrConverter.isTechnical(sa.getChrIndex())) {
             suppAlignments.emplace_back(sa);
         }
     }
     for (const auto &sa : tmpBp.getSupplementsPrimary()) {
-        if (!chrConverter.isIgnoredChromosome(sa.getChrIndex())) {
+        if (!chrConverter.isTechnical(sa.getChrIndex())) {
             suppAlignments.emplace_back(sa);
         }
     }

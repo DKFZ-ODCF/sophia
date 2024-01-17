@@ -157,7 +157,7 @@ AnnotationProcessor::AnnotationProcessor(
         };
         Breakpoint tmpBpPre = Breakpoint::parse(line, true);
         BreakpointReduced tmpBp{tmpBpPre, lineIndex, false};
-        if (chrConverter.isIgnoredChromosome(tmpBp.getChrIndex())) {
+        if (chrConverter.isTechnical(tmpBp.getChrIndex())) {
             continue;
         }
         if (pathogenInControlIn) {

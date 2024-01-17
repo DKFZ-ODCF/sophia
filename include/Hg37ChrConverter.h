@@ -71,13 +71,23 @@ namespace sophia {
         /** Map an index position to a chromosome name for compressed mref files. */
         std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
 
+        /** chr1-chr22, chrX, chrY, GL000.+ */
+        bool isPrimary(ChrIndex index) const;
+
+        /** phix index. */
+        bool isTechnical(ChrIndex index) const;
+
+        /** NC_007605. */
+        bool isVirus(ChrIndex index) const;
+
+        /** Mitochondrial chromosome index. */
+        bool isExtrachromosal(ChrIndex index) const;
+
+        /** Decoy sequence index. */
+        bool isDecoy(ChrIndex index) const;
+
         /** Whether the chromosome index is that of a compressed mref chromosome. */
         bool isCompressedMrefIndex(ChrIndex index) const;
-
-        /** Whether the chromosome index is that of an ignored chromosome. Ignored chromosomes
-          * are not the same as the ones that are not among the compressedMref chromosomes.
-          * For hg37 this used to be phiX only. */
-        bool isIgnoredChromosome(ChrIndex index) const;
 
         /** Map the compressed mref index to the uncompressed mref index. */
         std::optional<ChrIndex> compressedMrefIndexToIndex(CompressedMrefIndex index) const;

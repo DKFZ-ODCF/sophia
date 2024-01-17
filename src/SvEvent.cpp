@@ -1003,13 +1003,11 @@ namespace sophia {
             return 2;
         }
         if (mrefHits1 > GERMLINEDBLIMIT &&
-            // TODO hg37:999 == 'hs37d5'; hg37:1000 == 'NC_007605'
-            !(bp1.getChrIndex() == 999 || bp1.getChrIndex() == 1000)) {
+            !(chrConverter.isDecoy(bp1.isgetChrIndex()) || chrConverter.isVirus(bp1.getChrIndex()))) {
             return 171;
         }
         if (mrefHits2 > GERMLINEDBLIMIT &&
-            // TODO hg37:999 == 'hs37d5'; hg37:1000 == 'NC_007605'
-            !(bp2.getChrIndex() == 999 || bp2.getChrIndex() == 1000)) {
+            !(chrConverter.isDecoy(bp2.getChrIndex()) || chrConverter.isVirus(bp2.getChrIndex()))) {
             return 171;
         }
         if (!distant) {
@@ -1102,8 +1100,7 @@ namespace sophia {
             }
         }
         if (mrefHits1 > BPFREQTHRESHOLD) {
-            // TODO hg37:999 == 'hs37d5'
-            if (chrIndex1 != 999 || chrIndex2 == 999 ||
+            if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
                 mrefHits2 > BPFREQTHRESHOLD) {
                 return 431;
             }
@@ -1113,8 +1110,7 @@ namespace sophia {
             }
         }
         if (mrefHits2 > BPFREQTHRESHOLD) {
-            // TODO hg37:999 == 'hs37d5'
-            if (chrIndex1 == 999 || chrIndex2 != 999 ||
+            if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
                 mrefHits1 > BPFREQTHRESHOLD) {
                 return 432;
             }
@@ -1144,13 +1140,11 @@ namespace sophia {
             return 29;
         }
         if (mrefHits1 > GERMLINEDBLIMIT &&
-            // TODO hg37:999 == 'hs37d5'; hg37:1000 == 'NC_007605'
-            !(bp1.getChrIndex() == 999 || bp1.getChrIndex() == 1000)) {
+            !(chrConverter.isDecoy(bp1.getChrIndex()) || chrConverter.isVirus(bp1.getChrIndex()))) {
             return 301;
         }
-        // TODO hg37:999 == 'hs37d5'; hg37:1000 == 'NC_007605'
-        if (mrefHits2 > GERMLINEDBLIMIT && !(selectedSa1.getChrIndex() == 999 ||
-                                             selectedSa1.getChrIndex() == 1000)) {
+        if (mrefHits2 > GERMLINEDBLIMIT && !(chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
+                                             chrConverter.isVirus(selectedSa1.getChrIndex()))) {
             return 302;
         }
         if (!distant) {
@@ -1216,8 +1210,7 @@ namespace sophia {
             }
         }
         if (mrefHits1 > BPFREQTHRESHOLD) {
-            // TODO hg37:999 == 'hs37d5'
-            if (chrIndex1 != 999 || selectedSa1.getChrIndex() == 999 ||
+            if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
                 mrefHits2 > BPFREQTHRESHOLD) {
                 return 471;
             }
@@ -1227,8 +1220,7 @@ namespace sophia {
             }
         }
         if (mrefHits2 > BPFREQTHRESHOLD) {
-            // TODO hg37:999 == 'hs37d5'
-            if (chrIndex2 == 999 || selectedSa1.getChrIndex() != 999 ||
+            if (chrConverter.isDecoy(chrIndex2) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
                 mrefHits1 > BPFREQTHRESHOLD) {
                 return 472;
             }

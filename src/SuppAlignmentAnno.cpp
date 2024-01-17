@@ -69,14 +69,13 @@ namespace sophia {
         }
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 
-        // TODO Fix this
         chrIndex = chrConverter.parseChrAndReturnIndex(
             next(saStrIn.cbegin(), index),
             saStrIn.cend(),
             ':',
             STOP_CHARS);
 
-        if (chrConverter.isIgnoredChromosome(chrIndex)) {
+        if (chrConverter.isTechnical(chrIndex)) {
             return;
         }
 

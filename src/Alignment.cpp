@@ -640,13 +640,13 @@ namespace sophia {
                                     chosenBp->selfNodeIndex,
                                     bpChrIndex,
                                     bpPos);
-                if (!chrConverter.isIgnoredChromosome(saTmp.getChrIndex())) {
+                if (!chrConverter.isTechnical(saTmp.getChrIndex())) {
                     suppAlignmentsTmp.push_back(saTmp);
                 }
             }
         }
         if (assessOutlierMateDistance()) {
-            if (!chrConverter.isIgnoredChromosome(getMateChrIndex())) {
+            if (!chrConverter.isTechnical(getMateChrIndex())) {
                 auto foundMatch = false;
                 MateInfo tmpPairDummy{
                     0, 0, getMateChrIndex(), getMatePos(), true, invertedMate};

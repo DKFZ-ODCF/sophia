@@ -50,31 +50,29 @@ namespace sophia {
         virtual CompressedMrefIndex nChromosomesCompressedMref() const = 0;
 
         /** Map an index position to a chromosome name. */
-        virtual std::string indexToChrName(ChrIndex index) const = 0;
+        virtual ChrName indexToChrName(ChrIndex index) const = 0;
 
         /** Map an index position to a chromosome name for compressed mref files. */
-        virtual std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
-//
-//        /** phix index. */
-//        virtual bool isTechnical(ChrIndex index) const = 0;
-//
-//        /** NC_007605, EBV. */
-//        virtual bool isVirus(ChrIndex index) const = 0;
-//
-//        /** Mitochondrial chromosome index. */
-//        virtual bool isExtrachromosal(ChrIndex index) const = 0;
-//
-//          /** Decoy sequence index. */
-//          virtual bool isDecoy(ChrIndex index) const = 0;
+        virtual ChrName indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
+
+        /** chr1-chr22, chrX, chrY, GL000.+ */
+        virtual bool isPrimary(ChrIndex index) const = 0;
+
+        /** phix index. */
+        virtual bool isTechnical(ChrIndex index) const = 0;
+
+        /** NC_007605, EBV. */
+        virtual bool isVirus(ChrIndex index) const = 0;
+
+        /** Mitochondrial chromosome index. */
+        virtual bool isExtrachromosal(ChrIndex index) const = 0;
+
+        /** Decoy sequence index. */
+        virtual bool isDecoy(ChrIndex index) const = 0;
 
 
         /** Whether the chromosome index is that of a compressed mref chromosome. */
         virtual bool isCompressedMrefIndex(ChrIndex index) const = 0;
-
-        /** Whether the chromosome index is that of an ignored chromosome. Ignored chromosomes
-          * are not the same as the ones that are not among the compressedMref chromosomes.
-          * This should be the index of the phiX chromosomes. */
-        virtual bool isIgnoredChromosome(ChrIndex index) const = 0;
 
         /** Map the compressed mref index to the uncompressed mref index. */
         virtual std::optional<ChrIndex>
@@ -84,7 +82,7 @@ namespace sophia {
         virtual ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const = 0;
 
         /** Map a chromosome name to an index position. */
-        virtual ChrIndex chrNameToIndex(std::string chrName) const = 0;
+        virtual ChrIndex chrNameToIndex(ChrName chrName) const = 0;
 
         /** Parse chromosome index.
           *

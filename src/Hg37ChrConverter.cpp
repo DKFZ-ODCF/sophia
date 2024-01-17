@@ -29,7 +29,7 @@ namespace sophia {
 
     namespace hg37 {
 
-        static const std::vector<std::string> indexToChr {
+        static const std::vector<ChrName> indexToChr {
             "0",          "1",          "2",          "3",          "4",
             "5",          "6",          "7",          "8",          "9",
             "10",         "11",         "12",         "13",         "14",
@@ -232,9 +232,12 @@ namespace sophia {
             "995",        "996",        "997",        "998",        "hs37d5",
             "NC_007605",  "MT",         "phiX174",    "INVALID"};
 
+        static const ChrIndex decoyIndex = 999;
+        static const ChrIndex virusIndex = 1000;
+        static const ChrIndex mtChrIndex = 1001;
         static const ChrIndex phixChrIndex = 1002;
 
-        static const std::vector<std::string> indexToChrCompressedMref {
+        static const std::vector<ChrName> indexToChrCompressedMref {
             "1",          "2",          "3",          "4",          "5",
             "6",          "7",          "8",          "9",          "10",
             "11",         "12",         "13",         "14",         "15",
@@ -331,8 +334,8 @@ namespace sophia {
 
     const std::string Hg37ChrConverter::assemblyName = "hg37";
 
-    Hg37ChrConverter::Hg37ChrConverter(const std::vector<std::string> &indexToChr,
-                                       const std::vector<std::string> &indexToChrCompressedMref,
+    Hg37ChrConverter::Hg37ChrConverter(const std::vector<ChrName> &indexToChr,
+                                       const std::vector<ChrName> &indexToChrCompressedMref,
                                        const std::vector<ChrSize> &chrSizesCompressedMref,
                                        const std::vector<ChrIndex> &indexConverter) :
                     indexToChr(indexToChr),
@@ -362,8 +365,8 @@ namespace sophia {
     }
 
     /** Map an index position to a chromosome name. */
-    std::string Hg37ChrConverter::indexToChrName(ChrIndex index) const {
-        std::string name = indexToChr[index];
+    ChrName Hg37ChrConverter::indexToChrName(ChrIndex index) const {
+        ChrName name = indexToChr[index];
         if (name == "INVALID") {
             throw_with_trace(std::runtime_error("Invalid chromosome index." +
                              std::to_string(index)));
@@ -371,12 +374,37 @@ namespace sophia {
         return name;
     }
 
+    /** chr1-chr22, ... */
+    bool Hg37ChrConverter::isPrimary(ChrIndex index) const {
+        return index > 0 && index < hg37::decoyIndex;
+    }
+
+    /** phix index. */
+    bool Hg37ChrConverter::isTechnical(ChrIndex index) const {
+        return index == hg37::phixChrIndex;
+    }
+
+    /** NC_007605. */
+    bool Hg37ChrConverter::isVirus(ChrIndex index) const {
+        return index == hg37::virusIndex;
+    }
+
+    /** Mitochondrial chromosome index. */
+    bool Hg37ChrConverter::isExtrachromosal(ChrIndex index) const {
+        return index == hg37::mtChrIndex;
+    }
+
+    /** Decoy sequence index. */
+    bool Hg37ChrConverter::isDecoy(ChrIndex index) const {
+        return index == hg37::decoyIndex;
+    }
+
     bool Hg37ChrConverter::isCompressedMrefIndex(ChrIndex index) const {
         return index <= 1000;  // 1000 == 'NC_007605' (i.e. excluding MT)
     }
 
     /** Map an index position to a compressed mref index position. */
-    std::string
+    ChrName
     Hg37ChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
         return indexToChrCompressedMref[index];
     }
@@ -396,12 +424,8 @@ namespace sophia {
     }
 
     ChrIndex
-    Hg37ChrConverter::chrNameToIndex(std::string chrName) const {
+    Hg37ChrConverter::chrNameToIndex(ChrName chrName) const {
         return parseChrAndReturnIndex(chrName.begin(), chrName.end(), ' ');
-    }
-
-    bool Hg37ChrConverter::isIgnoredChromosome(ChrIndex index) const {
-        return index == hg37::phixChrIndex;
     }
 
     /* This is parsing code. It takes a position in a character stream, and translates the
@@ -475,6 +499,7 @@ namespace sophia {
             }
         }
         throw_with_trace(std::runtime_error("Oops! This should not occur!"));
+        return std::numeric_limits<ChrIndex>::max();
     }
 
 } /* namespace sophia */

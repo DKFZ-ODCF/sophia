@@ -150,8 +150,6 @@ Note that `sophiaMref` uses a lot of memory (e.g. 400 GB is a safe choice for hu
 The `$version` is the value provided by the `--version` parameter that is only used to delimit the right end of the PID name.
 For instance `/path/to/somePid1_35.1_bps.tsv.gz` would be a valid filename for the version `35.1` and the extracted PID will be `somePid`.
 
-[//]: # (TODO: What will be done with the extracted PID?)
-
 
 ## Runtime Dependencies
 

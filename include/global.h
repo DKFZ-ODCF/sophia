@@ -31,6 +31,7 @@ namespace sophia {
 
     // These two are only to make the code clearer, but are not type checked. There are no opaque
     // or strongly type-checked type-"aliases" in C++17. A type-safe solution would use classes.
+    using ChrName = std::string;
     using ChrIndex = size_t;
     using CompressedMrefIndex = size_t ;
     using ChrSize = long unsigned int;
