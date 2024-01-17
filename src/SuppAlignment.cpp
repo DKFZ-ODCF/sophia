@@ -312,7 +312,6 @@ SuppAlignment SuppAlignment::parseSaSupport(const string& saIn) {
 
 	// else, skip forward to the first colon ':' character. This ':' will be in column 6 or 7,
 	// dependent on the support information there.
-	// TODO This fails, if the chromosome name contains colons!
 	while (saIn[index] != ':') {
 		++index;
 	}

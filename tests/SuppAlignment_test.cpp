@@ -25,6 +25,10 @@ namespace sophia {
         const std::string test3 = "|chr4:49107794-49107795(0,1,2?/89)";
         EXPECT_EQ(SuppAlignment::parseSaSupport(test3).getChrIndex(),
                   GlobalAppConfig::getInstance().getChrConverter().chrNameToIndex("chr4"));
+
+        const std::string test4 = "HLA-DRB1*13:01:01:2914|(4,0,0?/0)";
+        EXPECT_EQ(SuppAlignment::parseSaSupport(test4).getChrIndex(),
+                  GlobalAppConfig::getInstance().getChrConverter().chrNameToIndex("HLA-DRB1*13:01:01"));
     }
 
 } // namespace sophia
