@@ -32,66 +32,79 @@
 
 namespace sophia {
 
-using namespace std;
+    using namespace std;
 
-class MrefEntry {
-  public:
-    static int NUMPIDS;
-    static int DEFAULTREADLENGTH;
-    static boost::format doubleFormatter;
+    class MrefEntry {
+      public:
+        static int NUMPIDS;
+        static int DEFAULTREADLENGTH;
+        static boost::format doubleFormatter;
 
-    MrefEntry();
-    void addEntry(Breakpoint &tmpBreakpoint, int fileIndex);
-    void addEntry(BreakpointReduced &tmpBreakpoint, int fileIndex);
-    void mergeMrefEntries(MrefEntry &entry2);
+        MrefEntry();
 
-    int getPos() const { return pos; }
+        void addEntry(Breakpoint &tmpBreakpoint, int fileIndex);
 
-    const vector<float> &getArtifactRatios() const { return artifactRatios; }
+        void addEntry(BreakpointReduced &tmpBreakpoint, int fileIndex);
 
-    const vector<short> &getFileIndices() const { return fileIndices; }
+        void mergeMrefEntries(MrefEntry &entry2);
 
-    short getValidityScore() const { return validity; }
-    void removeMarkedFuzzies() {
-        suppAlignments.erase(remove_if(suppAlignments.begin(),
-                                       suppAlignments.end(),
-                                       [](const SuppAlignmentAnno &sa) {
-                                           return sa.isToRemove();
-                                       }),
-                             suppAlignments.end());
-    }
-    string printBpInfo(const string &chromosome);
-    string printArtifactRatios(const string &chromosome);
-    SuppAlignmentAnno *searchFuzzySa(const SuppAlignmentAnno &fuzzySa);
-    vector<SuppAlignmentAnno *> getSupplementsPtr() {
-        vector<SuppAlignmentAnno *> res{};
-        for (auto &sa : suppAlignments) {
-            res.push_back(&sa);
+        int getPos() const { return pos; }
+
+        const vector<float> &getArtifactRatios() const { return artifactRatios; }
+
+        const vector<short> &getFileIndices() const { return fileIndices; }
+
+        short getValidityScore() const { return validity; }
+
+        void removeMarkedFuzzies() {
+            suppAlignments.erase(remove_if(suppAlignments.begin(),
+                                           suppAlignments.end(),
+                                           [](const SuppAlignmentAnno &sa) {
+                                               return sa.isToRemove();
+                                           }),
+                                 suppAlignments.end());
         }
-        return res;
-    }
-    const vector<short> &getFileIndicesWithArtifactRatios() const {
-        return fileIndicesWithArtifactRatios;
-    }
-    const vector<SuppAlignmentAnno> &getSuppAlignments() const {
-        return suppAlignments;
-    }
 
-    void setAsInvalid() {
-        pos = -1;
-        validity = -1;
-    }
+        string printBpInfo(const string &chromosome);
 
-  private:
-    bool saMatcher(SuppAlignmentAnno *saPtr);
-    void finalizeFileIndices();
-    short validity;   //-1 nothing, 0 only sa, 1 sa and support
-    int pos;
-    vector<short> fileIndices;
-    vector<short> fileIndicesWithArtifactRatios;
-    vector<float> artifactRatios;
-    vector<SuppAlignmentAnno> suppAlignments;
-};
+        string printArtifactRatios(const string &chromosome);
+
+        SuppAlignmentAnno *searchFuzzySa(const SuppAlignmentAnno &fuzzySa);
+
+        vector<SuppAlignmentAnno *> getSupplementsPtr() {
+            vector<SuppAlignmentAnno *> res{};
+            for (auto &sa : suppAlignments) {
+                res.push_back(&sa);
+            }
+            return res;
+        }
+
+        const vector<short> &getFileIndicesWithArtifactRatios() const {
+            return fileIndicesWithArtifactRatios;
+        }
+
+        const vector<SuppAlignmentAnno> &getSuppAlignments() const {
+            return suppAlignments;
+        }
+
+        void setAsInvalid() {
+            pos = -1;
+            validity = -1;
+        }
+
+      private:
+
+        bool saMatcher(SuppAlignmentAnno *saPtr);
+
+        void finalizeFileIndices();
+
+        short validity;   //-1 nothing, 0 only sa, 1 sa and support
+        int pos;
+        vector<short> fileIndices;
+        vector<short> fileIndicesWithArtifactRatios;
+        vector<float> artifactRatios;
+        vector<SuppAlignmentAnno> suppAlignments;
+    };
 
 } /* namespace sophia */
 

@@ -141,6 +141,7 @@ namespace sophia {
         validity = max(validity, entry2.getValidityScore());
     }
 
+    /** This prints the output of the `sophiaMref` tool. */
     string MrefEntry::printBpInfo(const string& chromosome) {
         finalizeFileIndices();
         vector<string> outputFields { };
@@ -179,6 +180,7 @@ namespace sophia {
         return boost::join(outputFields, "\t").append("\n");
     }
 
+    // Currently, not used.
     string MrefEntry::printArtifactRatios(const string& chromosome) {
         vector<string> outputFields { };
         outputFields.reserve(NUMPIDS + 3);

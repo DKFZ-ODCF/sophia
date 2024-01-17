@@ -125,7 +125,26 @@ Usually, you will only need to run it, if you adapt SOPHIA to a new genome assem
 `sophiaMref` processes a list of gzipped BED files that were generated with the `sophia` tool.
 From these it generates a reference that can be used by `sophiaAnnotate` for annotating structural variants with gene information. 
 
-Note that `sophiaMref` uses a lot of memory (e.g. 600 GB), but usually will be only used for generating the reference files for a new genome assembly (which are currently hardcoded anyway).
+The file produced by `sophiaMref` is a BED file with the following columns (see `MrefEntry::printBpInfo` for details):
+
+| Column | Description                                              | Format                                                                                                            |
+|--------|----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| 1      | chromosome identifier                                    | string w/o \{:space:, :tab:, :newline, :carriage_return:\}                                                        |
+| 2      | 0-based start (inclusive)                                | `\d+`                                                                                                             |
+| 3      | 0-based end (exclusive). This is just start position + 1. | `\d+`                                                                                                             |
+| 4      | number of fileIndices given in column 10                 | `\d+`                                                                                                             |
+| 5      | number of fileIndicesWithArtifactsRatio                  | `\d+`                                                                                                             |
+| 6      | fileIndices.size() / NUMPIDS                             | `\d\.\d+`                                                                                                         |
+| 7      | fileIndicesWithArtifactsRatio / NUMPIDS                  | `\d\.\d+`                                                                                                         |
+| 8      | average artifacts ratio                                  | `NA` if there are no artifacts ratios; otherwise `\d\.\d+`                                                        |
+| 9      | suppAlignments                                           | `.` if there are no supplementary alignments; otherwise the same format as columns 6 and 7 of the `sophia` output |
+| 10     | fileIndices                                              | Comma-separated list of file indices (`\d+`)                                                                       |
+
+The "fileIndices" are the 0-based index into the list of gzipped control-BED input files given to `sophiaMref`.
+
+The artifacts ratios are tracked in the moment, but not printed. Files get an artifacts ratio only if a number of conditions are met (undocumented; see `MrefEntry::addEntry` for details).
+
+Note that `sophiaMref` uses a lot of memory (e.g. 400 GB is a safe choice for human assembly), but usually will be only used for generating the reference files for a new genome assembly (which are currently hardcoded anyway).
 
 `sophiaMref` expects that the input BED files match the filename pattern `.*/$realPidName.{1}$version.+`.
 The `$version` is the value provided by the `--version` parameter that is only used to delimit the right end of the PID name.
@@ -136,13 +155,14 @@ For instance `/path/to/somePid1_35.1_bps.tsv.gz` would be a valid filename for t
 
 ## Runtime Dependencies
 
-The only dependency is Boost 1.82.0 (currently). E.g. you can do
+The only dependency is Boost 1.82.0 (currently) and google-test 1.14.0 for testing. E.g. you can do
 
 ```bash
 conda create -n sophia boost=1.82.0 gtest=1.14.0
 ```
 
-`gtest` is only needed, if you run the tests (which is included in the default `make all` target).
+`gtest` is only needed, if you run the tests, which is, however, the default if compile with `make` or `make all`.
+To just build the binaries you can do `make binaries`
 
 ## Building
 
@@ -153,7 +173,7 @@ conda create -n sophia boost=1.82.0 gtest=1.14.0
 With [Conda](https://docs.conda.io/) you can do
 
 ```bash
-conda create -n sophia gxx_linux-64=13 boost=1.82.0
+conda create -n sophia gxx_linux-64=13 boost=1.82.0 gtest=1.14.0
 ```
 
 to create an environment to build the SOPHIA binaries.
@@ -209,8 +229,8 @@ make test develop=true boost_lib_dir=$boost_lib_dir
 ```
 
 This will create a `./testRunner` binary in the root directory and execute it.
-The `testRunner` is newer linked statically.
-It uses the gtest_main library and supports a number of command line options.
+Note that the `testRunner` is never linked statically.
+It uses the `libgtest_main.so` library that supports a number of command line options.
 See `testRunner --help` for details.
 
 #### Chromosome names
