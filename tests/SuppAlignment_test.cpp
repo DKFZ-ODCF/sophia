@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "Hg38ChrConverter.h"
+#include "GenericChrConverter.h"
 #include "GlobalAppConfig.h"
 #include "SuppAlignment.h"
 #include "Fixtures.h"
 
 namespace sophia {
 
-    TEST_F(Hg38ChrConverterFixture, SuppAlignmentTest_ParseSaSupport) {
+    TEST_F(GenericChrConverterFixture, SuppAlignmentTest_ParseSaSupport) {
 
         const std::string test1 = "chr16:1041693_INV|(8,0,!/0)";
         EXPECT_EQ(SuppAlignment::parseSaSupport(test1).getChrIndex(),

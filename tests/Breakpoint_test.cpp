@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "Hg38ChrConverter.h"
+#include "GenericChrConverter.h"
 #include "GlobalAppConfig.h"
 #include "Breakpoint.h"
 

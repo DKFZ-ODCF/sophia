@@ -16,7 +16,7 @@
  *     LICENSE: GPL
  */
 
-#include "Hg38ChrConverter.h"
+#include "GenericChrConverter.h"
 #include "global.h"
 #include "ChrInfo.h"
 #include "ChrInfoTable.h"
@@ -42,8 +42,8 @@ namespace sophia {
        unordered_map is quite fast and O(1), but we might consider making a tuned structure here,
        that takes into account the hit-probability of reads against contigs, based on the
        assumption of a uniform hit-probability proportional to chromosome size. */
-    Hg38ChrConverter::ChrToIndexMap
-    Hg38ChrConverter::buildAllChromosomeLookup(const ChrInfoTable::ChrNames &chromosomes) {
+    GenericChrConverter::ChrToIndexMap
+    GenericChrConverter::buildAllChromosomeLookup(const ChrInfoTable::ChrNames &chromosomes) {
         ChrToIndexMap result (chromosomes.size());
         for (ChrIndex i = 0; i < chromosomes.size(); ++i) {
             result[chromosomes[i]] = i;
@@ -52,7 +52,7 @@ namespace sophia {
     }
 
     std::vector<ChrIndex>
-    Hg38ChrConverter::buildCompressedMrefToAllMapping(ChrInfoTable chrInfoIn) {
+    GenericChrConverter::buildCompressedMrefToAllMapping(ChrInfoTable chrInfoIn) {
         std::vector<ChrIndex> mapping;
         mapping.reserve(chrInfoIn.nChromosomes());
         for (ChrIndex idx = 0; idx < chrInfoIn.nChromosomes(); ++idx) {
@@ -63,7 +63,7 @@ namespace sophia {
         return mapping;
     }
 
-    Hg38ChrConverter::Hg38ChrConverter(
+    GenericChrConverter::GenericChrConverter(
         std::string assemblyNameIn,
         ChrInfoTable chrInfoTableIn)
             : chrInfoTable { chrInfoTableIn },
@@ -72,18 +72,18 @@ namespace sophia {
               assemblyName { assemblyNameIn } {}
 
     /** Number of all chromosomes. */
-    ChrIndex Hg38ChrConverter::nChromosomes() const {
+    ChrIndex GenericChrConverter::nChromosomes() const {
         return chrInfoTable.nChromosomes();
     }
 
     /** Map an index position to a chromosome name. */
-    ChrName Hg38ChrConverter::indexToChrName(ChrIndex index) const {
+    ChrName GenericChrConverter::indexToChrName(ChrIndex index) const {
         return chrInfoTable.getChrInfos().at(index).getName();
     }
 
     /** Map a chromosome name to an index position. */
     ChrIndex
-    Hg38ChrConverter::chrNameToIndex(ChrName chrName) const {
+    GenericChrConverter::chrNameToIndex(ChrName chrName) const {
         ChrIndex result;
         try {
             result = allChromosomeLookup.at(chrName);
@@ -95,63 +95,63 @@ namespace sophia {
 
 
     /** chr1-chr22 */
-    bool Hg38ChrConverter::isAutosome(ChrIndex index) const {
+    bool GenericChrConverter::isAutosome(ChrIndex index) const {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::AUTOSOME;
     }
 
     /** chrX, chrY */
-    bool Hg38ChrConverter::isGonosome(ChrIndex index) const {
+    bool GenericChrConverter::isGonosome(ChrIndex index) const {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::GONOSOME;
     }
 
     /** phix index. */
-    bool Hg38ChrConverter::isTechnical(ChrIndex index) const {
+    bool GenericChrConverter::isTechnical(ChrIndex index) const {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::TECHNICAL;
     }
 
     /** NC_007605, EBV. */
-    bool Hg38ChrConverter::isVirus(ChrIndex index) const {
+    bool GenericChrConverter::isVirus(ChrIndex index) const {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::VIRUS;
     }
 
     /** Mitochondrial chromosome index. */
-    bool Hg38ChrConverter::isExtrachromosomal(ChrIndex index) const {
+    bool GenericChrConverter::isExtrachromosomal(ChrIndex index) const {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::EXTRACHROMOSOMAL;
     }
 
     /** Decoy sequence index. */
-    bool Hg38ChrConverter::isDecoy(ChrIndex index) const {
+    bool GenericChrConverter::isDecoy(ChrIndex index) const {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::DECOY;
     }
 
     /** ALT sequence index. */
-    bool Hg38ChrConverter::isALT(ChrIndex index) const {
+    bool GenericChrConverter::isALT(ChrIndex index) const {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::ALT;
     }
 
     /** HLA sequence index. */
-    bool Hg38ChrConverter::isHLA(ChrIndex index) const {
+    bool GenericChrConverter::isHLA(ChrIndex index) const {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::HLA;
     }
 
     /** Unassigned (unplaced, random, unlocalized) sequence index. */
-    bool Hg38ChrConverter::isUnassigned(ChrIndex index) const {
+    bool GenericChrConverter::isUnassigned(ChrIndex index) const {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::UNASSIGNED;
     }
 
-    bool Hg38ChrConverter::isCompressedMrefIndex(ChrIndex index) const {
+    bool GenericChrConverter::isCompressedMrefIndex(ChrIndex index) const {
         return index < nChromosomes()  // Ensure no access out of range is done
                 && chrInfoTable.getChrInfos()[index].isCompressedMref();
     }
 
     /** Number of compressedMref chromosomes. */
-    ChrIndex Hg38ChrConverter::nChromosomesCompressedMref() const {
+    ChrIndex GenericChrConverter::nChromosomesCompressedMref() const {
         return compressedToAllMapping.size();
 
     }
 
     /** Map the compressed mref index to the uncompressed mref index. */
-    ChrIndex Hg38ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
+    ChrIndex GenericChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
         if (index >= nChromosomesCompressedMref()) {
             throw_with_trace(std::logic_error("Compressed mref index out of range."));
         }
@@ -168,12 +168,12 @@ namespace sophia {
     }
 
     /** Map compressed mref index to chromosome size. */
-    ChrSize Hg38ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
+    ChrSize GenericChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
         return chrInfoTable.getChrInfos()[compressedMrefIndexToIndex(index)].getSize();
     }
 
     /** Map an compressed mref index to a chromosome name. */
-    ChrName Hg38ChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
+    ChrName GenericChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
         return chrInfoTable.getChrInfos()[compressedMrefIndexToIndex(index)].getName();
     }
 
@@ -188,7 +188,7 @@ namespace sophia {
         "HLA-DRB1*13:01:01:2914|(4,0,0?/0)" by first separating out the `|` separator, and then
         finding the last `:` separator before position.
         */
-    ChrName Hg38ChrConverter::parseChrBreakPoint(std::string::const_iterator startIt,
+    ChrName GenericChrConverter::parseChrBreakPoint(std::string::const_iterator startIt,
                                                  std::string::const_iterator endIt,
                                                  char stopChar,
                                                  const std::string &stopCharsExt) {
@@ -225,7 +225,7 @@ namespace sophia {
 
     /** Parse the chromosome index just by finding the `stopChar`. Everything between the `startIt`,
            and the first occurrence of the `stopChar` is returned as chromosome name. */
-    ChrName Hg38ChrConverter::parseChrSimple(std::string::const_iterator startIt,
+    ChrName GenericChrConverter::parseChrSimple(std::string::const_iterator startIt,
                                              std::string::const_iterator endIt,
                                              char stopChar) {
         auto isStopChar = [stopChar](char c) { return c == stopChar; };
@@ -240,7 +240,7 @@ namespace sophia {
         return chrName;
     }
 
-    ChrName Hg38ChrConverter::parseChr(std::string::const_iterator startIt,
+    ChrName GenericChrConverter::parseChr(std::string::const_iterator startIt,
                                        std::string::const_iterator endIt,
                                        char stopChar,
                                        const std::string &stopCharsExt) {
@@ -251,7 +251,7 @@ namespace sophia {
         }
     }
 
-    ChrIndex Hg38ChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
+    ChrIndex GenericChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
                                                       std::string::const_iterator endIt,
                                                       char stopChar,
                                                       const std::string &stopCharsExt) const {

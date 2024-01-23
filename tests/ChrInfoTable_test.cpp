@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "Fixtures.h"
 #include "GlobalAppConfig.h"
-#include "Hg38ChrConverter.h"
+#include "GenericChrConverter.h"
 
 namespace sophia {
 

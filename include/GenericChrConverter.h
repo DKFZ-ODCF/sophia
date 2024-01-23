@@ -16,8 +16,8 @@
  *     LICENSE: GPL
  */
 
-#ifndef HG38CHRCONVERTER_H_
-#define HG38CHRCONVERTER_H_
+#ifndef GenericChrConverter_H_
+#define GenericChrConverter_H_
 
 #include "ChrConverter.h"
 #include "global.h"
@@ -34,7 +34,7 @@
 namespace sophia {
 
     /** This converter provides fast by-index access to the ChrInfoTable. */
-    class Hg38ChrConverter: public ChrConverter {
+    class GenericChrConverter: public ChrConverter {
 
       public:
 
@@ -82,12 +82,12 @@ namespace sophia {
         /** Initialize the hg38 chromosome converter with different types of contig/chromosome
           * names and the sizes of the corresponding chromosomes.
           **/
-        Hg38ChrConverter(std::string assemblyName,
+        GenericChrConverter(std::string assemblyName,
                          ChrInfoTable chrInfo);
 
         /** This default constructor only makes sense, as long as the hg38 chromosome names are
             hard-coded. */
-        Hg38ChrConverter();
+        GenericChrConverter();
 
         /** Number of chromosomes. */
         ChrIndex nChromosomes() const;
@@ -169,4 +169,4 @@ namespace sophia {
 
 }
 
-#endif /* HG38CHRCONVERTER_H_ */
+#endif /* GenericChrConverter_H_ */

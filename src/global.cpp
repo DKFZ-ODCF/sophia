@@ -11,7 +11,7 @@
 #include "ChrInfo.h"
 #include "ChrInfoTable.h"
 #include "Hg37ChrConverter.h"
-#include "Hg38ChrConverter.h"
+#include "GenericChrConverter.h"
 #include "GlobalAppConfig.h"
 
 
@@ -32,14 +32,15 @@ namespace sophia {
         if (!assembly_name.has_value() || assembly_name.value() == "hg37") {
             converter = std::unique_ptr<ChrConverter>(new Hg37ChrConverter());
 
-        } else if (assembly_name.value() == "hg38") {
-            std::string chromosome_file = "resources/hg38.tsv";
+        } else if (assembly_name.value().size() > 0) {
+            // Compose the chromosome set name from the assembly name.
+            std::string chromosome_file = "resources/" + assembly_name.value() + ".tsv";
             std::vector<ChrInfo> chr_info = read_chr_info(chromosome_file);
             ChrInfoTable chr_info_table { chr_info };
-            converter = std::unique_ptr<ChrConverter>(new Hg38ChrConverter("hg38", chr_info_table));
+            converter = std::unique_ptr<ChrConverter>(
+                new GenericChrConverter(assembly_name.value(), chr_info_table));
         } else {
-            throw std::invalid_argument("Unknown assembly name '" + assembly_name.value() +
-                                        ". I know 'hg37' and 'hg38'.");
+            throw std::invalid_argument("Empty assembly name.");
         }
 
         // Initialize the global application configuration.

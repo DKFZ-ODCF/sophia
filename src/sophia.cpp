@@ -17,7 +17,7 @@
 #include "SamSegmentMapper.h"
 #include "HelperFunctions.h"
 #include "Hg37ChrConverter.h"
-#include "Hg38ChrConverter.h"
+#include "GenericChrConverter.h"
 #include "GlobalAppConfig.h"
 
 

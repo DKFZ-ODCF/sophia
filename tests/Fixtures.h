@@ -8,7 +8,7 @@
 #include <memory>
 #include "global.h"
 #include "ChrInfoTable.h"
-#include "Hg38ChrConverter.h"
+#include "GenericChrConverter.h"
 #include "GlobalAppConfig.h"
 
 
@@ -32,15 +32,16 @@ namespace sophia {
 
     };
 
-    class Hg38ChrConverterFixture : public ChrInfoTableFixture {
+    class GenericChrConverterFixture : public ChrInfoTableFixture {
 
       protected:
 
         void SetUp() {
             ChrInfoTableFixture::SetUp();
             try {
-                std::unique_ptr<Hg38ChrConverter> converter =
-                    std::unique_ptr<Hg38ChrConverter>(new Hg38ChrConverter("hg38", *chr_info_table));
+                std::unique_ptr<GenericChrConverter> converter =
+                    std::unique_ptr<GenericChrConverter>(
+                        new GenericChrConverter("hg38", *chr_info_table));
                 // TODO Find a way to deal with the singleton, without having to refactor the whole code
                 GlobalAppConfig::init(std::move(converter));
             } catch (const std::logic_error& e) {

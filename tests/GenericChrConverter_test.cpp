@@ -3,13 +3,13 @@
 #include <stdexcept>
 #include "Fixtures.h"
 #include "GlobalAppConfig.h"
-#include "Hg38ChrConverter.h"
+#include "GenericChrConverter.h"
 
 namespace sophia {
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverterTest_chrNameToIndex) {
-        const Hg38ChrConverter &converter =
-                dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverterTest_chrNameToIndex) {
+        const GenericChrConverter &converter =
+                dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_EQ(converter.chrNameToIndex("chr1"), 0);
         EXPECT_EQ(converter.chrNameToIndex("chr22"), 21);
         EXPECT_EQ(converter.chrNameToIndex("chrX"), 22);
@@ -19,21 +19,21 @@ namespace sophia {
         EXPECT_EQ(converter.chrNameToIndex("phix"), 3366);
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverter_assemblyName) {
-        const Hg38ChrConverter &converter =
-                dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverter_assemblyName) {
+        const GenericChrConverter &converter =
+                dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_EQ(converter.assemblyName, "hg38");
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverter_nChromosomes) {
-        const Hg38ChrConverter &converter =
-                dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverter_nChromosomes) {
+        const GenericChrConverter &converter =
+                dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_EQ(converter.nChromosomes(), 3367);
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverterTest_indexToChrName) {
-        const Hg38ChrConverter &converter =
-                dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverterTest_indexToChrName) {
+        const GenericChrConverter &converter =
+                dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_EQ(converter.indexToChrName(0), "chr1");
         EXPECT_EQ(converter.indexToChrName(21), "chr22");
         EXPECT_EQ(converter.indexToChrName(22), "chrX");
@@ -43,9 +43,9 @@ namespace sophia {
         EXPECT_EQ(converter.indexToChrName(3366), "phix");
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverter_chrNameToIndex) {
-        const Hg38ChrConverter &converter =
-            dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverter_chrNameToIndex) {
+        const GenericChrConverter &converter =
+            dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_EQ(converter.chrNameToIndex("chr1"), 0);
         EXPECT_EQ(converter.chrNameToIndex("chr22"), 21);
         EXPECT_EQ(converter.chrNameToIndex("chrX"), 22);
@@ -55,15 +55,15 @@ namespace sophia {
         EXPECT_EQ(converter.chrNameToIndex("phix"), 3366);
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverterTest_nChromosomesCompressedMref) {
-        const Hg38ChrConverter &converter =
-                dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverterTest_nChromosomesCompressedMref) {
+        const GenericChrConverter &converter =
+                dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_EQ(converter.nChromosomesCompressedMref(), 3365);
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverterTest_is_category) {
-        const Hg38ChrConverter &converter =
-                dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverterTest_is_category) {
+        const GenericChrConverter &converter =
+                dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_TRUE(converter.isAutosome(0));  // chr1
         EXPECT_TRUE(converter.isAutosome(21)); // chr22
         EXPECT_TRUE(converter.isGonosome(22)); // chrX
@@ -77,9 +77,9 @@ namespace sophia {
         EXPECT_TRUE(converter.isHLA(2841)); // HLA-A*01:01:01:01
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverter_isCompressedMrefIndex) {
-        const Hg38ChrConverter &converter =
-                dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverter_isCompressedMrefIndex) {
+        const GenericChrConverter &converter =
+                dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_TRUE(converter.isCompressedMrefIndex(0));  // chr1
         EXPECT_TRUE(converter.isCompressedMrefIndex(21)); // chr22
         EXPECT_TRUE(converter.isCompressedMrefIndex(22)); // chrX
@@ -89,9 +89,9 @@ namespace sophia {
         EXPECT_TRUE(! converter.isCompressedMrefIndex(3366)); // phix
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverter_compressedMrefIndexToIndex) {
-        const Hg38ChrConverter &converter =
-                dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverter_compressedMrefIndexToIndex) {
+        const GenericChrConverter &converter =
+                dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_EQ(converter.compressedMrefIndexToIndex(0), 0);  // chr1
         EXPECT_EQ(converter.compressedMrefIndexToIndex(23), 23); // chrY
         // chrM = global::24 is missing from compressed mrefs,
@@ -100,17 +100,17 @@ namespace sophia {
         EXPECT_THROW(converter.compressedMrefIndexToIndex(3366), std::logic_error); // phix
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverterTest_ParseSimpleStrings) {
+    TEST_F(GenericChrConverterFixture, GenericChrConverterTest_ParseSimpleStrings) {
         const std::string test1 = "chr1\tsomething\telse\n";
-        const Hg38ChrConverter &converter =
-            dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+        const GenericChrConverter &converter =
+            dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_EQ(converter.parseChr(test1.begin(), test1.end(), '\t'),
                   "chr1");
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverter_chrSizeCompressedMref) {
-        const Hg38ChrConverter &converter =
-            dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+    TEST_F(GenericChrConverterFixture, GenericChrConverter_chrSizeCompressedMref) {
+        const GenericChrConverter &converter =
+            dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
         EXPECT_EQ(converter.chrSizeCompressedMref(0), 248956422);  // chr1
         EXPECT_EQ(converter.chrSizeCompressedMref(23), 57227415);  // chrY
         EXPECT_EQ(converter.chrSizeCompressedMref(454), 171823);  // chrEBV; 454 is the index in compressed mrefs!
@@ -118,10 +118,10 @@ namespace sophia {
         EXPECT_EQ(converter.chrSizeCompressedMref(24), 175055); // chr1_KI270706v1_random
     }
 
-    TEST_F(Hg38ChrConverterFixture, Hg38ChrConverterTest_ParseBreakPointStrings) {
+    TEST_F(GenericChrConverterFixture, GenericChrConverterTest_ParseBreakPointStrings) {
         const std::string stopChars = "|(,!/?;";
-        const Hg38ChrConverter &converter =
-            dynamic_cast<const Hg38ChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+        const GenericChrConverter &converter =
+            dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
 
 
         const std::string test1 = "HLA-DRB1*13:01:01:2914|(4,0,0?/0)";

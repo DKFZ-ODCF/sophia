@@ -98,7 +98,7 @@ sophia: $(BUILD_DIR)/global.o \
 		$(BUILD_DIR)/ChosenBp.o \
 		$(BUILD_DIR)/ChrConverter.o \
 		$(BUILD_DIR)/Hg37ChrConverter.o \
-		$(BUILD_DIR)/Hg38ChrConverter.o \
+		$(BUILD_DIR)/GenericChrConverter.o \
 		$(BUILD_DIR)/SamSegmentMapper.o \
 		$(BUILD_DIR)/Sdust.o \
 		$(BUILD_DIR)/SuppAlignment.o \
@@ -121,7 +121,7 @@ sophiaAnnotate: $(BUILD_DIR)/global.o \
 				$(BUILD_DIR)/BreakpointReduced.o \
 				$(BUILD_DIR)/ChrConverter.o \
 				$(BUILD_DIR)/Hg37ChrConverter.o \
-				$(BUILD_DIR)/Hg38ChrConverter.o \
+				$(BUILD_DIR)/GenericChrConverter.o \
 				$(BUILD_DIR)/DeFuzzier.o \
 				$(BUILD_DIR)/GermlineMatch.o \
 				$(BUILD_DIR)/MrefEntry.o \
@@ -149,7 +149,7 @@ sophiaMref: $(BUILD_DIR)/global.o \
 			$(BUILD_DIR)/GlobalAppConfig.o \
 			$(BUILD_DIR)/ChrConverter.o \
 			$(BUILD_DIR)/Hg37ChrConverter.o \
-			$(BUILD_DIR)/Hg38ChrConverter.o \
+			$(BUILD_DIR)/GenericChrConverter.o \
 			$(BUILD_DIR)/HelperFunctions.o \
 			$(BUILD_DIR)/SuppAlignment.o \
 			$(BUILD_DIR)/SuppAlignmentAnno.o \

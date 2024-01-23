@@ -2,14 +2,15 @@
 
 SOPHIA is a Structural Variant(SV) detection algorithm based on the supplementary alignment(SA) concept of the aligner BWA-mem, combined with filters based on expert-knowledge to increase specificity. 
 
-Currently, SOPHIA only is optimized for the hg38 assembly of the human genome. 
+Currently, SOPHIA only is optimized for the hg37 assembly of the human genome.
 It uses a large panel of normals for filtering artifacts (most often due to mapping difficulties) and common SVs in the germline.
 The parameters for filtering results are hand-tuned against the clinical gold standard FISH of V(D)J rearrangements.
 Results from the hand-tuned parameter set were tested against hallmark findings from disease datasets where hallmark SVs were known (CDKN2A in various TCGA datasets, EGFR in TCGA-GBM, GFI1B, MYCN and PRDM6 in ICGC-PEDBRAIN-MB etc.) 
 
 For a detailed description of the algorithm, please refer to Umut Topraks's dissertation at https://doi.org/10.11588/heidok.00027429, in particular chapter 2. Section 2.2.1 describes the method in more details.
 
-SOPHIA is a very fast and resource-light algorithm. It uses 2GB RAM, 2 CPU cores and runs in ~3.5 hours for 50x coverage WGS, and can detect variants with a single pass of the input BAM files. No local assembly is done.
+SOPHIA is a very fast and resource-light algorithm. 
+It uses 2GB RAM, 2 CPU cores and runs in ~3.5 hours for 50x coverage WGS, and can detect variants with a single pass of the input BAM files. No local assembly is done.
 
 > This is a fork of the original [SOPHIA](https://bitbucket.org/utoprak/sophia/src/master/) bitbucket repository.
 
@@ -57,8 +58,8 @@ samtools view -F 0x600 -f 0x001 /yourPositionSorted.bam \
 A run on a typical Illumina X10 sample with 30x coverage takes about 5 GB of memory, 2 cores.
 In extreme cases (like with chromothripsis) the runtime can jump to 120 hours, but usually is much shorter.
 
-Note that currently only very specific genome references/assemblies for hg37 and hg38 are supported.
-Please have a look at the [Hg37ChrConverter.cpp](src/Hg37ChrConverter.cpp) and [Hg38ChrConverter.cpp](src/Hg38ChrConverter.cpp) files, in which the sets of allowed chromosome names are (yet) hard-coded.
+Note that currently only very specific genome references/assemblies for hg37 supported.
+Please have a look at the [Hg37ChrConverter.cpp](src/Hg37ChrConverter.cpp) file, in which the sets of allowed chromosome names for "classic_hg37" is hard-coded.
 
 The output is a BED file, which means the start and end positions are 0-based, and left-inclusive, right-exclusive. The 8 columns are:
 
@@ -142,9 +143,10 @@ The file produced by `sophiaMref` is a BED file with the following columns (see 
 
 The "fileIndices" are the 0-based index into the list of gzipped control-BED input files given to `sophiaMref`.
 
-The artifacts ratios are tracked in the moment, but not printed. Files get an artifacts ratio only if a number of conditions are met (undocumented; see `MrefEntry::addEntry` for details).
+The artifacts ratios are tracked in the moment, but not printed.
+Files get an artifacts ratio only if a number of conditions are met (undocumented; see `MrefEntry::addEntry` for details).
 
-Note that `sophiaMref` uses a lot of memory (e.g. 400 GB is a safe choice for human assembly), but usually will be only used for generating the reference files for a new genome assembly (which are currently hardcoded anyway).
+Note that `sophiaMref` uses a lot of memory (e.g. 400 GB is a safe choice for human assembly), but usually will be only used for generating the reference files for a new genome assembly (which, currently, are hardcoded anyway).
 
 `sophiaMref` expects that the input BED files match the filename pattern `.*/$realPidName.{1}$version.+`.
 The `$version` is the value provided by the `--version` parameter that is only used to delimit the right end of the PID name.
@@ -218,6 +220,42 @@ cd "$repoRoot"
 make -j 4 static=true boost_lib_dir=$boost_lib_dir develop=true all
 ```
 
+#### Testing Assemblies
+
+There is a new `GenericChrConverter` to handle arbitrary assemblies.
+For development, different assemblies can be defined by adding `$assemblyName.tsv` files into the `resources/` directory.
+
+> **WARNING**: No mechanism to allow this for production has yet been implemented. This is a development feature only!
+
+The `$assemblyName.tsv` file must be a TSV-separated with 4 columns and a header line with the following fields (names must match exactly):
+  * `chromosome`: The chromosome name, which must **not** contain the following characters, because these characters are used as separators:
+    * `\t`, `\n`, `\r`, ` ` (whitespace)
+    * `,` (comma)
+    * `;` (semicolon)
+    * `|` (pipe) 
+    * `(`, `)` (parentheses)
+  
+    > **NOTE**: The `:` (colon) symbol is allowed.
+
+  * `size`: The length of the chromosome FASTA sequence in base pairs.
+  * `compressedMref`: Whether the chromosome should be considered part of the compressed master-ref set of chromosomes. For instance, for "classic_hg37" these are all chromosomes including autosomes, gonosomes, decoys, unassigned (unplaced/random), EBV, but excluding the mitochondrion (extrachromosomal) and phix (technical). The string is converted to lower-case and matched against the following strings:
+    * `true`, `yes`, `t`, `y`, or `1`: The chromosome is part of the compressed master-ref set of chromosomes.
+    * `false`, `no`, `f`, `n`, or `0`: The chromosome is not part of the compressed master-ref set of chromosomes.
+  * `category`: The following categories are allowed. See `GenericChrConverter::Category` for details. Categories are converted to lower-case and matched against the following strings:
+    * `autosomal`: e.g. chr1, chr2, ...
+    * `gonosomal`: e.g. chrX, chrY
+    * `virus`: e.g. chrEBV
+    * `decoy`: e.g. all chromosomes with a _decoy suffix or hs37d5
+    * `unassigned`: sequences that belong to normal nuclear genome, but could not be positioned exactly, such as "unplaced", "random", "unlocalized" chromosomes in human assemblies, e.g. chrUn_gl000220
+    * `extrachromosomal`: e.g. chrM
+    * `technical`: Used for technical reasons, e.g. for calibrating the sequence, such as chrPhiX, lambda
+    * `alt`: ALT contigs
+    * `hla`: HLA contigs
+
+> **NOTE**: The fact that these classes exist does not mean that they are used in the code.
+If you want to know more then, currently, the only documentation of we can offer you for SOPHIA is the source code itself.
+
+
 #### Running the tests
 
 Currently, there are only very few tests that were added to the legacy code. To run them do
@@ -231,25 +269,11 @@ Note that the `testRunner` is never linked statically.
 It uses the `libgtest_main.so` library that supports a number of command line options.
 See `testRunner --help` for details.
 
-#### Chromosome names
-
-For now, reference genomes are hard-coded, which is why this information is given here in the development section.
-
-Chromosome names must not contain the following characters, because these characters are used as separators:
-
-* `\t`, `\n`, `\r`, ` ` (whitespace)
-* `,` (comma)
-* `;` (semicolon)
-* `|` (pipe)
-* `(`, `)` (parentheses)
-
-The `:` (colon) symbol can be used.
-
 ## Changes
 
 * 35.1.0 (upcoming)
-  * Minor: hg38 support
-    * Added `--assemblyname` option, defaulting to "hg37" when omitted (old behaviour)
+  * Minor: Generic assembly support
+    * Added `--assemblyname` option, defaulting to "classic_hg37" when omitted (old behaviour).
     > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted. Furthermore, the runtime will be longer than for hg37 and also hg37 runtime has increase.
   * Minor: Build system
     * Use `make` as build system. `Release_*` directories are removed
