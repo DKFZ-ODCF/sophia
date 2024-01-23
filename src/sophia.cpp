@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
         isizeSigmaLevel = 5,
         bpSupport = 5;
     double properPairPercentage = 100.0;
-    std::string assemblyName = "hg37";
+    std::string assemblyName = "classic_hg37";
 
     try {
         std::ios_base::sync_with_stdio(false);
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
             ("help", "printe help message")
             ("assemblyname",
                 po::value<std::string>(&assemblyName)->default_value(assemblyName),
-                ("assembly name (hg37, hg38)"))
+                ("assembly name (classic_hg37, hg38, ...)"))
             ("mergedisizes",
                 po::value<std::string>(),
                 "insertsize distribution file for the merged bam.")

@@ -225,7 +225,9 @@ make -j 4 static=true boost_lib_dir=$boost_lib_dir develop=true all
 There is a new `GenericChrConverter` to handle arbitrary assemblies.
 For development, different assemblies can be defined by adding `$assemblyName.tsv` files into the `resources/` directory.
 
-> **WARNING**: No mechanism to allow this for production has yet been implemented. This is a development feature only!
+> **NOTE**: For assembly name "classic_hg37" the behaviour of SOPHIA 35.0.0 is used. This is also the default if the `--assemblyname` parameter is omitted.
+
+> **WARNING**: No mechanism to allow this for production has yet been implemented. This is a development feature only! The `GenericChrConverter` implementation is also less performant (yet) than the "classic_hg37" `Hg37ChrConverter`.
 
 The `$assemblyName.tsv` file must be a TSV-separated with 4 columns and a header line with the following fields (names must match exactly):
   * `chromosome`: The chromosome name, which must **not** contain the following characters, because these characters are used as separators:
@@ -273,7 +275,7 @@ See `testRunner --help` for details.
 
 * 35.1.0 (upcoming)
   * Minor: Generic assembly support
-    * Added `--assemblyname` option, defaulting to "classic_hg37" when omitted (old behaviour).
+    * Added `--assemblyname` option, defaulting to SOPHIA 35.0.0's chromosome converter implementation "classic_hg37" when omitted.
     > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted. Furthermore, the runtime will be longer than for hg37 and also hg37 runtime has increase.
   * Minor: Build system
     * Use `make` as build system. `Release_*` directories are removed

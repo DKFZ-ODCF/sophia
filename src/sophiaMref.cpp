@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     using namespace sophia;
 
     int defaultReadLength { 0 };
-    string assemblyName = "hg37";
+    string assemblyName = "classic_hg37";
 
     try {
         boost::program_options::options_description desc("Allowed options for sophiaMref");
@@ -44,8 +44,8 @@ int main(int argc, char** argv) {
                 boost::program_options::value<string>(),
                 "version string used to match the PID in the BED files with the pattern\n  `.*/$pidName.{1}$version.+`")
             ("assemblyname",
-                boost::program_options::value<string>(&assemblyName)->default_value("hg37"),
-                "assembly name (hg37, hg38)")
+                boost::program_options::value<string>(&assemblyName)->default_value("classic_hg37"),
+                "assembly name (classic_hg37, hg38, ...)")
             ("defaultreadlength",
                 boost::program_options::value<int>(&defaultReadLength)->default_value(defaultReadLength),
                 "Default read length for the technology used in sequencing, e.g. 101 or 151.")

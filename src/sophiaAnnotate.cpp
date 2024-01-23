@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     using namespace std;
     using namespace sophia;
 
-    string assemblyName = "hg37";
+    string assemblyName = "classic_hg37";
     int artifactlofreq { 33 };
     int artifacthifreq { 50 };
     int clonalitylofreq { 5 };
@@ -58,8 +58,8 @@ int main(int argc, char** argv) {
                 po::value<string>(),
                 "path to _bps.bed.gz file from `sophia` for the control")
             ("assemblyname",
-                po::value<string>(&assemblyName)->default_value("hg37"),
-                "assembly name")
+                po::value<string>(&assemblyName)->default_value(assemblyName),
+                "assembly name (classic_hg37, hg38, ...)")
             ("defaultreadlengthtumor",
                 po::value<int>(&defaultReadLengthTumor)->default_value(defaultReadLengthTumor),
                 "Default read length for the technology used in sequencing 101,151 etc., tumor")

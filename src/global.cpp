@@ -29,7 +29,7 @@ namespace sophia {
     void setApplicationConfig(std::optional<std::string> assembly_name) {
         std::unique_ptr<ChrConverter> converter;
 
-        if (!assembly_name.has_value() || assembly_name.value() == "hg37") {
+        if (!assembly_name.has_value() || assembly_name.value() == "classic_hg37") {
             converter = std::unique_ptr<ChrConverter>(new Hg37ChrConverter());
 
         } else if (assembly_name.value().size() > 0) {
