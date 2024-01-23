@@ -2,6 +2,7 @@
 *.iml
 build/*.o
 include/strtk.hpp
+include/rapidcsv.h
 sophia
 sophiaAnnotate
 sophiaMref

@@ -17,6 +17,9 @@
 #include "Hg37ChrConverter.h"
 #include "Hg38ChrConverter.h"
 #include "HelperFunctions.h"
+#include "ChrInfo.h"
+#include "ChrInfoTable.h"
+#include "ChrCategory.h"
 
 
 int main(int argc, char** argv) {
@@ -58,6 +61,12 @@ int main(int argc, char** argv) {
             return 0;
         }
 
+        std::optional<std::string> assemblyNameOpt { };
+        if (inputVariables.count("assemblyname")) {
+            assemblyNameOpt = inputVariables["assemblyname"].as<string>();
+        }
+        setApplicationConfig(assemblyNameOpt);
+
         string gzInFilesList;
         if (inputVariables.count("gzins")) {
             gzInFilesList = inputVariables["gzins"].as<string>();
@@ -95,22 +104,6 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        unique_ptr<ChrConverter> chrConverter;
-        if (!inputVariables.count("assemblyname") ||
-              inputVariables["assemblyname"].as<string>() == Hg37ChrConverter::assemblyName) {
-            chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
-        } else if (inputVariables["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
-            chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
-        } else {
-            cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<string>() << ". I know "
-                 << Hg37ChrConverter::assemblyName << " and "
-                 << Hg38ChrConverter::assemblyName << endl;
-                return 1;
-        }
-
-        // Initialize the global application configuration.
-        GlobalAppConfig::init(move(chrConverter));
-
         SuppAlignment::DEFAULTREADLENGTH = defaultReadLength;
         SuppAlignmentAnno::DEFAULTREADLENGTH = defaultReadLength;
         MrefEntry::NUMPIDS = gzListIn.size();
@@ -118,7 +111,7 @@ int main(int argc, char** argv) {
 
         return 0;
     } catch (boost::exception &e) {
-        cerr << get_trace(e) << endl;
+        cerr << "Error: " << boost::diagnostic_information(e) << endl;
         return 1;
     } catch (std::exception& e) {
         cerr << "Error: " << e.what() << endl;

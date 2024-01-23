@@ -99,8 +99,11 @@ class AnnotationProcessor {
                                         int distanceThreshold,
                                         int conservativeDistanceThreshold);
 
-    void searchSa(int chrIndex, int dbIndex, const SuppAlignmentAnno &sa,
-                  bool doubleSupportSa, vector<vector<MrefEntryAnno>> &mref);
+    void searchSa(CompressedMrefIndex chrIndex,
+                  int dbIndex,
+                  const SuppAlignmentAnno &sa,
+                  bool doubleSupportSa,
+                  vector<vector<MrefEntryAnno>> &mref);
     bool applyMassiveInversionFiltering(bool stricterMode,
                                         bool controlCheckMode);
     bool applyPathogenContaminationFiltering();

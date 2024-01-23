@@ -23,6 +23,8 @@
 
 #include <cstddef>
 #include <iostream>
+#include <optional>
+#include <string>
 #include <boost/exception/all.hpp>
 #include <boost/stacktrace.hpp>
 
@@ -45,6 +47,7 @@ namespace sophia {
         throw boost::enable_error_info(e) << traced(boost::stacktrace::stacktrace());
     }
 
+    void setApplicationConfig(std::optional<std::string> assemblyname);
 }
 
 

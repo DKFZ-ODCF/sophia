@@ -8,22 +8,19 @@
 #include <cmath>
 #include <string>
 #include <memory>
+#include <vector>
+#include <boost/filesystem.hpp>
+#include <boost/program_options.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 #include "BreakpointReduced.h"
 #include "AnnotationProcessor.h"
 #include "SuppAlignment.h"
 #include "SuppAlignmentAnno.h"
 #include "SvEvent.h"
 #include "strtk-wrap.h"
-#include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
-#include <vector>
 #include "MrefEntryAnno.h"
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
 #include "HelperFunctions.h"
-#include "Hg37ChrConverter.h"
-#include "Hg38ChrConverter.h"
-#include "GlobalAppConfig.h"
 
 
 int main(int argc, char** argv) {
@@ -109,24 +106,11 @@ int main(int argc, char** argv) {
             return 0;
         }
 
-        unique_ptr<ChrConverter> chrConverter;
-        if (!inputVariables.count("assemblyname") ||
-              inputVariables["assemblyname"].as<string>() == Hg37ChrConverter::assemblyName) {
-            chrConverter = unique_ptr<ChrConverter>(new Hg37ChrConverter());
-        } else if (inputVariables["assemblyname"].as<string>() == Hg38ChrConverter::assemblyName) {
-            chrConverter = unique_ptr<ChrConverter>(new Hg38ChrConverter());
-        } else {
-            cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<string>()
-                 << ". I know " << Hg37ChrConverter::assemblyName
-                 << " and "     << Hg38ChrConverter::assemblyName << endl;
-            return 1;
+        std::optional<std::string> assemblyNameOpt { };
+        if (inputVariables.count("assemblyname")) {
+            assemblyNameOpt = inputVariables["assemblyname"].as<string>();
         }
-
-
-        // Initialize global application config.
-        // This will raise a warning with -Wextra or -Wdangling-reference, but that's probably a
-        // false positive. See https://stackoverflow.com/a/77103062/8784544.
-        GlobalAppConfig::init(move(chrConverter));
+        setApplicationConfig(assemblyNameOpt);
 
         vector<vector<MrefEntryAnno>> mref
             { GlobalAppConfig::getInstance().getChrConverter().
@@ -200,21 +184,21 @@ int main(int argc, char** argv) {
         cerr << "m\n";
         string line { };
 
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+
         while (error_terminating_getline(*mrefGzHandle, line)) {
             if (line.front() == '#') {
                 continue;
             };
-            std::optional<ChrIndex> chrIndexO = GlobalAppConfig::getInstance().getChrConverter().
-                compressedMrefIndexToIndex(
-                    GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
-                    line.cbegin(), line.cend(), '\t'));
-            ChrIndex chrIndex;
-            if (!chrIndexO.has_value()) {
+            ChrIndex globalIndex =
+                chrConverter.parseChrAndReturnIndex(line.cbegin(), line.cend(), '\t');
+            CompressedMrefIndex chrIndex;
+            if (!chrConverter.isCompressedMrefIndex(globalIndex)) {
                 continue;
             } else {
-                chrIndex = chrIndexO.value();
+                chrIndex = chrConverter.compressedMrefIndexToIndex(globalIndex);
+                mref[chrIndex].emplace_back(line);
             }
-            mref[chrIndex].emplace_back(line);
         }
         SvEvent::ARTIFACTFREQLOWTHRESHOLD = (artifactlofreq + 0.0) / 100;
         SvEvent::ARTIFACTFREQHIGHTHRESHOLD = (artifacthifreq + 0.0) / 100;
@@ -269,7 +253,7 @@ int main(int argc, char** argv) {
 
         return 0;
     } catch (boost::exception &e) {
-        cerr << get_trace(e) << endl;
+        cerr << "Error: " << boost::diagnostic_information(e) << endl;
         return 1;
     } catch (std::exception& e) {
         cerr << "Error: " << e.what() << endl;

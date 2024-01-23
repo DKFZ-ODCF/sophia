@@ -9,7 +9,7 @@ TESTS_DIR = ./tests
 # Compiler flags
 LIBRARY_FLAGS := -lz -lm -lrt -lboost_system -lboost_iostreams -lboost_program_options -ldl
 LDFLAGS := $(LDFLAGS) -flto=auto -rdynamic -no-pie
-CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++17 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
+CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++20 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
 
 ifeq ($(static),true)
 	LD_BEGIN_FLAGS := -L$(boost_lib_dir)
@@ -23,11 +23,11 @@ ifeq ($(develop),true)
 	# NOTE: Generally, it is a good idea to compile with -O0 during development, because it seems
 	#       that thus the compiler actually catches some binary dependencies during linking that
 	#       will otherwise be missed.
-	CXXFLAGS := $(CXXFLAGS) -O0 -ggdb3 -DDEBUG -fno-inline
+	CXXFLAGS := $(CXXFLAGS) -O0 -ggdb3 -DDEBUG -fno-inline -fno-elide-constructors -fno-omit-frame-pointer -fno-optimize-sibling-calls
 	LD_END_FLAGS := $(LD_END_FLAGS) -Wl,-O0 -ggdb3 -DDEBUG -fno-inline
 else
 	# Ignore some leftover unused variables from SvEvent::assessBreakpointClonalityStatus.
-	CXXFLAGS := $(CXXFLAGS) -O3 -DNDEBUG -Wno-unused-variable
+	CXXFLAGS := $(CXXFLAGS) -O3 -DNDEBUG
 endif
 
 # Source files
@@ -55,12 +55,16 @@ vpath %_test.cpp $(TESTS_DIR)
 $(BUILD_DIR):
 	mkdir -p $@
 
-# Retrieve and build strtk.
+# Retrieve StrTK
 $(INCLUDE_DIR)/strtk.hpp:
 	wget -c https://raw.githubusercontent.com/ArashPartow/strtk/d2b446bf1f7854e8b08f5295ec6f6852cae066a2/strtk.hpp -O $(INCLUDE_DIR)/strtk.hpp
 
+# Retrieve rapidcsv
+$(INCLUDE_DIR)/rapidcsv.h:
+	wget -c https://github.com/d99kris/rapidcsv/raw/v8.80/src/rapidcsv.h -O $(INCLUDE_DIR)/rapidcsv.h
+
 # General compilation rule for object files that have matching .h files.
-$(BUILD_DIR)/%.o: %.cpp %.h $(INCLUDE_DIR)/strtk.hpp Makefile | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.cpp %.h $(INCLUDE_DIR)/strtk.hpp $(INCLUDE_DIR)/rapidcsv.h Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Test source files with the suffix _test.cpp
@@ -70,7 +74,7 @@ TEST_SOURCES = $(wildcard $(TESTS_DIR)/*_test.cpp)
 TEST_OBJECTS = $(TEST_SOURCES:$(TESTS_DIR)/%_test.cpp=$(BUILD_DIR)/%_test.o)
 
 # There are usually no .h files for test files, so we need a separate rule for test files.
-$(BUILD_DIR)/%_test.o: $(TESTS_DIR)/%_test.cpp Makefile | $(BUILD_DIR)
+$(BUILD_DIR)/%_test.o: $(TESTS_DIR)/%_test.cpp  $(TESTS_DIR)/Fixtures.h Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Link the testRunner.
@@ -85,6 +89,10 @@ test: testRunner
 $(BUILD_DIR)/sophia.o: $(SRC_DIR)/sophia.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 sophia: $(BUILD_DIR)/global.o \
+		$(BUILD_DIR)/IndexRange.o \
+		$(BUILD_DIR)/ChrCategory.o \
+		$(BUILD_DIR)/ChrInfo.o \
+		$(BUILD_DIR)/ChrInfoTable.o \
 		$(BUILD_DIR)/Alignment.o \
 		$(BUILD_DIR)/Breakpoint.o \
 		$(BUILD_DIR)/ChosenBp.o \
@@ -103,6 +111,10 @@ sophia: $(BUILD_DIR)/global.o \
 $(BUILD_DIR)/sophiaAnnotate.o: $(SRC_DIR)/sophiaAnnotate.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 sophiaAnnotate: $(BUILD_DIR)/global.o \
+				$(BUILD_DIR)/IndexRange.o \
+				$(BUILD_DIR)/ChrCategory.o \
+				$(BUILD_DIR)/ChrInfo.o \
+				$(BUILD_DIR)/ChrInfoTable.o \
 				$(BUILD_DIR)/Alignment.o \
 				$(BUILD_DIR)/AnnotationProcessor.o \
 				$(BUILD_DIR)/Breakpoint.o \
@@ -129,6 +141,10 @@ sophiaAnnotate: $(BUILD_DIR)/global.o \
 $(BUILD_DIR)/sophiaMref.o: $(SRC_DIR)/sophiaMref.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 sophiaMref: $(BUILD_DIR)/global.o \
+			$(BUILD_DIR)/IndexRange.o \
+			$(BUILD_DIR)/ChrCategory.o \
+			$(BUILD_DIR)/ChrInfo.o \
+			$(BUILD_DIR)/ChrInfoTable.o \
 			$(BUILD_DIR)/Alignment.o \
 			$(BUILD_DIR)/GlobalAppConfig.o \
 			$(BUILD_DIR)/ChrConverter.o \

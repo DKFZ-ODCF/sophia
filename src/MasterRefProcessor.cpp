@@ -190,15 +190,13 @@ namespace sophia {
             // Ignore comment lines.
             if (sophiaLine[0] != '#') {
                 // Parse the chromosome name in the first column of the gzip file.
-                auto chrIndexO =
-                    chrConverter.compressedMrefIndexToIndex(
-                        chrConverter.parseChrAndReturnIndex(
-                            sophiaLine.cbegin(),
-                            sophiaLine.cend(),
-                            '\t'));
+                ChrIndex globalIndex = chrConverter.parseChrAndReturnIndex(
+                    sophiaLine.cbegin(), sophiaLine.cend(), '\t');
+
                 // Ignore chromosomes not in the compressedMref set.
-                if (chrIndexO.has_value()) {
-                    ChrIndex chrIndex = chrIndexO.value();
+                if (chrConverter.isCompressedMrefIndex(globalIndex)) {
+                    CompressedMrefIndex chrIndex =
+                        chrConverter.compressedMrefIndexToIndex(globalIndex);
                     // Note: This instantiation actually parses `sophiaLine`.
                     Breakpoint tmpBp = Breakpoint::parse(sophiaLine, true);
                     fileBps[chrIndex].emplace_back(

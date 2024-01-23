@@ -23,7 +23,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <optional>
 
 
 namespace sophia {
@@ -31,9 +30,15 @@ namespace sophia {
     /** ChrConverter manages information on chromosomes names, sizes, and index positions in
       * data arrays.
       *
-      * This probably needs a redesign. The current situation is just an intermediate step away
-      * from the former completely procedural implementation that heavily leaked implementation
-      * details into the calling code and was highly tuned but very inflexible. */
+      * The concept of compressed master ref (mref) chromosomes is used to separate out a
+      * subset of particularly important chromosomes for which SOPHIA will calculate its
+      * statistics. Note that sophiaMref will allocate a huge vector of the size of the sum
+      * of the lengths of the compressed mref chromosomes (see `MasterRefProcessor` constructor.
+      *
+      * This class also is managing the mapping between all chromosome indices and indices of
+      * the compressed master ref chromosomes (called "all index space" and "compressed master-ref
+      * index space").
+      **/
     class ChrConverter {
 
       public:
@@ -46,17 +51,17 @@ namespace sophia {
         /** Number of chromosomes. */
         virtual ChrIndex nChromosomes() const = 0;
 
-        /** Number of compressed mref chromosomes. */
-        virtual CompressedMrefIndex nChromosomesCompressedMref() const = 0;
-
         /** Map an index position to a chromosome name. */
         virtual ChrName indexToChrName(ChrIndex index) const = 0;
 
-        /** Map an index position to a chromosome name for compressed mref files. */
-        virtual ChrName indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
+        /** Map a chromosome name to an index position. */
+        virtual ChrIndex chrNameToIndex(ChrName chrName) const = 0;
 
-        /** chr1-chr22, chrX, chrY, GL000.+ */
-        virtual bool isPrimary(ChrIndex index) const = 0;
+        /** chr1-chr22 */
+        virtual bool isAutosome(ChrIndex index) const = 0;
+
+        /** chrX, Y, ...*/
+        virtual bool isGonosome(ChrIndex index) const = 0;
 
         /** phix index. */
         virtual bool isTechnical(ChrIndex index) const = 0;
@@ -65,24 +70,37 @@ namespace sophia {
         virtual bool isVirus(ChrIndex index) const = 0;
 
         /** Mitochondrial chromosome index. */
-        virtual bool isExtrachromosal(ChrIndex index) const = 0;
+        virtual bool isExtrachromosomal(ChrIndex index) const = 0;
 
         /** Decoy sequence index. */
         virtual bool isDecoy(ChrIndex index) const = 0;
 
+        /** Chromosomes that are not assigned to a specific position in a chromosome. This
+          * includes unplaced, unlocalized, and random contigs, such as GL000192.1. */
+        virtual bool isUnassigned(ChrIndex index) const = 0;
+
+        /** HLA contigs */
+        virtual bool isHLA(ChrIndex index) const = 0;
+
+        /** ALT contigs */
+        virtual bool isALT(ChrIndex index) const = 0;
+
+        // Methods for working with the subset of compressed master-ref chromosomes.
+
+        /** Number of compressed mref chromosomes. */
+        virtual CompressedMrefIndex nChromosomesCompressedMref() const = 0;
+
+        /** Map an index position to a chromosome name for compressed mref files. */
+        virtual ChrName indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
 
         /** Whether the chromosome index is that of a compressed mref chromosome. */
         virtual bool isCompressedMrefIndex(ChrIndex index) const = 0;
 
-        /** Map the compressed mref index to the uncompressed mref index. */
-        virtual std::optional<ChrIndex>
-        compressedMrefIndexToIndex(CompressedMrefIndex index) const = 0;
+        /** Map from compressed mref index space to all chromosome index space. */
+        virtual ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const = 0;
 
         /** Map compressed mref index to chromosome size. */
         virtual ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const = 0;
-
-        /** Map a chromosome name to an index position. */
-        virtual ChrIndex chrNameToIndex(ChrName chrName) const = 0;
 
         /** Parse chromosome index.
           *

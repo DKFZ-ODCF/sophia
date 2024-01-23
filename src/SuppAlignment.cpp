@@ -148,7 +148,7 @@ SuppAlignment SuppAlignment::parseSamSaTag(string::const_iterator saCbegin,
         STRAND = 2,
         CIGAR = 3,
         MAPQ = 4,
-        NM = 5;
+        NM [[gnu::unused]] = 5;   // not used in this parser and only provided for documentation
 
 	vector<string::const_iterator> fieldBegins = { saCbegin };
 	vector<string::const_iterator> fieldEnds;

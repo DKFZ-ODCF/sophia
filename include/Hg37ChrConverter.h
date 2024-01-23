@@ -23,7 +23,6 @@
 #include "global.h"
 #include <vector>
 #include <string>
-#include <optional>
 
 
 namespace sophia {
@@ -71,8 +70,11 @@ namespace sophia {
         /** Map an index position to a chromosome name for compressed mref files. */
         std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
 
-        /** chr1-chr22, chrX, chrY, GL000.+ */
-        bool isPrimary(ChrIndex index) const;
+        /** chr1-chr22, GL00+ */
+        bool isAutosome(ChrIndex index) const;
+
+        /** chrX, Y, ... */
+        bool isGonosome(ChrIndex index) const;
 
         /** phix index. */
         bool isTechnical(ChrIndex index) const;
@@ -81,16 +83,25 @@ namespace sophia {
         bool isVirus(ChrIndex index) const;
 
         /** Mitochondrial chromosome index. */
-        bool isExtrachromosal(ChrIndex index) const;
+        bool isExtrachromosomal(ChrIndex index) const;
 
         /** Decoy sequence index. */
         bool isDecoy(ChrIndex index) const;
+
+        /** GL00.+ */
+        bool isUnassigned(ChrIndex index) const;
+
+        /** none */
+        bool isALT(ChrIndex index) const;
+
+        /** none */
+        bool isHLA(ChrIndex index) const;
 
         /** Whether the chromosome index is that of a compressed mref chromosome. */
         bool isCompressedMrefIndex(ChrIndex index) const;
 
         /** Map the compressed mref index to the uncompressed mref index. */
-        std::optional<ChrIndex> compressedMrefIndexToIndex(CompressedMrefIndex index) const;
+        ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const;
 
         /** Map compressed mref index to chromosome size. */
         ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const;

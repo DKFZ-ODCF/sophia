@@ -52,9 +52,8 @@ namespace sophia {
     }
 
     const GlobalAppConfig &GlobalAppConfig::getInstance() {
-        if (GlobalAppConfig::instance_ == nullptr) {
+        if (GlobalAppConfig::instance_ == nullptr)
             throw_with_trace(logic_error("GlobalAppConfig not initialized"));
-        }
         return *GlobalAppConfig::instance_;
     }
 

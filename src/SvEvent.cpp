@@ -148,8 +148,8 @@ namespace sophia {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
                               !selectedSa2.isProperPairErrorProne() &&
-                              chrConverter.compressedMrefIndexToIndex(chrIndex1) < 23 &&
-                              chrConverter.compressedMrefIndexToIndex(chrIndex2) < 23;
+                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex1)) &&
+                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex2));
         auto splitSupportThreshold1 =
             (strictNonDecoy && !selectedSa1.isSemiSuspicious() &&
              (mateRatio1 >= 0.6))
@@ -360,8 +360,8 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                              chrConverter.compressedMrefIndexToIndex(chrIndex1) < 23 &&
-                              chrConverter.compressedMrefIndexToIndex(chrIndex2) < 23;
+                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex1)) &&
+                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex2));
         auto splitSupportThreshold =
             (strictNonDecoy && !selectedSa2.isSemiSuspicious() &&
              (mateRatio1 >= 0.66))
@@ -557,8 +557,8 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                              chrConverter.compressedMrefIndexToIndex(chrIndex1) < 23 &&
-                              chrConverter.compressedMrefIndexToIndex(chrIndex2) < 23;
+                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex1)) &&
+                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex2));
         auto splitSupportThreshold =
             (strictNonDecoy && (mateRatio1 >= 0.66) ? 0 : 2);
 
@@ -993,6 +993,7 @@ namespace sophia {
     int
     SvEvent::filterMatchSingle(const BreakpointReduced &bp1,
                                const BreakpointReduced &bp2) {
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         if (suspicious != 0) {
             return suspicious;
         }
@@ -1003,7 +1004,7 @@ namespace sophia {
             return 2;
         }
         if (mrefHits1 > GERMLINEDBLIMIT &&
-            !(chrConverter.isDecoy(bp1.isgetChrIndex()) || chrConverter.isVirus(bp1.getChrIndex()))) {
+            !(chrConverter.isDecoy(bp1.getChrIndex()) || chrConverter.isVirus(bp1.getChrIndex()))) {
             return 171;
         }
         if (mrefHits2 > GERMLINEDBLIMIT &&
@@ -1124,6 +1125,7 @@ namespace sophia {
 
     int
     SvEvent::filterMatchUnknown(const BreakpointReduced &bp1) {
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         if (suspicious != 0) {
             return suspicious;
         }
@@ -1247,8 +1249,8 @@ namespace sophia {
 
     ClonalityStatus
     SvEvent::assessBreakpointClonalityStatus(double clonalityRatioIn,
-                                             const BreakpointReduced &bp1,
-                                             const BreakpointReduced &bp2) const {
+                                             const BreakpointReduced &bp1[[gnu::unused]],
+                                             const BreakpointReduced &bp2[[gnu::unused]]) const {
         if (clonalityRatioIn < CLONALITYLOWTHRESHOLD) {
             if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
                 return EXTREME_SUBCLONAL;
@@ -1273,8 +1275,10 @@ namespace sophia {
 
     ClonalityStatus
     SvEvent::assessBreakpointClonalityStatusSingle(
-        double clonalityRatioIn, const BreakpointReduced &bp1,
-        const BreakpointReduced &bp2) const {
+            double clonalityRatioIn,
+            const BreakpointReduced &bp1 [[gnu::unused]],
+            const BreakpointReduced &bp2 [[gnu::unused]]
+            ) const {
         if (clonalityRatioIn < CLONALITYLOWTHRESHOLD) {
             if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
                 return EXTREME_SUBCLONAL;
@@ -1295,7 +1299,9 @@ namespace sophia {
 
     ClonalityStatus
     SvEvent::assessBreakpointClonalityStatusUnknown(
-        double clonalityRatioIn, const BreakpointReduced &bp1) const {
+            double clonalityRatioIn,
+            const BreakpointReduced &bp1 [[gnu::unused]]
+            ) const {
         if (clonalityRatioIn < CLONALITYLOWTHRESHOLD) {
             if (mrefHits1 > GERMLINEDBLIMIT) {
                 return EXTREME_SUBCLONAL;
@@ -1315,8 +1321,9 @@ namespace sophia {
     }
 
     void
-    SvEvent::assessSvArtifactStatus(const BreakpointReduced &bp1,
-                                    const BreakpointReduced &bp2) {
+    SvEvent::assessSvArtifactStatus(const BreakpointReduced &bp1 [[gnu::unused]],
+                                    const BreakpointReduced &bp2 [[gnu::unused]]
+                                    ) {
         if (artifactRatio1 < ARTIFACTFREQLOWTHRESHOLD &&
             artifactRatio2 < ARTIFACTFREQLOWTHRESHOLD) {
             artifactStatus = CLEAN;

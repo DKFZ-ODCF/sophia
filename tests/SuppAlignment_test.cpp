@@ -4,15 +4,11 @@
 #include "Hg38ChrConverter.h"
 #include "GlobalAppConfig.h"
 #include "SuppAlignment.h"
+#include "Fixtures.h"
 
 namespace sophia {
 
-    TEST(SuppAlignmentTest_ParseSaSupport, BasicAssertions) {
-        try {
-            // TODO Find a way to deal with the singleton, without having to refactor the whole code
-            GlobalAppConfig::init(move(make_unique<Hg38ChrConverter>()));
-        } catch (const std::exception& e) {
-        }
+    TEST_F(Hg38ChrConverterFixture, SuppAlignmentTest_ParseSaSupport) {
 
         const std::string test1 = "chr16:1041693_INV|(8,0,!/0)";
         EXPECT_EQ(SuppAlignment::parseSaSupport(test1).getChrIndex(),

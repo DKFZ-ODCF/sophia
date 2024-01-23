@@ -90,6 +90,12 @@ int main(int argc, char** argv) {
             return 0;
         }
 
+        std::optional<std::string> assemblyNameOpt { };
+        if (inputVariables.count("assemblyname")) {
+            assemblyNameOpt = inputVariables["assemblyname"].as<string>();
+        }
+        setApplicationConfig(assemblyNameOpt);
+
         if (inputVariables.count("defaultreadlength")) {
             defaultReadLength = inputVariables["defaultreadlength"].as<int>();
         } else {
@@ -153,23 +159,6 @@ int main(int argc, char** argv) {
             }
         }
 
-        unique_ptr<ChrConverter> chrConverter;
-        if (!inputVariables.count("assemblyname") ||
-              inputVariables["assemblyname"].as<std::string>() == Hg37ChrConverter::assemblyName) {
-            chrConverter = unique_ptr<Hg37ChrConverter>(new Hg37ChrConverter());
-        } else if (inputVariables["assemblyname"].as<std::string>() == Hg38ChrConverter::assemblyName) {
-            chrConverter = unique_ptr<Hg38ChrConverter>(new Hg38ChrConverter());
-        } else {
-            cerr << "Unknown assembly name " << inputVariables["assemblyname"].as<std::string>()
-                 << ". I know "
-                 << Hg37ChrConverter::assemblyName << " and "
-                 << Hg38ChrConverter::assemblyName << endl;
-            return 1;
-        }
-
-        // Initialize the global application configuration.
-        GlobalAppConfig::init(move(chrConverter));
-
         Alignment::CLIPPEDNUCLEOTIDECOUNTTHRESHOLD = clipSize;
         Alignment::BASEQUALITYTHRESHOLD = baseQuality + 33;
         Alignment::BASEQUALITYTHRESHOLDLOW = baseQualityLow + 33;
@@ -187,7 +176,7 @@ int main(int argc, char** argv) {
 
         return 0;
     } catch (boost::exception &e) {
-        cerr << get_trace(e) << endl;
+        cerr << "Error: " << boost::diagnostic_information(e) << endl;
         return 1;
     } catch (std::exception& e) {
         cerr << "Error: " << e.what() << endl;

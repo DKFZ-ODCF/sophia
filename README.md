@@ -164,7 +164,7 @@ To just build the binaries you can do `make binaries`
 
 ## Building
 
-> Note that `make` will download one file from [StrTk](https://github.com/ArashPartow/strtk). If you want to delete an already downloaded file and download it again, run `make clean-all` before the compilation. See the `Makefile` for details.
+> Note that `make` will download one file from [StrTk](https://github.com/ArashPartow/strtk). Furthermore, `make` will download [rapidcsv](https://github.com/d99kris/rapidcsv) for TSV file parsing. If you want to delete an already downloaded file and download it again, run `make clean-all` before the compilation. See the `Makefile` for details.
 
 ### Dynamic Build
 
