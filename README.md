@@ -1,8 +1,11 @@
 # SOPHIA Tool for Structural Variation Calling
 
-SOPHIA is a Structural Variant(SV) detection algorithm based on the supplementary alignment(SA) concept of the aligner BWA-mem, combined with filters based on expert-knowledge to increase specificity. 
+SOPHIA is a Structural Variant(SV) detection algorithm based on the supplementary alignment(SA) concept of the aligner BWA-MEM, combined with filters based on expert-knowledge to increase specificity. 
 
 Currently, SOPHIA only is optimized for the hg37 assembly of the human genome.
+
+> **NOTE**: We are preparing hg38 support. See the [Changes](#changes) section for details.
+
 It uses a large panel of normals for filtering artifacts (most often due to mapping difficulties) and common SVs in the germline.
 The parameters for filtering results are hand-tuned against the clinical gold standard FISH of V(D)J rearrangements.
 Results from the hand-tuned parameter set were tested against hallmark findings from disease datasets where hallmark SVs were known (CDKN2A in various TCGA datasets, EGFR in TCGA-GBM, GFI1B, MYCN and PRDM6 in ICGC-PEDBRAIN-MB etc.) 
@@ -19,12 +22,14 @@ Sophia is included in the [SophiaWorkflow](https://github.com/DKFZ-ODCF/SophiaWo
 
 ### Citing
 
-You can cite Sophia as follows:
+You can cite the original version (35) of SOPHIA as follows:
 
     Integrative Analysis of Omics Datasets.
     Doctoral dissertation, German Cancer Research Center (DKFZ), Heidelberg.
     Umut Toprak (2019).
     DOI 10.11588/heidok.000274296
+
+If you use the newer versions, please also include a reference to this repository, as the original code was cleaned up and tested for the `hg38` assembly. See [Contributors](CONTRIBUTORS.md).
 
 ### Tools
 
@@ -277,7 +282,7 @@ See `testRunner --help` for details.
 * 35.1.0 (upcoming)
   * Minor: Generic assembly support
     * Added `--assemblyname` option, defaulting to SOPHIA 35.0.0's chromosome converter implementation "classic_hg37" when omitted.
-    > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted. Furthermore, the runtime will be longer than for hg37 and also hg37 runtime has increase slightly (due to class polymorphism).
+    > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted. Furthermore, the runtime will be longer than for classic_hg37 and also classic_hg37 runtime has increase slightly (due to class polymorphism).
   * Minor: Build system
     * Use `make` as build system
     * `Release_*` directories with old build-scripts removed
@@ -285,9 +290,9 @@ See `testRunner --help` for details.
     * Allow development build with `make develop=true`
     * Build `sophiaMref` (no build documentation before)
     * Build `testRunner` for running unit tests
-  * Patch: Code readability improvements, documentation, `.editorconfig` file, and `clang-format` configuration
+  * Patch: A `README.md` file that is worth its name and contains first documentation about the usage of the SOPHIA binaries and input and output files.
   * Patch: Added unit tests.
-  * Patch: A `README.md` file that is worth its name and contains first documentation about the usage of the SOPHIA binaries.
-
+  * Patch: Code readability improvements, documentation, `.editorconfig` file, and `clang-format` configuration
+  
 * 35 (9e3b6ed)
-  * Last version in [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)
+  * Forked from [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)
