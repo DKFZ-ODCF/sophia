@@ -54,7 +54,8 @@ namespace sophia {
 
     template <class E>
     void throw_with_trace(const E &e) {
-        throw boost::enable_error_info(e) << traced(boost::stacktrace::stacktrace());
+        throw boost::enable_error_info(e) <<
+              traced(boost::stacktrace::stacktrace());
     }
 
     void setApplicationConfig(std::optional<std::string> assemblyname);

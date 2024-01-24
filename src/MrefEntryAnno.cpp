@@ -48,16 +48,20 @@ MrefEntryAnno::MrefEntryAnno(const string& mrefEntryIn) :
 			++index;
 			++cit;
 		}
+		try {
 		string saStr { };
-		for (auto i = bpChunkPositions[7] + 1; i < static_cast<int>(mrefEntryIn.length()); ++i) {
-			if (mrefEntryIn[i] == ';') {
-				suppAlignments.emplace_back(saStr);
-				saStr.clear();
-			} else {
-				saStr.push_back(mrefEntryIn[i]);
-			}
+            for (auto i = bpChunkPositions[7] + 1; i < static_cast<int>(mrefEntryIn.length()); ++i) {
+                if (mrefEntryIn[i] == ';') {
+                    suppAlignments.emplace_back(saStr);
+                    saStr.clear();
+                } else {
+                    saStr.push_back(mrefEntryIn[i]);
+                }
+            }
+            suppAlignments.emplace_back(saStr);
+		} catch (DomainError &e) {
+		    throw e << error_info_string("from = " + mrefEntryIn);
 		}
-		suppAlignments.emplace_back(saStr);
 	} else {
 		while (bpChunkPositions.size() < 5) {
 			if (*cit == '\t') {

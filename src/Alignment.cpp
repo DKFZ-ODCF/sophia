@@ -79,10 +79,9 @@ namespace sophia {
                     samLine.cend(),
                     '\t');
             } catch (DomainError &e) {
-                e <<
-                    error_info_string("line = " +
-                                      std::string(next(samLine.cbegin(), samChunkPositions[1] + 1),
-                                                  samLine.cend()));
+                e << error_info_string("line = " +
+                                       std::string(next(samLine.cbegin(), samChunkPositions[1] + 1),
+                                                   samLine.cend()));
                 throw e;
             }
         }

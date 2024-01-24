@@ -77,10 +77,8 @@ namespace sophia {
                 ':',
                 STOP_CHARS);
         } catch (const DomainError &e) {
-            e <<
-                error_info_string("from = " +
-                                  std::string(next(saStrIn.cbegin(), index), saStrIn.cend()));
-            throw e;
+            throw e << error_info_string(
+                  "from = " + std::string(next(saStrIn.cbegin(), index), saStrIn.cend()));
         }
 
         if (chrConverter.isTechnical(chrIndex)) {

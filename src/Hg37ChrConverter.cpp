@@ -456,10 +456,8 @@ namespace sophia {
         ChrIndex result;
         try {
             result = parseChrAndReturnIndex(chrName.begin(), chrName.end(), ' ');
-        } catch (const DomainError &e) {
-            e <<
-                error_info_string("from = " + chrName);
-            throw e;
+        } catch (DomainError &e) {
+           throw e << error_info_string("from = " + chrName);
         }
         return result;
     }
@@ -498,9 +496,9 @@ namespace sophia {
             const std::string &stopCharExt[[gnu::unused]]  // Attribute to remove the warning
             ) const {
         int chrIndex {0};
-        if (start == end) {
+        /* if (start == end) {
             throw_with_trace(DomainError("Chromosome identifier is empty."));
-        } else if (isdigit(*start)) {
+        } else */ if (isdigit(*start)) {
             for (auto chr_cit = start; chr_cit != end && *chr_cit != stopChar; ++chr_cit) {
                 chrIndex = chrIndex * 10 + (*chr_cit - '0');
             }
