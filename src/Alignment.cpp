@@ -190,11 +190,9 @@ namespace sophia {
                         samLine.cend(),
                         '\t');
             } catch (const DomainError &e) {
-                e <<
-                    error_info_string("from = " +
-                                      std::string(next(samLine.cbegin(), 1 + samChunkPositions[5]),
-                                                  samLine.cend()));
-                throw e;
+                throw e << error_info_string(
+                    "from = " + std::string(next(samLine.cbegin(), 1 + samChunkPositions[5]),
+                                            samLine.cend()));
             }
         }
     }

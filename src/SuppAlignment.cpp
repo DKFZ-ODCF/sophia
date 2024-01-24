@@ -289,105 +289,111 @@ namespace sophia {
     };
 
     SuppAlignment SuppAlignment::parseSaSupport(const string& saIn) {
-        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        SuppAlignment result = SuppAlignment();
-
-        // If the last character is a `#` then properPairErrorProne is true.
-        result.properPairErrorProne = saIn.back() == '#';
-
-        auto index = 0;
-
-        // If the string starts with a `|` then encounteredM is true.
-        result.encounteredM = saIn[0] == '|';
-        if (result.encounteredM) {
-            ++index;
-        }
-
-        // Parse chromosome name. The chromosome name will be separated from the position information
-        // by a colon ':' character, but as the chromosome name itself may also contain colons, we
-        // need to anchor first character after the position which is either a `|` or a `(`, and then
-        // track back to the *last* colon.
         try {
-            result.chrIndex = chrConverter.parseChrAndReturnIndex(
-                next(saIn.cbegin(), index),
-                saIn.cend(),
-                ':',
-                STOP_CHARS);
-        } catch (DomainError& e) {
-            e <<
-                error_info_string("from = " + string(next(saIn.cbegin(), index), saIn.cend()));
-            throw e;
-        }
+            const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 
-        // If this is an ignored chromosome, don't bother parsing the rest.
-        if (chrConverter.isTechnical(result.chrIndex)) {
+            SuppAlignment result = SuppAlignment();
+
+            // If the last character is a `#` then properPairErrorProne is true.
+            result.properPairErrorProne = saIn.back() == '#';
+
+            auto index = 0;
+
+            // If the string starts with a `|` then encounteredM is true.
+            result.encounteredM = saIn.at(0) == '|';
+            if (result.encounteredM) {
+                ++index;
+            }
+
+            // Parse chromosome name. The chromosome name will be separated from the position information
+            // by a colon ':' character, but as the chromosome name itself may also contain colons, we
+            // need to anchor first character after the position which is either a `|` or a `(`, and then
+            // track back to the *last* colon.
+            try {
+                result.chrIndex = chrConverter.parseChrAndReturnIndex(
+                    next(saIn.cbegin(), index),
+                    saIn.cend(),
+                    ':',
+                    STOP_CHARS);
+            } catch (DomainError& e) {
+                e <<
+                    error_info_string("from = " + string(next(saIn.cbegin(), index), saIn.cend()));
+                throw e;
+            }
+
+            // If this is an ignored chromosome, don't bother parsing the rest.
+            if (chrConverter.isTechnical(result.chrIndex)) {
+                return result;
+            }
+
+            // else, skip forward to the first colon ':' character. This ':' will be in column 6 or 7,
+            // dependent on the support information there.
+            while (saIn.at(index) != ':') {
+                ++index;
+            }
+            ++index;
+
+            // ... and continue to parse the breakpoint specification, which gives information about the
+            // position, and whether the breakpoint is fuzzy or inverted.
+            for (; saIn.at(index) != '('; ++index) {
+                if (saIn.at(index) == '-') {
+                    result.fuzzy = true;
+                } else if (saIn.at(index) == '_') {
+                    result.inverted = true;
+                    while (saIn.at(index) != '(') {
+                        ++index;
+                    }
+                    break;
+                } else if (saIn.at(index) != '|') {
+                    if (!result.fuzzy) {
+                        result.pos = 10 * result.pos + (saIn.at(index) - '0');
+                    } else {
+                        result.extendedPos = 10 * result.extendedPos + (saIn.at(index) - '0');
+                    }
+                }
+            }
+
+            if (!result.fuzzy) {
+                result.extendedPos = result.pos;
+            }
+            ++index;
+
+            for (; saIn.at(index) != ','; ++index) {
+                result.support = 10 * result.support + (saIn.at(index) - '0');
+            }
+            ++index;
+
+            for (; saIn.at(index) != ','; ++index) {
+                result.secondarySupport = 10 * result.secondarySupport + (saIn.at(index) - '0');
+            }
+
+            ++index;
+            if (saIn.at(index) == '!') {
+                result.suspicious = true;
+                index += 2;
+            } else {
+                for (; saIn.at(index) != '/'; ++index) {
+                    if (saIn.at(index) == '?') {
+                        result.semiSuspicious = true;
+                    } else {
+                        result.mateSupport = 10 * result.mateSupport + (saIn.at(index) - '0');
+                    }
+                }
+                ++index;
+            }
+            for (; saIn.at(index) != ')'; ++index) {
+                result.expectedDiscordants = 10 * result.expectedDiscordants + (saIn.at(index) - '0');
+            }
+
+            result.distant = result.expectedDiscordants > 0 || result.suspicious;
+            bool strictFuzzyCandidate = (result.support + result.secondarySupport) < 3;
+            result.strictFuzzy = result.fuzzy || strictFuzzyCandidate;
+
             return result;
+        } catch (out_of_range& e) {
+            throw boost::enable_error_info(e) <<
+                error_info_string("from = " + saIn);
         }
-
-        // else, skip forward to the first colon ':' character. This ':' will be in column 6 or 7,
-        // dependent on the support information there.
-        while (saIn[index] != ':') {
-            ++index;
-        }
-        ++index;
-
-        // ... and continue to parse the breakpoint specification, which gives information about the
-        // position, and whether the breakpoint is fuzzy or inverted.
-        for (; saIn[index] != '('; ++index) {
-            if (saIn[index] == '-') {
-                result.fuzzy = true;
-            } else if (saIn[index] == '_') {
-                result.inverted = true;
-                while (saIn[index] != '(') {
-                    ++index;
-                }
-                break;
-            } else if (saIn[index] != '|') {
-                if (!result.fuzzy) {
-                    result.pos = 10 * result.pos + (saIn[index] - '0');
-                } else {
-                    result.extendedPos = 10 * result.extendedPos + (saIn[index] - '0');
-                }
-            }
-        }
-
-        if (!result.fuzzy) {
-            result.extendedPos = result.pos;
-        }
-        ++index;
-
-        for (; saIn[index] != ','; ++index) {
-            result.support = 10 * result.support + (saIn[index] - '0');
-        }
-        ++index;
-
-        for (; saIn[index] != ','; ++index) {
-            result.secondarySupport = 10 * result.secondarySupport + (saIn[index] - '0');
-        }
-
-        ++index;
-        if (saIn[index] == '!') {
-            result.suspicious = true;
-            index += 2;
-        } else {
-            for (; saIn[index] != '/'; ++index) {
-                if (saIn[index] == '?') {
-                    result.semiSuspicious = true;
-                } else {
-                    result.mateSupport = 10 * result.mateSupport + (saIn[index] - '0');
-                }
-            }
-            ++index;
-        }
-        for (; saIn[index] != ')'; ++index) {
-            result.expectedDiscordants = 10 * result.expectedDiscordants + (saIn[index] - '0');
-        }
-
-        result.distant = result.expectedDiscordants > 0 || result.suspicious;
-
-        result.strictFuzzy = result.fuzzy || (result.support + result.secondarySupport) < 3;
-
-        return result;
     }
 
     void SuppAlignment::finalizeSupportingIndices() {

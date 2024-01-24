@@ -47,11 +47,23 @@ namespace sophia {
 
     }
 
-    void MrefEntry::addEntry(BreakpointReduced& tmpBreakpoint, int fileIndex) {
+    void MrefEntry::addEntry(BreakpointReduced& tmpBreakpoint,
+                             int fileIndex) {
         pos = tmpBreakpoint.getPos();
-        auto artifactBreakTotal = tmpBreakpoint.getLowQualBreaksSoft() + tmpBreakpoint.getLowQualBreaksHard() + tmpBreakpoint.getRepetitiveOverhangBreaks();
-        auto eventTotal = tmpBreakpoint.getPairedBreaksSoft() + tmpBreakpoint.getPairedBreaksHard() + tmpBreakpoint.getUnpairedBreaksSoft() + tmpBreakpoint.getUnpairedBreaksHard() + tmpBreakpoint.getBreaksShortIndel();
-        auto breakTotal = eventTotal + artifactBreakTotal;
+        auto artifactBreakTotal =
+            tmpBreakpoint.getLowQualBreaksSoft() +
+            tmpBreakpoint.getLowQualBreaksHard() +
+            tmpBreakpoint.getRepetitiveOverhangBreaks();
+        auto eventTotal =
+            tmpBreakpoint.getPairedBreaksSoft() +
+            tmpBreakpoint.getPairedBreaksHard() +
+            tmpBreakpoint.getUnpairedBreaksSoft() +
+            tmpBreakpoint.getUnpairedBreaksHard() +
+            tmpBreakpoint.getBreaksShortIndel();
+        auto breakTotal =
+            eventTotal +
+            artifactBreakTotal;
+
         if (breakTotal < 200) {
             const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
             for (auto saPtr : tmpBreakpoint.getSupplementsPtr()) {

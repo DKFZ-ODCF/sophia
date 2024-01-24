@@ -79,7 +79,8 @@ namespace sophia {
         static int DEFAULTREADLENGTH;
 
         /** Print the supplementary alignment information as displayed in columns 6 and 7 of the
-          * breakpoints BED format. */
+          * breakpoints BED format. This will be parsed by
+          * `SuppAlignmentAnno::SuppAlignmentAnno(const string&)`. */
         string print() const;
 
         void extendSuppAlignment(int minPos, int maxPos) {
