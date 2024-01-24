@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
             { make_unique<boost::iostreams::filtering_istream>() };
         mrefGzHandle->push(boost::iostreams::gzip_decompressor());
         mrefGzHandle->push(*mrefInputHandle);
-        cerr << "m\n";
+//        cerr << "m\n";
         string line { };
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
