@@ -248,8 +248,7 @@ namespace sophia {
         }
         germline =
             (germlineStatus1 || germlineStatus2) &&
-            !((selectedSa1.getSupport() + selectedSa1.getSecondarySupport()) >
-                  200 &&
+            !((selectedSa1.getSupport() + selectedSa1.getSecondarySupport()) > 200 &&
               (selectedSa1.getSupport() + selectedSa2.getSecondarySupport()) > 200);
 
         assessSvArtifactStatus(bp1In, bp2In);

@@ -226,6 +226,7 @@ namespace sophia {
             if (!chrConverter.isTechnical(alignment.getMateChrIndex()) &&
                 !(alignment.getMateChrIndex() == 2 &&
                   (alignment.getMatePos() / 10000 == 3314))) {
+                  // TODO What is this? Is this a special case in the hg37 assembly?
                 if (PROPERPARIRCOMPENSATIONMODE) {
                     discordantAlignmentCandidatesPool.emplace_back(
                         alignment.getStartPos(), alignment.getEndPos(),

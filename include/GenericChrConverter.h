@@ -21,7 +21,6 @@
 
 #include "ChrConverter.h"
 #include "global.h"
-#include "IndexRange.h"
 #include "ChrCategory.h"
 #include "ChrInfo.h"
 #include "ChrInfoTable.h"

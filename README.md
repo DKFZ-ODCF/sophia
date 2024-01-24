@@ -158,9 +158,10 @@ For instance `/path/to/somePid1_35.1_bps.tsv.gz` would be a valid filename for t
 The only dependency is Boost 1.82.0 (currently) and google-test 1.14.0 for testing. E.g. you can do
 
 ```bash
-conda create -n sophia boost=1.82.0 gtest=1.14.0
+conda create -n sophia boost=1.82.0 gtest=1.14.0 backtrace=20220708 
 ```
 
+`backtrace` is used to report useful stack traces in case of a crashes
 `gtest` is only needed, if you run the tests, which is, however, the default if compile with `make` or `make all`.
 To just build the binaries you can do `make binaries`
 
@@ -276,16 +277,17 @@ See `testRunner --help` for details.
 * 35.1.0 (upcoming)
   * Minor: Generic assembly support
     * Added `--assemblyname` option, defaulting to SOPHIA 35.0.0's chromosome converter implementation "classic_hg37" when omitted.
-    > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted. Furthermore, the runtime will be longer than for hg37 and also hg37 runtime has increase.
+    > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted. Furthermore, the runtime will be longer than for hg37 and also hg37 runtime has increase slightly (due to class polymorphism).
   * Minor: Build system
-    * Use `make` as build system. `Release_*` directories are removed
+    * Use `make` as build system
+    * `Release_*` directories with old build-scripts removed
     * Allow static building with `make static=true boost_lib_dir=/path/to/boost/lib`
     * Allow development build with `make develop=true`
-    * Build `sophiaMref`
+    * Build `sophiaMref` (no build documentation before)
     * Build `testRunner` for running unit tests
   * Patch: Code readability improvements, documentation, `.editorconfig` file, and `clang-format` configuration
-  * Patch: Added few unit tests.
-  * Patch: A `README.md` file that is worth its name and contains first documentation about the usage of the SOPHIA tools.
+  * Patch: Added unit tests.
+  * Patch: A `README.md` file that is worth its name and contains first documentation about the usage of the SOPHIA binaries.
 
-* 9e3b6ed
+* 35 (9e3b6ed)
   * Last version in [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)

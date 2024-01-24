@@ -7,9 +7,9 @@ SRC_DIR = ./src
 TESTS_DIR = ./tests
 
 # Compiler flags
-LIBRARY_FLAGS := -lz -lm -lrt -lboost_system -lboost_iostreams -lboost_program_options -ldl
+LIBRARY_FLAGS := -lz -lm -lrt -lboost_system -lboost_iostreams -lboost_program_options -ldl -lbacktrace -lboost_stacktrace_backtrace -DBOOST_STACKTRACE_USE_BACKTRACE
 LDFLAGS := $(LDFLAGS) -flto=auto -rdynamic -no-pie
-CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++20 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes
+CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++20 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes -lbacktrace -lboost_stacktrace_backtrace -DBOOST_STACKTRACE_USE_BACKTRACE
 
 ifeq ($(static),true)
 	LD_BEGIN_FLAGS := -L$(boost_lib_dir)
@@ -89,7 +89,6 @@ test: testRunner
 $(BUILD_DIR)/sophia.o: $(SRC_DIR)/sophia.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 sophia: $(BUILD_DIR)/global.o \
-		$(BUILD_DIR)/IndexRange.o \
 		$(BUILD_DIR)/ChrCategory.o \
 		$(BUILD_DIR)/ChrInfo.o \
 		$(BUILD_DIR)/ChrInfoTable.o \
@@ -111,7 +110,6 @@ sophia: $(BUILD_DIR)/global.o \
 $(BUILD_DIR)/sophiaAnnotate.o: $(SRC_DIR)/sophiaAnnotate.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 sophiaAnnotate: $(BUILD_DIR)/global.o \
-				$(BUILD_DIR)/IndexRange.o \
 				$(BUILD_DIR)/ChrCategory.o \
 				$(BUILD_DIR)/ChrInfo.o \
 				$(BUILD_DIR)/ChrInfoTable.o \
@@ -141,7 +139,6 @@ sophiaAnnotate: $(BUILD_DIR)/global.o \
 $(BUILD_DIR)/sophiaMref.o: $(SRC_DIR)/sophiaMref.cpp Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 sophiaMref: $(BUILD_DIR)/global.o \
-			$(BUILD_DIR)/IndexRange.o \
 			$(BUILD_DIR)/ChrCategory.o \
 			$(BUILD_DIR)/ChrInfo.o \
 			$(BUILD_DIR)/ChrInfoTable.o \
