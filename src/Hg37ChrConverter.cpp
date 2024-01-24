@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <boost/exception/all.hpp>
 
 
 namespace sophia {
@@ -452,7 +453,15 @@ namespace sophia {
 
     ChrIndex
     Hg37ChrConverter::chrNameToIndex(ChrName chrName) const {
-        return parseChrAndReturnIndex(chrName.begin(), chrName.end(), ' ');
+        ChrIndex result;
+        try {
+            result = parseChrAndReturnIndex(chrName.begin(), chrName.end(), ' ');
+        } catch (const DomainError &e) {
+            e <<
+                error_info_string("from = " + chrName);
+            throw e;
+        }
+        return result;
     }
 
     /* This is parsing code. It takes a position in a character stream, and translates the
@@ -490,7 +499,7 @@ namespace sophia {
             ) const {
         int chrIndex {0};
         if (start == end) {
-            throw_with_trace(std::domain_error("Chromosome identifier is empty."));
+            throw_with_trace(DomainError("Chromosome identifier is empty."));
         } else if (isdigit(*start)) {
             for (auto chr_cit = start; chr_cit != end && *chr_cit != stopChar; ++chr_cit) {
                 chrIndex = chrIndex * 10 + (*chr_cit - '0');
@@ -517,7 +526,7 @@ namespace sophia {
                         chrIndex = hg37::mtIndex;
                     } else {
                         throw_with_trace(
-                            std::domain_error("Chromosome identifier with invalid prefix 'M" +
+                            DomainError("Chromosome identifier with invalid prefix 'M" +
                                               std::to_string(*start) + "'."));
                     }
                     break;
@@ -528,7 +537,7 @@ namespace sophia {
                     chrIndex = hg37::phixIndex;
                     break;
                 default:
-                    throw_with_trace(std::domain_error("Chromosome identifier with invalid prefix '"
+                    throw_with_trace(DomainError("Chromosome identifier with invalid prefix '"
                                                        + std::to_string(*start) + "'."));
             }
         }

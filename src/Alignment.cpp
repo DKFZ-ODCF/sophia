@@ -31,6 +31,7 @@
 #include "strtk-wrap.h"
 #include <bitset>
 #include <iostream>
+#include <boost/exception/all.hpp>
 
 namespace sophia {
 
@@ -72,10 +73,18 @@ namespace sophia {
                 }
                 ++index;
             }
-            chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
-                next(samLine.cbegin(), samChunkPositions[1] + 1),
-                samLine.cend(),
-                '\t');
+            try {
+                chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
+                    next(samLine.cbegin(), samChunkPositions[1] + 1),
+                    samLine.cend(),
+                    '\t');
+            } catch (DomainError &e) {
+                e <<
+                    error_info_string("line = " +
+                                      std::string(next(samLine.cbegin(), samChunkPositions[1] + 1),
+                                                  samLine.cend()));
+                throw e;
+            }
         }
     }
 
@@ -175,11 +184,19 @@ namespace sophia {
         if (samLine[1 + samChunkPositions[5]] == '=') {
             mateChrIndex = chrIndex;
         } else {
-            mateChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-                parseChrAndReturnIndex(
-                    next(samLine.cbegin(), 1 + samChunkPositions[5]),
-                    samLine.cend(),
-                    '\t');
+            try {
+                mateChrIndex = GlobalAppConfig::getInstance().getChrConverter().
+                    parseChrAndReturnIndex(
+                        next(samLine.cbegin(), 1 + samChunkPositions[5]),
+                        samLine.cend(),
+                        '\t');
+            } catch (const DomainError &e) {
+                e <<
+                    error_info_string("from = " +
+                                      std::string(next(samLine.cbegin(), 1 + samChunkPositions[5]),
+                                                  samLine.cend()));
+                throw e;
+            }
         }
     }
 

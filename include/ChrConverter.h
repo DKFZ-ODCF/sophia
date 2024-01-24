@@ -124,6 +124,8 @@ namespace sophia {
           * separating out the `|` separator (stopCharExt), and then finding the last `:`
           * separator (stopChar).
           *
+          * If no chromosome name can be parsed, throws a std::domain_error enriched with
+          * boost::exception information.
           **/
         virtual ChrIndex
         parseChrAndReturnIndex(std::string::const_iterator startIt,

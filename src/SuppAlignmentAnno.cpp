@@ -22,14 +22,15 @@
  *      LICENSE: GPL
  */
 
-#include "SuppAlignmentAnno.h"
-#include "GlobalAppConfig.h"
-#include "strtk-wrap.h"
 #include "global.h"
+#include "strtk-wrap.h"
+#include "GlobalAppConfig.h"
+#include "SuppAlignmentAnno.h"
 
 #include <algorithm>
 #include <cmath>
 #include <vector>
+#include <boost/exception/all.hpp>
 
 
 namespace sophia {
@@ -69,11 +70,18 @@ namespace sophia {
         }
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 
-        chrIndex = chrConverter.parseChrAndReturnIndex(
-            next(saStrIn.cbegin(), index),
-            saStrIn.cend(),
-            ':',
-            STOP_CHARS);
+        try {
+            chrIndex = chrConverter.parseChrAndReturnIndex(
+                next(saStrIn.cbegin(), index),
+                saStrIn.cend(),
+                ':',
+                STOP_CHARS);
+        } catch (const DomainError &e) {
+            e <<
+                error_info_string("from = " +
+                                  std::string(next(saStrIn.cbegin(), index), saStrIn.cend()));
+            throw e;
+        }
 
         if (chrConverter.isTechnical(chrIndex)) {
             return;

@@ -28,6 +28,7 @@
 #include "global.h"
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/exception/all.hpp>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -1177,7 +1178,14 @@ namespace sophia {
 
         // Column 1: chrIndex. 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        result.chrIndex = chrConverter.parseChrAndReturnIndex(bpIn.cbegin(), bpIn.cend(), '\t');
+        try {
+            result.chrIndex = chrConverter.parseChrAndReturnIndex(bpIn.cbegin(), bpIn.cend(), '\t');
+        } catch (DomainError &e) {
+            e <<
+                error_info_string("from = " +
+                                  std::string(bpIn.cbegin(), bpIn.cend()));
+            throw e;
+        }
 
         // Column 2: start position
         for (auto i = startStart; i < startEnd; ++i) {

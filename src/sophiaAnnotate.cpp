@@ -13,6 +13,7 @@
 #include <boost/program_options.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/exception/all.hpp>
 #include "BreakpointReduced.h"
 #include "AnnotationProcessor.h"
 #include "SuppAlignment.h"
@@ -190,8 +191,14 @@ int main(int argc, char** argv) {
             if (line.front() == '#') {
                 continue;
             };
-            ChrIndex globalIndex =
-                chrConverter.parseChrAndReturnIndex(line.cbegin(), line.cend(), '\t');
+            ChrIndex globalIndex;
+            try {
+                globalIndex = chrConverter.parseChrAndReturnIndex(line.cbegin(), line.cend(), '\t');
+            } catch (const DomainError &e) {
+                e <<
+                    error_info_string("line = " + line);
+                throw e;
+            }
             CompressedMrefIndex chrIndex;
             if (!chrConverter.isCompressedMrefIndex(globalIndex)) {
                 continue;

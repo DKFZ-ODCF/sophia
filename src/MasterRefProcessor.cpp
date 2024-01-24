@@ -29,6 +29,7 @@
 #include <MasterRefProcessor.h>
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/exception/all.hpp>
 #include <chrono>
 #include <cmath>
 #include <iostream>
@@ -190,8 +191,15 @@ namespace sophia {
             // Ignore comment lines.
             if (sophiaLine[0] != '#') {
                 // Parse the chromosome name in the first column of the gzip file.
-                ChrIndex globalIndex = chrConverter.parseChrAndReturnIndex(
-                    sophiaLine.cbegin(), sophiaLine.cend(), '\t');
+                ChrIndex globalIndex;
+                try {
+                    globalIndex = chrConverter.parseChrAndReturnIndex(
+                        sophiaLine.cbegin(), sophiaLine.cend(), '\t');
+                } catch (const DomainError &e) {
+                    e <<
+                        error_info_string("file = " + gzPath + ", line = " + sophiaLine);
+                    throw e;
+                }
 
                 // Ignore chromosomes not in the compressedMref set.
                 if (chrConverter.isCompressedMrefIndex(globalIndex)) {

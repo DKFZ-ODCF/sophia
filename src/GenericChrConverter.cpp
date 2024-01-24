@@ -88,7 +88,7 @@ namespace sophia {
         try {
             result = allChromosomeLookup.at(chrName);
         } catch (std::out_of_range &e) {
-            throw_with_trace(std::domain_error("Chromosome name not found: '" + chrName + "'"));
+            throw_with_trace(DomainError("Chromosome name not found: '" + chrName + "'"));
         }
         return result;
     }
@@ -162,7 +162,7 @@ namespace sophia {
         // using/typedef declarations, which are not type-checked!), then this should be removed.
         // TODO Remove when switching to typed ChrIndex and CompressedMrefIndex.
         if (!chrInfoTable.getChrInfos()[result].isCompressedMref())
-            throw_with_trace(std::domain_error(
+            throw_with_trace(DomainError(
                 "Compressed mref index does not map back to a compressed mref chromosome."));
         return result;
     }
@@ -252,9 +252,9 @@ namespace sophia {
     }
 
     ChrIndex GenericChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
-                                                      std::string::const_iterator endIt,
-                                                      char stopChar,
-                                                      const std::string &stopCharsExt) const {
+                                                         std::string::const_iterator endIt,
+                                                         char stopChar,
+                                                         const std::string &stopCharsExt) const {
         ChrName chrName = parseChr(startIt, endIt, stopChar, stopCharsExt);
 
         // Map to ChrIndex and return it, of if the chromosome is not registered, give a helpful
@@ -262,9 +262,8 @@ namespace sophia {
         try {
             return allChromosomeLookup.at(chrName);
         } catch (std::out_of_range& e) {
-            throw_with_trace(std::domain_error(
-                "Chromosome name not found: '" + chrName + "'. "
-                "Parsed from '" + std::string(startIt, endIt) + "'."));
+            throw_with_trace(DomainError(
+                "Chromosome name not found: '" + chrName));
         }
         // Just to get rid of a warning.
         return std::numeric_limits<ChrIndex>::max();

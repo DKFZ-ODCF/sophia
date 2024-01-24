@@ -31,6 +31,16 @@
 
 namespace sophia {
 
+    // Enrich boost::exceptions with additional std::string information
+    using error_info_string = boost::error_info<struct tag_string, std::string>;
+
+    class DomainError :
+            public virtual boost::exception,
+            public virtual std::domain_error {
+      public:
+        DomainError(const std::string &msg) : std::domain_error(msg) {}
+    };
+
     // These two are only to make the code clearer, but are not type checked. There are no opaque
     // or strongly type-checked type-"aliases" in C++17. A type-safe solution would use classes.
     using ChrName = std::string;
