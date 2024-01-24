@@ -10,12 +10,10 @@ It uses a large panel of normals for filtering artifacts (most often due to mapp
 The parameters for filtering results are hand-tuned against the clinical gold standard FISH of V(D)J rearrangements.
 Results from the hand-tuned parameter set were tested against hallmark findings from disease datasets where hallmark SVs were known (CDKN2A in various TCGA datasets, EGFR in TCGA-GBM, GFI1B, MYCN and PRDM6 in ICGC-PEDBRAIN-MB etc.) 
 
-For a detailed description of the algorithm, please refer to Umut Topraks's dissertation at https://doi.org/10.11588/heidok.00027429, in particular chapter 2. Section 2.2.1 describes the method in more details.
+For a detailed description of the algorithm, please refer to [Umut Topraks's dissertation](https://doi.org/10.11588/heidok.00027429), in particular chapter 2. Section 2.2.1 describes the method in more details.
 
 SOPHIA is a very fast and resource-light algorithm. 
 It uses 2GB RAM, 2 CPU cores and runs in ~3.5 hours for 50x coverage WGS, and can detect variants with a single pass of the input BAM files. No local assembly is done.
-
-> This is a fork of the original [SOPHIA](https://bitbucket.org/utoprak/sophia/src/master/) bitbucket repository.
 
 Sophia is included in the [SophiaWorkflow](https://github.com/DKFZ-ODCF/SophiaWorkflow) that uses the [Roddy Workflow Management Systems](https://github.com/TheRoddyWMS/Roddy).
 
@@ -29,7 +27,10 @@ You can cite the original version (35) of SOPHIA as follows:
     Umut Toprak (2019).
     DOI 10.11588/heidok.000274296
 
-If you use the newer versions, please also include a reference to this repository, as the original code was cleaned up and tested for the `hg38` assembly. See [Contributors](CONTRIBUTORS.md).
+The code for the original version 35 can be found in the old [SOPHIA repository](https://bitbucket.org/utoprak/sophia/src/master/) bitbucket repository. 
+
+The code here is a fork of that repository. If you use the newer versions here, please also include a reference to this repository in your citation -- in particular if you use SOPHIA for any other reference genome that the [1000 genomes reference](ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
+). The original code was cleaned up and tested for the `hg38` assembly. See [Contributors](CONTRIBUTORS.md).
 
 ### Tools
 
@@ -63,7 +64,7 @@ samtools view -F 0x600 -f 0x001 /yourPositionSorted.bam \
 A run on a typical Illumina X10 sample with 30x coverage takes about 5 GB of memory, 2 cores.
 In extreme cases (like with chromothripsis) the runtime can jump to 120 hours, but usually is much shorter.
 
-Note that currently only very specific genome references/assemblies for hg37 supported.
+Note that currently only a very specific genome reference/assembly for is hg37 supported.
 Please have a look at the [Hg37ChrConverter.cpp](src/Hg37ChrConverter.cpp) file, in which the sets of allowed chromosome names for "classic_hg37" is hard-coded.
 
 The output is a BED file, which means the start and end positions are 0-based, and left-inclusive, right-exclusive. The 8 columns are:
@@ -126,7 +127,7 @@ sophiaAnnotate \
 #### `sophiaMref` Tool
 
 The `sophiaMref` tool is used to create a reference file that can be used by `sophiaAnnotate` for annotating SVs with gene information.
-Usually, you will only need to run it, if you adapt SOPHIA to a new genome assembly.
+Usually, you will only need to run `sophiaMref`, if you adapt SOPHIA to a new genome assembly.
 
 `sophiaMref` processes a list of gzipped BED files that were generated with the `sophia` tool.
 From these it generates a reference that can be used by `sophiaAnnotate` for annotating structural variants with gene information. 
@@ -148,7 +149,7 @@ The file produced by `sophiaMref` is a BED file with the following columns (see 
 
 The "fileIndices" are the 0-based index into the list of gzipped control-BED input files given to `sophiaMref`.
 
-The artifacts ratios are tracked in the moment, but not printed.
+Currently, the artifacts ratios are tracked, but not printed.
 Files get an artifacts ratio only if a number of conditions are met (undocumented; see `MrefEntry::addEntry` for details).
 
 Note that `sophiaMref` uses a lot of memory (e.g. 400 GB is a safe choice for human assembly), but usually will be only used for generating the reference files for a new genome assembly (which, currently, are hardcoded anyway).
@@ -158,55 +159,75 @@ The `$version` is the value provided by the `--version` parameter that is only u
 For instance `/path/to/somePid1_35.1_bps.tsv.gz` would be a valid filename for the version `35.1` and the extracted PID will be `somePid`.
 
 
-## Runtime Dependencies
+## Dependencies
 
-The only dependency is Boost 1.82.0 (currently) and google-test 1.14.0 for testing. E.g. you can do
+If you built SOPHIA with dynamic libraries, the some libraries are runtime requirements, namely:
+
+  * Boost 1.82.0
+  * libbacktrace 20220708
+  * gtest 1.14.0
+  * rapidcsv 8.0.0
+  * strtk 0.6.0
+
+These may be runtime dependencies, if you choose a dynamic build.
+The static build creates self-contained binaries that do not have any runtime dependencies.
+
+You can install all dependencies for the dynamic build with [Conda](https://docs.conda.io/):
 
 ```bash
-conda create -n sophia boost=1.82.0 gtest=1.14.0 backtrace=20220708 
+conda create -n sophia gxx_linux-64=13 boost=1.82.0 gtest=1.14.0 backtrace=20220708
 ```
-
-`backtrace` is used to report useful stack traces in case of a crashes
-`gtest` is only needed, if you run the tests, which is, however, the default if compile with `make` or `make all`.
-To just build the binaries you can do `make binaries`
 
 ## Building
 
-> Note that `make` will download one file from [StrTk](https://github.com/ArashPartow/strtk). Furthermore, `make` will download [rapidcsv](https://github.com/d99kris/rapidcsv) for TSV file parsing. If you want to delete an already downloaded file and download it again, run `make clean-all` before the compilation. See the `Makefile` for details.
+> Note that `make` will download [StrTk](https://github.com/ArashPartow/strtk) for string processing and [rapidcsv](https://github.com/d99kris/rapidcsv) for TSV file parsing. If you want to delete an already downloaded file and download it again, run `make clean-all` before the compilation. See the `Makefile` for details.
 
 ### Dynamic Build
 
-With [Conda](https://docs.conda.io/) you can do
+For compilation you additionally need the g++ compiler. So extend the Conda environment a bit:
 
 ```bash
-conda create -n sophia gxx_linux-64=13 boost=1.82.0 gtest=1.14.0
+conda create -n sophia gxx_linux-64=13 boost=1.82.0 gtest=1.14.0 backtrace=20220708
 ```
 
-to create an environment to build the SOPHIA binaries.
-
-To build you need to do
+Then you can do
 
 ```bash
 source activate sophia
-make -j 4
+make -j 4 all
 ```
 
+This will also run all unit tests.
 The binaries will be located in the top-level directory.
-
 
 ### Static Build
 
-If you want to compile statically you need to install glibc and boost static libraries. Conda does not provide a statically compiled version of boost, though. Please refer to the [boost documentation]() for detailed instructions or in case of problems.
+Static building produced 100% self-contained binaries that you can copy to any compatible OS independent of which libraries are installed there.
 
-Shortly, to install boost statically (here without installing it system-wide) you need to do
+For static building all dependencies need to be available as static libraries (`.a` files). 
+Specifically, libz, libm, glibc, and libstdc++ need to be available as static libraries. 
+Fortunately, static versions of these libraries are installed by Conda.
+You can use the same build environment as for the dynamic build. 
+
+The only complications are the gtest library and the Boost libraries, both of which are not available as static builds from Conda.
+
+The gtest library is only used for testing, and the `testRunner` binary is never build statically.
+
+To install boost statically (here without installing it system-wide) you need to do the following:
 
 ```bash
+# Download boost
+wget https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.tar.bz2
+tar -xjf boost_1_82_0.tar.bz2
+
+# Build b2
+cd boost_1_82_0
 ./bootstrap.sh --prefix=build/
+
+# Build boost
 ./b2 --prefix=build/ link=static runtime-link=static cxxflags="-std=c++11 -fPIC"
 boost_lib_dir=$PWD/stage/lib
 ```
-
-> NOTE: This requires that you have a C++11-compatible compiler installed.
 
 After that you can do:
 
@@ -226,14 +247,39 @@ cd "$repoRoot"
 make -j 4 static=true boost_lib_dir=$boost_lib_dir develop=true all
 ```
 
-#### Testing Assemblies
+### Running the tests
 
-There is a new `GenericChrConverter` to handle arbitrary assemblies.
-For development, different assemblies can be defined by adding `$assemblyName.tsv` files into the `resources/` directory.
+Currently, there are only very few tests that were added to the legacy code. To run them do
 
-> **NOTE**: For assembly name "classic_hg37" the behaviour of SOPHIA 35.0.0 is used. This is also the default if the `--assemblyname` parameter is omitted.
+```bash
+make test develop=true boost_lib_dir=$boost_lib_dir
+```
 
-> **WARNING**: No mechanism to allow this for production has yet been implemented. This is a development feature only! The `GenericChrConverter` implementation is also less performant (yet) than the "classic_hg37" `Hg37ChrConverter`.
+This will create a `./testRunner` binary in the root directory and execute it.
+Note that the `testRunner` is never linked statically.
+It uses the `libgtest_main.so` library that supports a number of command line options.
+See `testRunner --help` for details.
+
+
+## Reference Genomes / Assemblies
+
+### "classic_hg37"
+
+The 35 version of SOPHIA was extensively tested on the [1000 genomes reference](ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz) with a [phix](https://www.ncbi.nlm.nih.gov/nuccore/NC_001422.1) sequence added.
+
+The original code logic for the "classic_hg37" is still available with the option `--assemblyname classic_hg37`.
+"classic_hg37" is also the default if the `--assemblyname` option is omitted.
+
+Please have a look at the [resources/hg37.tsv](resources/hg37.tsv) file for a compilation of chromosome names and parameters used for that assembly.
+Note however, that this specific file will not be used if you use the `--assemblyname classic_hg37` option, because the "classic_hg37" has all these information hardcoded.
+
+### "hg38" and others
+
+Since version 35.1.0 SOPHIA supports other assemblies than "classic_hg37".
+Remember that because SOPHIA needs to map chromosome names, the exact names of the chromosomes are part of the notion of reference/assembly.
+With any other `$assemblyName` value for the `--assemblyname` parameter than "classic_hg37", the value will be composed to a filename `resources/$assemblyName.tsv`.
+
+> **WARNING**: This is a development feature only. Currently, the `resources/` directory has to reside in the execution directory!
 
 The `$assemblyName.tsv` file must be a TSV-separated with 4 columns and a header line with the following fields (names must match exactly):
   * `chromosome`: The chromosome name, which must **not** contain the following characters, because these characters are used as separators:
@@ -260,22 +306,10 @@ The `$assemblyName.tsv` file must be a TSV-separated with 4 columns and a header
     * `alt`: ALT contigs
     * `hla`: HLA contigs
 
-> **NOTE**: The fact that these classes exist does not mean that they are used in the code.
-If you want to know more then, currently, the only documentation of we can offer you for SOPHIA is the source code itself.
+    > **NOTE**: The fact that these "categories" exist does not mean that they are used in the code.
+If you want to know more then, currently, the only documentation of we can offer you for SOPHIA is the source code itself. In the future, these categories may also be removed or combined.
 
 
-#### Running the tests
-
-Currently, there are only very few tests that were added to the legacy code. To run them do
-
-```bash
-make test develop=true boost_lib_dir=$boost_lib_dir
-```
-
-This will create a `./testRunner` binary in the root directory and execute it.
-Note that the `testRunner` is never linked statically.
-It uses the `libgtest_main.so` library that supports a number of command line options.
-See `testRunner --help` for details.
 
 ## Changes
 
