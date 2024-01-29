@@ -93,8 +93,11 @@ namespace sophia {
         /** Map an index position to a chromosome name for compressed mref files. */
         virtual ChrName indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
 
+        /** Map an index from the global index-space to the compressed mref index-space. */
+        virtual CompressedMrefIndex indexToCompressedMrefIndex(ChrIndex index) const = 0;
+
         /** Whether the chromosome index is that of a compressed mref chromosome. */
-        virtual bool isCompressedMrefIndex(ChrIndex index) const = 0;
+        virtual bool isCompressedMref(ChrIndex index) const = 0;
 
         /** Map from compressed mref index space to all chromosome index space. */
         virtual ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const = 0;

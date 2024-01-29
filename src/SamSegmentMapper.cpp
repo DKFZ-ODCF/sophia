@@ -50,7 +50,7 @@ namespace sophia {
         while (true) {
             auto alignment = make_shared<Alignment>();
 
-            if (!chrConverter.isCompressedMrefIndex(alignment->getChrIndex())) {
+            if (!chrConverter.isCompressedMref(alignment->getChrIndex())) {
                 continue;
             }
 

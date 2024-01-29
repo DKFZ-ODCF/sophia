@@ -98,10 +98,13 @@ namespace sophia {
         bool isHLA(ChrIndex index) const;
 
         /** Whether the chromosome index is that of a compressed mref chromosome. */
-        bool isCompressedMrefIndex(ChrIndex index) const;
+        bool isCompressedMref(ChrIndex index) const;
 
         /** Map the compressed mref index to the uncompressed mref index. */
         ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const;
+
+        /** Map an index from the global index-space to the compressed mref index-space. */
+        CompressedMrefIndex indexToCompressedMrefIndex(ChrIndex index) const;
 
         /** Map compressed mref index to chromosome size. */
         ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const;

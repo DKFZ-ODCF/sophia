@@ -424,7 +424,7 @@ namespace sophia {
         return false;
     }
 
-    bool Hg37ChrConverter::isCompressedMrefIndex(ChrIndex index) const {
+    bool Hg37ChrConverter::isCompressedMref(ChrIndex index) const {
         return index != hg37::ZERO && index <= 1000;  // 1000 == 'NC_007605' (i.e. excluding MT and phiX)
     }
 
@@ -432,6 +432,12 @@ namespace sophia {
     ChrName
     Hg37ChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
         return indexToChrCompressedMref[index];
+    }
+
+    /** Map an index from the global index-space to the compressed mref index-space. */
+    CompressedMrefIndex
+    Hg37ChrConverter::indexToCompressedMrefIndex(ChrIndex index) const {
+        return index;
     }
 
     /** Map the compressed mref index to the uncompressed mref index. For this implementation

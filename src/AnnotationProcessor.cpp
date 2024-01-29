@@ -75,14 +75,14 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
         };
 
         Breakpoint tmpBp = Breakpoint::parse(line, true);
-        CompressedMrefIndex chrIndex;
-        if (!chrConverter.isCompressedMrefIndex(tmpBp.getChrIndex())) {
+        CompressedMrefIndex compressedMrefChrIndex;
+        if (!chrConverter.isCompressedMref(tmpBp.getChrIndex())) {
             continue;
         } else {
-            chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
+            compressedMrefChrIndex = chrConverter.indexToCompressedMrefIndex(tmpBp.getChrIndex());
         }
         auto hasOverhang = line.back() != '.' && line.back() != '#';
-        tumorResults[chrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
+        tumorResults[compressedMrefChrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
         if (hasOverhang) {
             string overhang{};
             for (auto it = line.rbegin(); it != line.rend(); ++it) {
@@ -246,7 +246,7 @@ AnnotationProcessor::AnnotationProcessor(
                 }
             }
         }
-        controlResults[chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex())]
+        controlResults[chrConverter.indexToCompressedMrefIndex(tmpBp.getChrIndex())]
             .push_back(tmpBp);
         ++lineIndex;
     }
@@ -266,14 +266,14 @@ AnnotationProcessor::AnnotationProcessor(
             continue;
         };
         Breakpoint tmpBp = Breakpoint::parse(line, true);
-        CompressedMrefIndex chrIndex;
-        if (!chrConverter.isCompressedMrefIndex(tmpBp.getChrIndex())) {
+        CompressedMrefIndex compressedMrefChrIndex;
+        if (!chrConverter.isCompressedMref(tmpBp.getChrIndex())) {
             continue;
         } else {
-            chrIndex = chrConverter.compressedMrefIndexToIndex(tmpBp.getChrIndex());
+            compressedMrefChrIndex = chrConverter.indexToCompressedMrefIndex(tmpBp.getChrIndex());
         }
         auto hasOverhang = line.back() != '.' && line.back() != '#';
-        tumorResults[chrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
+        tumorResults[compressedMrefChrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
         if (line.back() != '.' && line.back() != '#') {
             string overhang{};
             for (auto it = line.rbegin(); it != line.rend(); ++it) {
@@ -311,7 +311,7 @@ AnnotationProcessor::AnnotationProcessor(
 
 void
 AnnotationProcessor::searchMatches(vector<vector<MrefEntryAnno>> &mref) {
-    ChrIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
+    CompressedMrefIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
         getChrConverter().nChromosomesCompressedMref();
     for (CompressedMrefIndex j = 0; j < nCompressedMrefChromosomes; ++j) {
         for (auto i = 0u; i < tumorResults[j].size(); ++i) {
@@ -330,7 +330,7 @@ AnnotationProcessor::searchMatches(vector<vector<MrefEntryAnno>> &mref) {
 }
 
 void
-AnnotationProcessor::searchSa(CompressedMrefIndex chrIndex,
+AnnotationProcessor::searchSa(CompressedMrefIndex compressedMrefIndex,
                               int dbIndex,
                               const SuppAlignmentAnno &sa,
                               bool doubleSupportSa,
@@ -340,17 +340,17 @@ AnnotationProcessor::searchSa(CompressedMrefIndex chrIndex,
     }
     if (sa.getChrIndex() == 1001) {
         if (createUnknownMatchSvPreCheck(sa, doubleSupportSa)) {
-            createUnknownMatchSv(tumorResults[chrIndex][dbIndex], sa, mref,
+            createUnknownMatchSv(tumorResults[compressedMrefIndex][dbIndex], sa, mref,
                                  doubleSupportSa);
         }
         return;
     }
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     ChrIndex saChrIndex;
-    if (!chrConverter.isCompressedMrefIndex(sa.getChrIndex())) {
+    if (!chrConverter.isCompressedMref(sa.getChrIndex())) {
         return;
     } else {
-        saChrIndex = chrConverter.compressedMrefIndexToIndex(sa.getChrIndex());
+        saChrIndex = chrConverter.indexToCompressedMrefIndex(sa.getChrIndex());
     }
     auto fuzziness = 3 * SuppAlignmentAnno::DEFAULTREADLENGTH;
     vector<pair<int, vector<BreakpointReduced>::iterator>> dbHits{};
@@ -367,7 +367,7 @@ AnnotationProcessor::searchSa(CompressedMrefIndex chrIndex,
             if (!itStart->closeToSupp(sa, fuzziness)) {
                 if (createUnknownMatchSvPreCheck(sa, doubleSupportSa)) {
 
-                    createUnknownMatchSv(tumorResults[chrIndex][dbIndex], sa,
+                    createUnknownMatchSv(tumorResults[compressedMrefIndex][dbIndex], sa,
                                          mref, doubleSupportSa);
                 }
                 return;
@@ -399,7 +399,7 @@ AnnotationProcessor::searchSa(CompressedMrefIndex chrIndex,
     }
     if (dbHits.empty()) {
         if (createUnknownMatchSvPreCheck(sa, doubleSupportSa)) {
-            createUnknownMatchSv(tumorResults[chrIndex][dbIndex], sa, mref,
+            createUnknownMatchSv(tumorResults[compressedMrefIndex][dbIndex], sa, mref,
                                  doubleSupportSa);
         }
         return;
@@ -407,10 +407,10 @@ AnnotationProcessor::searchSa(CompressedMrefIndex chrIndex,
         auto createdMatch = false;
         for (auto &res : dbHits) {
             for (const auto &saMatch : res.second->getSuppAlignments()) {
-                if (tumorResults[chrIndex][dbIndex].closeToSupp(saMatch,
+                if (tumorResults[compressedMrefIndex][dbIndex].closeToSupp(saMatch,
                                                                 fuzziness)) {
                     if (createDoubleMatchSvPreCheck(saMatch)) {
-                        createDoubleMatchSv(tumorResults[chrIndex][dbIndex],
+                        createDoubleMatchSv(tumorResults[compressedMrefIndex][dbIndex],
                                             *res.second, sa, saMatch, true,
                                             mref);
                         createdMatch = true;
@@ -421,17 +421,17 @@ AnnotationProcessor::searchSa(CompressedMrefIndex chrIndex,
         if (!createdMatch) {
             auto res = dbHits[0];
             for (const auto &saMatch : res.second->getSuppAlignments()) {
-                if (tumorResults[chrIndex][dbIndex].closeToSupp(
+                if (tumorResults[compressedMrefIndex][dbIndex].closeToSupp(
                         saMatch, fuzziness * 3)) {
                     if (createDoubleMatchSvPreCheck(saMatch)) {
-                        createDoubleMatchSv(tumorResults[chrIndex][dbIndex],
+                        createDoubleMatchSv(tumorResults[compressedMrefIndex][dbIndex],
                                             *res.second, sa, saMatch, true,
                                             mref);
                         return;
                     }
                 }
             }
-            createUnmatchedSaSv(tumorResults[chrIndex][dbIndex], *res.second,
+            createUnmatchedSaSv(tumorResults[compressedMrefIndex][dbIndex], *res.second,
                                 sa, mref);
         }
     }
@@ -586,10 +586,10 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     vector<SuppAlignmentAnno> suppMatches{};
     CompressedMrefIndex convertedChrIndex;
-    if (!chrConverter.isCompressedMrefIndex(bpIn.getChrIndex())) {
+    if (!chrConverter.isCompressedMref(bpIn.getChrIndex())) {
         return MrefMatch{0, 0, 10000, suppMatches};
     } else {
-        convertedChrIndex = chrConverter.compressedMrefIndexToIndex(bpIn.getChrIndex());
+        convertedChrIndex = chrConverter.indexToCompressedMrefIndex(bpIn.getChrIndex());
     }
     auto itStart = lower_bound(mref[convertedChrIndex].begin(),
                                mref[convertedChrIndex].end(), bpIn);
@@ -726,11 +726,11 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
     }
 
     CompressedMrefIndex convertedChrIndex;
-    if (!chrConverter.isCompressedMrefIndex(bpIn.getChrIndex())) {
+    if (!chrConverter.isCompressedMref(bpIn.getChrIndex())) {
         return dummyMatchFalse;
     } else {
         convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-            compressedMrefIndexToIndex(bpIn.getChrIndex());
+            indexToCompressedMrefIndex(bpIn.getChrIndex());
     }
 
     if (controlResults[convertedChrIndex].empty()) {

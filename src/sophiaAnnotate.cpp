@@ -200,10 +200,10 @@ int main(int argc, char** argv) {
                 throw e;
             }
             CompressedMrefIndex chrIndex;
-            if (!chrConverter.isCompressedMrefIndex(globalIndex)) {
+            if (!chrConverter.isCompressedMref(globalIndex)) {
                 continue;
             } else {
-                chrIndex = chrConverter.compressedMrefIndexToIndex(globalIndex);
+                chrIndex = chrConverter.indexToCompressedMrefIndex(globalIndex);
                 mref[chrIndex].emplace_back(line);
             }
         }

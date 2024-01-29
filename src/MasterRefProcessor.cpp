@@ -202,10 +202,9 @@ namespace sophia {
                 }
 
                 // Ignore chromosomes not in the compressedMref set.
-                if (chrConverter.isCompressedMrefIndex(globalIndex)) {
+                if (chrConverter.isCompressedMref(globalIndex)) {
                     CompressedMrefIndex chrIndex =
-                        chrConverter.compressedMrefIndexToIndex(globalIndex);
-                    // Note: This instantiation actually parses `sophiaLine`.
+                        chrConverter.indexToCompressedMrefIndex(globalIndex);
                     Breakpoint tmpBp = Breakpoint::parse(sophiaLine, true);
                     fileBps[chrIndex].emplace_back(
                         tmpBp, lineIndex++,

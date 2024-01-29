@@ -69,7 +69,7 @@ namespace sophia {
             for (auto saPtr : tmpBreakpoint.getSupplementsPtr()) {
                 if (saPtr->isSuspicious()
                     || saPtr->isToRemove()
-                    || chrConverter.isCompressedMrefIndex(saPtr->getChrIndex())
+                    || chrConverter.isCompressedMref(saPtr->getChrIndex())
                     ) {
                     continue;
                 }

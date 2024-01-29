@@ -63,12 +63,29 @@ namespace sophia {
         return mapping;
     }
 
+    std::vector<std::optional<CompressedMrefIndex>>
+    GenericChrConverter::buildAllToCompressedMrefMapping(ChrInfoTable chrInfoIn) {
+        std::vector<std::optional<CompressedMrefIndex>> mapping;
+        mapping.reserve(chrInfoIn.nChromosomes());
+        CompressedMrefIndex compressedMrefIndex = 0;
+        for (ChrIndex idx = 0; idx < chrInfoIn.nChromosomes(); ++idx) {
+            std::optional<CompressedMrefIndex> compressedMrefIndexO = std::nullopt;
+            if (chrInfoIn.getChrInfos()[idx].isCompressedMref()) {
+                compressedMrefIndexO = std::optional<CompressedMrefIndex>(compressedMrefIndex);
+                ++compressedMrefIndex;
+            }
+            mapping.emplace_back(compressedMrefIndexO);
+        }
+        return mapping;
+    }
+
     GenericChrConverter::GenericChrConverter(
         std::string assemblyNameIn,
         ChrInfoTable chrInfoTableIn)
             : chrInfoTable { chrInfoTableIn },
               allChromosomeLookup { buildAllChromosomeLookup(chrInfoTableIn.getNames()) },
               compressedToAllMapping { buildCompressedMrefToAllMapping(chrInfoTableIn) },
+              allToCompressedMapping { buildAllToCompressedMrefMapping(chrInfoTableIn) },
               assemblyName { assemblyNameIn } {}
 
     /** Number of all chromosomes. */
@@ -139,7 +156,7 @@ namespace sophia {
         return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::UNASSIGNED;
     }
 
-    bool GenericChrConverter::isCompressedMrefIndex(ChrIndex index) const {
+    bool GenericChrConverter::isCompressedMref(ChrIndex index) const {
         return index < nChromosomes()  // Ensure no access out of range is done
                 && chrInfoTable.getChrInfos()[index].isCompressedMref();
     }
@@ -147,7 +164,6 @@ namespace sophia {
     /** Number of compressedMref chromosomes. */
     ChrIndex GenericChrConverter::nChromosomesCompressedMref() const {
         return compressedToAllMapping.size();
-
     }
 
     /** Map the compressed mref index to the uncompressed mref index. */
@@ -166,6 +182,16 @@ namespace sophia {
                 "Compressed mref index does not map back to a compressed mref chromosome."));
         return result;
     }
+
+    /** Map an index from the global index-space to the compressed mref index-space. */
+   CompressedMrefIndex
+   GenericChrConverter::indexToCompressedMrefIndex(ChrIndex index) const {
+        if (allToCompressedMapping.at(index) == std::nullopt) {
+            throw_with_trace(std::logic_error(
+                "Index does not map to a compressed mref chromosome."));
+        }
+        return allToCompressedMapping.at(index).value();
+   }
 
     /** Map compressed mref index to chromosome size. */
     ChrSize GenericChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {

@@ -80,13 +80,13 @@ namespace sophia {
     TEST_F(GenericChrConverterFixture, GenericChrConverter_isCompressedMrefIndex) {
         const GenericChrConverter &converter =
                 dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
-        EXPECT_TRUE(converter.isCompressedMrefIndex(0));  // chr1
-        EXPECT_TRUE(converter.isCompressedMrefIndex(21)); // chr22
-        EXPECT_TRUE(converter.isCompressedMrefIndex(22)); // chrX
-        EXPECT_TRUE(converter.isCompressedMrefIndex(23)); // chrY
-        EXPECT_TRUE(! converter.isCompressedMrefIndex(24)); // chrM
-        EXPECT_TRUE(converter.isCompressedMrefIndex(88)); // chrUn_KI270423v1
-        EXPECT_TRUE(! converter.isCompressedMrefIndex(3366)); // phix
+        EXPECT_TRUE(converter.isCompressedMref(0));  // chr1
+        EXPECT_TRUE(converter.isCompressedMref(21)); // chr22
+        EXPECT_TRUE(converter.isCompressedMref(22)); // chrX
+        EXPECT_TRUE(converter.isCompressedMref(23)); // chrY
+        EXPECT_TRUE(! converter.isCompressedMref(24)); // chrM
+        EXPECT_TRUE(converter.isCompressedMref(88)); // chrUn_KI270423v1
+        EXPECT_TRUE(! converter.isCompressedMref(3366)); // phix
     }
 
     TEST_F(GenericChrConverterFixture, GenericChrConverter_compressedMrefIndexToIndex) {

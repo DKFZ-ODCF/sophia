@@ -52,11 +52,20 @@ namespace sophia {
         /** ChrInfoTable, is *not* actually for the index-based access. Therefore, as we need
           * a ChrName -> ChrIndex mapping, we manage this mapping here. */
         const ChrToIndexMap allChromosomeLookup;
-        static ChrToIndexMap buildAllChromosomeLookup(const ChrInfoTable::ChrNames &chr_info);
+        static ChrToIndexMap
+        buildAllChromosomeLookup(const ChrInfoTable::ChrNames &chr_info);
 
         /** A mapping table to convert the compressed mref indices into the global index space */
         const std::vector<ChrIndex> compressedToAllMapping;
-        static std::vector<ChrIndex> buildCompressedMrefToAllMapping(ChrInfoTable chrInfoIn);
+        static std::vector<ChrIndex>
+        buildCompressedMrefToAllMapping(ChrInfoTable chrInfoIn);
+
+        /** A mapping table to convert the global indices into the compressed mref index space.
+          * This is just a vector indexable by ChrIndex, that contains a non-null optional value
+          * with the CompressedMrefIndex. */
+        const std::vector<std::optional<CompressedMrefIndex>> allToCompressedMapping;
+        static std::vector<std::optional<CompressedMrefIndex>>
+        buildAllToCompressedMrefMapping(ChrInfoTable chrInfoIn);
 
         // Helper functions
 
@@ -82,7 +91,7 @@ namespace sophia {
           * names and the sizes of the corresponding chromosomes.
           **/
         GenericChrConverter(std::string assemblyName,
-                         ChrInfoTable chrInfo);
+                            ChrInfoTable chrInfo);
 
         /** This default constructor only makes sense, as long as the hg38 chromosome names are
             hard-coded. */
@@ -131,10 +140,13 @@ namespace sophia {
         bool isUnassigned(ChrIndex index) const;
 
         /** Whether the chromosome index is that of a compressed mref chromosome. */
-        bool isCompressedMrefIndex(ChrIndex index) const;
+        bool isCompressedMref(ChrIndex index) const;
 
         /** Map the compressed mref index to the uncompressed mref index. */
         ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const;
+
+        /** Map an index from the global index-space to the compressed mref index-space. */
+        CompressedMrefIndex indexToCompressedMrefIndex(ChrIndex index) const;
 
         /** Map compressed mref index to chromosome size. */
         ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const;
