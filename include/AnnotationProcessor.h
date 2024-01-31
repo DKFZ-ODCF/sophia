@@ -24,6 +24,7 @@
 
 #ifndef ANNOTATIONPROCESSOR_H_
 #define ANNOTATIONPROCESSOR_H_
+#include "global.h"
 #include "GermlineMatch.h"
 #include "MrefMatch.h"
 #include "SuppAlignmentAnno.h"
@@ -36,90 +37,111 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-//
-// struct VectorHash {
-//	size_t operator()(const vector<int>& v) const {
-//		hash<int> hasher;
-//		size_t seed = 0;
-//		for (int i : v) {
-//			seed ^= hasher(i) + 0x9e3779b9 + (seed << 6) + (seed >>
-// 2);
-//		}
-//		return seed;
-//	}
-//};
 
 namespace sophia {
 
-using namespace std;
+    using namespace std;
 
-class AnnotationProcessor {
-  public:
-    static bool ABRIDGEDOUTPUT;
-    AnnotationProcessor(const string &tumorResultsIn,
-                        vector<vector<MrefEntryAnno>> &mref,
-                        int defaultReadLengthTumorIn, bool controlCheckModeIn,
-                        int germlineDbLimit);
-    AnnotationProcessor(const string &tumorResultsIn,
-                        vector<vector<MrefEntryAnno>> &mref,
-                        const string &controlResultsIn,
-                        int defaultReadLengthTumorIn,
-                        int defaultReadLengthControlIn, int germlineDbLimit,
-                        int lowQualControlIn, bool pathogenInControlIn);
-    void printFilteredResults(bool contaminationInControl,
-                              int controlPrefilteringLevel) const;
-    int getMassiveInvFilteringLevel() const { return massiveInvFilteringLevel; }
+    class AnnotationProcessor {
+      public:
 
-    bool isContaminationObserved() const { return contaminationObserved; }
+        static bool ABRIDGED_OUTPUT;
 
-  private:
-    void searchMatches(vector<vector<MrefEntryAnno>> &mref);
-    void createDoubleMatchSv(BreakpointReduced &sourceBp,
-                             BreakpointReduced &targetBp,
-                             const SuppAlignmentAnno &sa,
-                             const SuppAlignmentAnno &saMatch, bool checkOrder,
-                             vector<vector<MrefEntryAnno>> &mref);
-    bool createDoubleMatchSvPreCheck(const SuppAlignmentAnno &saMatch);
-    void createUnmatchedSaSv(BreakpointReduced &sourceBp,
-                             BreakpointReduced &targetBp,
-                             const SuppAlignmentAnno &sa,
-                             vector<vector<MrefEntryAnno>> &mref);
-    void createUnknownMatchSv(BreakpointReduced &sourceBp,
-                              const SuppAlignmentAnno &sa,
-                              vector<vector<MrefEntryAnno>> &mref,
-                              bool doubleSupportSa);
-    bool createUnknownMatchSvPreCheck(const SuppAlignmentAnno &sa,
-                                      bool doubleSupportSa);
-    void checkSvQuality();
-    MrefMatch searchMrefHitsNew(const BreakpointReduced &bpIn,
-                                int distanceThreshold,
-                                int conservativeDistanceThreshold,
-                                vector<vector<MrefEntryAnno>> &mref);
-    GermlineMatch searchGermlineHitsNew(const BreakpointReduced &bpIn,
-                                        int distanceThreshold,
-                                        int conservativeDistanceThreshold);
+        AnnotationProcessor(const string &tumorResultsIn,
+                            vector<vector<MrefEntryAnno>> &mref,
+                            ChrSize DEFAULT_READ_LENGTHTumorIn,
+                            bool controlCheckModeIn,
+                            int GERMLINE_DB_LIMIT);
 
-    void searchSa(CompressedMrefIndex chrIndex,
-                  int dbIndex,
-                  const SuppAlignmentAnno &sa,
-                  bool doubleSupportSa,
-                  vector<vector<MrefEntryAnno>> &mref);
-    bool applyMassiveInversionFiltering(bool stricterMode,
-                                        bool controlCheckMode);
-    bool applyPathogenContaminationFiltering();
-    void printUnresolvedRareOverhangs(vector<vector<MrefEntryAnno>> &mref);
-    const bool NOCONTROLMODE;
-    const int GERMLINEDBLIMIT;
-    bool contaminationObserved;
-    int massiveInvFilteringLevel;
-    //	unordered_set<vector<int>, VectorHash> filteredResultKeys;
-    unordered_set<string> filteredResultKeys;
-    vector<SvEvent> filteredResults;
-    vector<vector<BreakpointReduced>> tumorResults;
-    vector<vector<BreakpointReduced>> controlResults;
-    vector<pair<int, string>> overhangs;
-    vector<int> visitedLineIndices;
-};
+        AnnotationProcessor(const string &tumorResultsIn,
+                            vector<vector<MrefEntryAnno>> &mref,
+                            const string &controlResultsIn,
+                            ChrSize DEFAULT_READ_LENGTHTumorIn,
+                            ChrSize DEFAULT_READ_LENGTHControlIn,
+                            int GERMLINE_DB_LIMIT,
+                            int lowQualControlIn,
+                            bool pathogenInControlIn);
+
+        void printFilteredResults(bool contaminationInControl,
+                                  int controlPrefilteringLevel) const;
+
+        int getMassiveInvFilteringLevel() const { return massiveInvFilteringLevel; }
+
+        bool isContaminationObserved() const { return contaminationObserved; }
+
+      private:
+
+        void searchMatches(vector<vector<MrefEntryAnno>> &mref);
+
+        void createDoubleMatchSv(BreakpointReduced &sourceBp,
+                                 BreakpointReduced &targetBp,
+                                 const SuppAlignmentAnno &sa,
+                                 const SuppAlignmentAnno &saMatch,
+                                 bool checkOrder,
+                                 vector<vector<MrefEntryAnno>> &mref);
+
+        bool createDoubleMatchSvPreCheck(const SuppAlignmentAnno &saMatch);
+
+        void createUnmatchedSaSv(BreakpointReduced &sourceBp,
+                                 BreakpointReduced &targetBp,
+                                 const SuppAlignmentAnno &sa,
+                                 vector<vector<MrefEntryAnno>> &mref);
+
+        void createUnknownMatchSv(BreakpointReduced &sourceBp,
+                                  const SuppAlignmentAnno &sa,
+                                  vector<vector<MrefEntryAnno>> &mref,
+                                  bool doubleSupportSa);
+
+        bool createUnknownMatchSvPreCheck(const SuppAlignmentAnno &sa,
+                                          bool doubleSupportSa);
+
+        void checkSvQuality();
+
+        MrefMatch searchMrefHitsNew(const BreakpointReduced &bpIn,
+                                    int distanceThreshold,
+                                    int conservativeDistanceThreshold,
+                                    vector<vector<MrefEntryAnno>> &mref);
+
+        GermlineMatch searchGermlineHitsNew(const BreakpointReduced &bpIn,
+                                            int distanceThreshold,
+                                            int conservativeDistanceThreshold);
+
+        void searchSa(CompressedMrefIndex chrIndex,
+                      size_t dbIndex,
+                      const SuppAlignmentAnno &sa,
+                      bool doubleSupportSa,
+                      vector<vector<MrefEntryAnno>> &mref);
+
+        bool applyMassiveInversionFiltering(bool stricterMode,
+                                            bool controlCheckMode);
+
+        bool applyPathogenContaminationFiltering();
+
+        void printUnresolvedRareOverhangs(vector<vector<MrefEntryAnno>> &mref);
+
+        const bool NO_CONTROL_MODE;
+
+        const int GERMLINE_DB_LIMIT;
+
+        bool contaminationObserved;
+
+        int massiveInvFilteringLevel;
+
+        //	unordered_set<vector<int>, VectorHash> filteredResultKeys;
+
+        unordered_set<string> filteredResultKeys;
+
+        vector<SvEvent> filteredResults;
+
+        vector<vector<BreakpointReduced>> tumorResults;
+
+        vector<vector<BreakpointReduced>> controlResults;
+
+        vector<pair<int, string>> overhangs;
+
+        vector<int> visitedLineIndices;
+
+    };
 
 } /* namespace sophia */
 

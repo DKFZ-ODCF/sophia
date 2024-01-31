@@ -45,19 +45,19 @@ namespace sophia {
       * @param filesIn            vector if input gzFile names.
       * @param outputRootName     base name/path for the output files
       * @param version            the version is matched in the gzFile name to find the realPidName.
-      * @param defaultReadLength  Value for the default read length used for the DeFuzzier.
+      * @param DEFAULT_READ_LENGTH  Value for the default read length used for the DeFuzzier.
       */
     MasterRefProcessor::MasterRefProcessor(const vector<string> &filesIn,
                                            const string &outputRootName,
                                            const string &version,
-                                           const int defaultReadLengthIn)
+                                           const ChrSize DEFAULT_READ_LENGTHIn)
         : NUMPIDS { static_cast<int>(filesIn.size()) },
-          DEFAULTREADLENGTH{ defaultReadLengthIn },
+          DEFAULT_READ_LENGTH{ DEFAULT_READ_LENGTHIn },
           mrefDb {} {
 
         // Initialize the mrefDb with default values. Only for compressed Mref indices.
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        for (std::vector<int>::size_type i = 0;
+        for (CompressedMrefIndex i = 0;
              i < chrConverter.nChromosomesCompressedMref();
              ++i) {
             // NOTE: This will allocate a lot of memory as the total size of the vectors is the
@@ -69,7 +69,7 @@ namespace sophia {
         // and appends them to the header. The `version` is matched in the gzFile name.
         vector<string> header {"#chr", "start", "end"};
         for (const auto &gzFile : filesIn) {
-            int posOnVersion = version.size() - 1;
+            signed int posOnVersion = version.size() - 1;
             bool counting { false };
             string realPidName;
             for (auto rit = gzFile.crbegin(); rit != gzFile.crend(); ++rit) {
@@ -77,7 +77,7 @@ namespace sophia {
                     // Match the version in the gzFile name. Note that we traverse the gzFile name
                     // in reverse order (from end), and therefore the matching algorithm is
                     // formulated in reverse order.
-                    if (*rit != version[posOnVersion]) {
+                    if (*rit != version[(unsigned long) posOnVersion]) {
                         // No match, means continue searching.
                         posOnVersion = version.size() - 1;
                     } else {
@@ -135,22 +135,22 @@ namespace sophia {
         mergedBpsOutput = make_unique<ofstream>(
             outputRootName + "_" + strtk::type_to_string<int>(NUMPIDS) +
             "_mergedBpCounts.bed");
-        auto defuzzier = DeFuzzier{DEFAULTREADLENGTH * 3, true};
-        ChrIndex compressedMrefChrIndex = chrConverter.nChromosomesCompressedMref() - 1;
+        auto defuzzier = DeFuzzier {DEFAULT_READ_LENGTH * 3, true};
+        CompressedMrefIndex compressedMrefChrIndex = chrConverter.nChromosomesCompressedMref() - 1;
         while (!mrefDb.empty()) {
-            // Remove all breakpoints with position -1.
+            // Remove all invalid breakpoints.
             mrefDb.back().erase(
                 remove_if(mrefDb.back().begin(), mrefDb.back().end(),
-                          [](const MrefEntry &bp) { return bp.getPos() == -1; }),
+                          [](const MrefEntry &bp) { return !bp.isValid(); }),
                 mrefDb.back().end());
 
             // Run the DeFuzzier.
             defuzzier.deFuzzyDb(mrefDb.back());
 
-            // Again, remove all breakpoints with position -1.
+            // Again, remove all invalid breakpoints.
             mrefDb.back().erase(
                 remove_if(mrefDb.back().begin(), mrefDb.back().end(),
-                          [](const MrefEntry &bp) { return bp.getPos() == -1; }),
+                          [](const MrefEntry &bp) { return !bp.isValid(); }),
                 mrefDb.back().end());
 
             // Write the breakpoint information.
@@ -158,7 +158,7 @@ namespace sophia {
                 chrConverter.indexToChrNameCompressedMref(compressedMrefChrIndex);
             --compressedMrefChrIndex;
             for (auto &bp : mrefDb.back()) {
-                if (bp.getPos() != -1 && bp.getValidityScore() != -1) {
+                if (bp.isValid()) {
                     // cout << bp.printArtifactRatios(chromosome);
                     *mergedBpsOutput << bp.printBpInfo(chromosome);
                 }
@@ -182,9 +182,11 @@ namespace sophia {
         string sophiaLine{};
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+        vector<vector<BreakpointReduced>>::size_type vectorSize =
+            chrConverter.nChromosomesCompressedMref();
 
         vector<vector<BreakpointReduced>> fileBps = vector<vector<BreakpointReduced>>
-            {chrConverter.nChromosomesCompressedMref(), vector<BreakpointReduced>{}};
+            {vectorSize, vector<BreakpointReduced>{}};
         auto lineIndex = 0;
 
         while (error_terminating_getline(gzStream, sophiaLine)) {
@@ -215,7 +217,7 @@ namespace sophia {
 
         ChrIndex chrIndex = 0;
         for (auto &chromosome : fileBps) {
-            DeFuzzier deFuzzierControl{DEFAULTREADLENGTH * 6, false};
+            DeFuzzier deFuzzierControl {DEFAULT_READ_LENGTH * 6, false};
             deFuzzierControl.deFuzzyDb(chromosome);
             for (auto &bp : chromosome) {
                 if (processBp(bp, chrIndex, fileIndex)) {
@@ -233,11 +235,10 @@ namespace sophia {
                                   short fileIndex) {
         MrefEntry tmpMrefEntry{};
         tmpMrefEntry.addEntry(bp, fileIndex);
-        auto validityInit =
-            mrefDb[chrIndex][tmpMrefEntry.getPos()].getValidityScore();
-        mrefDb[chrIndex][tmpMrefEntry.getPos()].mergeMrefEntries(tmpMrefEntry);
+        auto validityInit = mrefDb[(unsigned long) chrIndex][tmpMrefEntry.getPos()].getValidityScore();
+        mrefDb[(unsigned long) chrIndex][tmpMrefEntry.getPos()].mergeMrefEntries(tmpMrefEntry);
         auto validityFinal =
-            mrefDb[chrIndex][tmpMrefEntry.getPos()].getValidityScore();
+            mrefDb[(unsigned long) chrIndex][tmpMrefEntry.getPos()].getValidityScore();
         return validityFinal > validityInit;
     }
 

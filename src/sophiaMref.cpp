@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     using namespace std;
     using namespace sophia;
 
-    int defaultReadLength { 0 };
+    unsigned int DEFAULT_READ_LENGTH { 0 };
     string assemblyName = "classic_hg37";
 
     try {
@@ -46,8 +46,8 @@ int main(int argc, char** argv) {
             ("assemblyname",
                 boost::program_options::value<string>(&assemblyName)->default_value("classic_hg37"),
                 "assembly name (classic_hg37, hg38, ...)")
-            ("defaultreadlength",
-                boost::program_options::value<int>(&defaultReadLength)->default_value(defaultReadLength),
+            ("DEFAULT_READ_LENGTH",
+                boost::program_options::value<unsigned int>(&DEFAULT_READ_LENGTH),
                 "Default read length for the technology used in sequencing, e.g. 101 or 151.")
         ;
 
@@ -89,8 +89,8 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        if (inputVariables.count("defaultreadlength")) {
-            defaultReadLength = inputVariables["defaultreadlength"].as<int>();
+        if (inputVariables.count("DEFAULT_READ_LENGTH")) {
+            DEFAULT_READ_LENGTH = inputVariables["DEFAULT_READ_LENGTH"].as<unsigned int>();
         } else {
             cerr << "Default read Length not given, exiting" << endl;
             return 1;
@@ -104,10 +104,10 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        SuppAlignment::DEFAULTREADLENGTH = defaultReadLength;
-        SuppAlignmentAnno::DEFAULTREADLENGTH = defaultReadLength;
+        SuppAlignment::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTH;
+        SuppAlignmentAnno::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTH;
         MrefEntry::NUMPIDS = gzListIn.size();
-        MasterRefProcessor mRefProcessor { gzListIn, outputRoot, version, defaultReadLength };
+        MasterRefProcessor mRefProcessor { gzListIn, outputRoot, version, DEFAULT_READ_LENGTH };
 
         return 0;
     } catch (boost::exception &e) {

@@ -37,24 +37,32 @@ using namespace std;
 class MrefEntryAnno {
 
   public:
-    static int PIDSINMREF;
-    static int DEFAULTREADLENGTH;
+
+    static int PIDS_IN_MREF;
+
+    static ChrSize DEFAULT_READ_LENGTH;
+
     static boost::format doubleFormatter;
+
     MrefEntryAnno(const string &mrefEntryIn);
+
     template <typename T> bool operator<(const T &rhs) const {
-        return pos < rhs.getPos();
+        return (int) pos < (int) rhs.getPos();
     }
+
     template <typename T> int distanceTo(const T &rhs) const {
-        return abs(pos - rhs.getPos());
+        return abs((int) pos - (int) rhs.getPos());
     }
     template <typename T> int distanceToBp(const T &compIn) const {
-        return abs(pos - compIn.getPos());
+        return abs((int) pos - (int) compIn.getPos());
     }
+
     bool operator==(const MrefEntryAnno &rhs) const {
         return pos == rhs.getPos();
     }
 
-    int getPos() const { return pos; }
+    ChrSize getPos() const { return pos; }
+
     vector<SuppAlignmentAnno *> getSuppAlignmentsPtr() {
         vector<SuppAlignmentAnno *> res{};
         for (auto &sa : suppAlignments) {
@@ -91,36 +99,42 @@ class MrefEntryAnno {
         }
         return res;
     }
+
     bool closeToSupp(const SuppAlignmentAnno &compIn, int fuzziness) const {
         if (compIn.isFuzzy()) {
-            fuzziness = 2.5 * DEFAULTREADLENGTH;
-            return (pos - fuzziness) <= (compIn.getExtendedPos() + fuzziness) &&
-                   (compIn.getPos() - fuzziness) <= (pos + fuzziness);
+            fuzziness = 2.5 * DEFAULT_READ_LENGTH;
+            return ((long) pos - (long) fuzziness) <= ((long) compIn.getExtendedPos() + (long) fuzziness) &&
+                   ((long) compIn.getPos() - (long) fuzziness) <= ((long) pos + (long) fuzziness);
         } else {
-            return abs(pos - compIn.getPos()) <= fuzziness;
+            return abs((long) pos - (long) compIn.getPos()) <= (long) fuzziness;
         }
     }
-    int distanceToSupp(const SuppAlignmentAnno &compIn) const {
+
+    ChrSize distanceToSupp(const SuppAlignmentAnno &compIn) const {
+        ChrSize result;
         if (compIn.isFuzzy()) {
             if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
-                return 0;
+                result = 0;
             } else {
                 if (pos < compIn.getPos()) {
-                    return compIn.getPos() - pos;
+                    result = ChrSize(compIn.getPos() - pos);
                 } else {
-                    return pos - compIn.getExtendedPos();
+                    // TODO Why here getExtendedPos, and getPos() above?
+                    result = ChrSize(pos - compIn.getExtendedPos());
                 }
             }
         } else {
-            return abs(pos - compIn.getPos());
+            result = ChrSize(abs((long) pos - (long) compIn.getPos()));
         }
+        return result;
     }
+
     short getNumHits() const { return numHits; }
 
     void setNumHits(short numHits) { this->numHits = numHits; }
 
   private:
-    int pos;
+    ChrSize pos;
     short numHits;
     vector<SuppAlignmentAnno> suppAlignments;
 };

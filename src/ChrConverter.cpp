@@ -25,4 +25,9 @@ namespace sophia {
 
     ChrConverter::~ChrConverter() {}
 
+    bool ChrConverter::isInBlockedRegion(ChrIndex chrIndex [[gnu::unused]],
+                                         ChrSize position [[gnu::unused]]) const {
+        return false;
+    }
+
 } /* namespace sophia */

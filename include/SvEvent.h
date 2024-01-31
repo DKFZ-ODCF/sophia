@@ -42,27 +42,42 @@ namespace sophia {
 
     using namespace std;
 
-    enum ArtifactStatus { ARTIFACT, BORDERLINE, CLEAN, UNKNOWN_a };
+    enum ArtifactStatus { ARTIFACT, BORDERLINE, CLEAN, AS_UNKNOWN };
 
-    enum ClonalityStatus { HOMO, HETERO, SUBCLONAL, EXTREME_SUBCLONAL, UNKNOWN_c };
+    enum ClonalityStatus { HOMO, HETERO, SUBCLONAL, EXTREME_SUBCLONAL, CS_UNKNOWN };
 
     class SvEvent {
       public:
         static boost::format doubleFormatter;
-        static int GERMLINEOFFSETTHRESHOLD;
-        static double RELAXEDBPFREQTHRESHOLD;
-        static double BPFREQTHRESHOLD;
-        static double ARTIFACTFREQLOWTHRESHOLD;
-        static double ARTIFACTFREQHIGHTHRESHOLD;
-        static double CLONALITYLOWTHRESHOLD;
-        static double CLONALITYSTRICTLOWTHRESHOLD;
-        static double CLONALITYHIGHTHRESHOLD;
-        static string PIDSINMREFSTR;
-        static int HALFDEFAULTREADLENGTH;
-        static int GERMLINEDBLIMIT;
-        static bool ABRIDGEDOUTPUT;
-        static bool NOCONTROLMODE;
-        static bool DEBUGMODE;
+
+        static int GERMLINE_OFFSET_THRESHOLD;
+
+        static double RELAXED_BP_FREQ_THRESHOLD;
+
+        static double BP_FREQ_THRESHOLD;
+
+        static double ARTIFACT_FREQ_LOW_THRESHOLD;
+
+        static double ARTIFACT_FREQ_HIGH_THRESHOLD;
+
+        static double CLONALITY_LOW_THRESHOLD;
+
+        static double CLONALITY_STRICT_LOW_THRESHOLD;
+
+        static double CLONALITY_HIGH_THRESHOLD;
+
+        static string PIDS_IN_MREF_STR;
+
+        static int HALFDEFAULT_READ_LENGTH;
+
+        static int GERMLINE_DB_LIMIT;
+
+        static bool ABRIDGED_OUTPUT;
+
+        static bool NO_CONTROL_MODE;
+
+        static bool DEBUG_MODE;
+
         const static vector<string> EVENTTYPES;
 
         SvEvent(const BreakpointReduced &bp1In,
@@ -125,7 +140,7 @@ namespace sophia {
 
         void setEventScore(int eventScore) { this->eventScore = eventScore; }
 
-        void setEventType(int eventType) { this->eventType = eventType; }
+        void setEventType(unsigned int eventType) { this->eventType = eventType; }
 
         bool isOverhang1Compensation() const { return overhang1Compensation; }
 
@@ -135,9 +150,10 @@ namespace sophia {
       private:
 
         pair<int, double> mateQualityConditions(const SuppAlignmentAnno &sa);
-        \
+
         pair<bool, int> assessOverhangQualityCompensation(
-            int lineIndex, const vector<pair<int, string>> &overhangDb) const;
+            int lineIndex,
+            const vector<pair<int, string>> &overhangDb) const;
 
         pair<bool, short> processMrefHits(const MrefMatch &hitsInMref,
                                           const SuppAlignmentAnno &sa,
@@ -147,9 +163,12 @@ namespace sophia {
                                             const SuppAlignmentAnno &sa,
                                             double clonalityInit) const;
 
-        void determineEventTypeAndSize(int posDifferential, bool matchEncounteredM);
+        void determineEventTypeAndSize(ChrPosition pos1,
+                                       ChrPosition pos2,
+                                       bool matchEncounteredM);
 
-        int filterMatch(const BreakpointReduced &bp1, const BreakpointReduced &bp2);
+        int filterMatch(const BreakpointReduced &bp1,
+                        const BreakpointReduced &bp2);
 
         int filterMatchSingle(const BreakpointReduced &bp1,
                               const BreakpointReduced &bp2);
@@ -197,53 +216,100 @@ namespace sophia {
         }
 
         bool toRemove;
+
+
         int contaminationCandidate;
+
         ChrIndex chrIndex1;
-        int pos1;
+
+        ChrPosition pos1;
+
         ChrIndex chrIndex2;
-        int pos2;
+
+        ChrPosition pos2;
+
         int lineIndex1;
+
         int lineIndex2;
-        int eventType;
+
+        // Could probably be an enum.
+        unsigned int eventType;
+
         int eventSize;
+
         bool inverted;
+
         bool doubleSupport;
+
         bool distant;
+
         bool overhang1Compensation;
+
         bool overhang2Compensation;
+
+        // Can have value -1
         int overhang1Index;
         int overhang2Index;
+
         double overhang1lengthRatio;
+
         double overhang2lengthRatio;
+
         int inputScore;
+
         int eventScore;
+
         int totalEvidence1;
+
         int span1;
+
         int totalEvidence2;
+
         int span2;
+
         short evidenceLevel1;
         short evidenceLevel2;
+
         short mrefHits1;
+
         bool mrefHits1Conservative;
         short mrefHits2;
+
         bool mrefHits2Conservative;
+
         bool germline;
+
         double germlineClonality1;
+
         bool germlineStatus1;
         double germlineClonality2;
+
         bool germlineStatus2;
+
         SuppAlignmentAnno selectedSa1;
+
         SuppAlignmentAnno selectedSa2;
+
         double mateRatio1;
+
         double mateRatio2;
+
         int suspicious;
+
         bool semiSuspicious;
+
         double artifactRatio1;
+
         double clonalityRatio1;
+
         ClonalityStatus clonalityStatus1;
+
         double artifactRatio2;
+
         double clonalityRatio2;
+
         ClonalityStatus clonalityStatus2;
+
         ArtifactStatus artifactStatus;
     };
 

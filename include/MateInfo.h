@@ -30,90 +30,45 @@
 
 namespace sophia {
 
-struct MateInfo {
-    int readStartPos;
-    int readEndPos;
-    ChrIndex mateChrIndex;
-    int mateStartPos;
-    int mateEndPos;
-    bool inverted;
-    int source;
-    int evidenceLevel;
-    int matePower;
-    int inversionSupport;
-    int straightSupport;
-    std::vector<int> bpLocs;
-    bool saSupporter;
-    bool toRemove;
-    bool operator<(const MateInfo &rhs) const {
-        if (mateChrIndex < rhs.mateChrIndex)
-            return true;
-        if (mateChrIndex > rhs.mateChrIndex)
-            return false;
-        if (mateStartPos < rhs.mateStartPos)
-            return true;
-        return false;
-    }
-    bool suppAlignmentFuzzyMatch(const SuppAlignment &sa) const {
-        if (mateChrIndex != sa.getChrIndex()) {
-            return false;
-        } else {
-            if (!sa.isFuzzy()) {
-                return sa.getPos() >= (mateStartPos - sa.getMatchFuzziness()) &&
-                       sa.getPos() <= (mateEndPos + sa.getMatchFuzziness());
-            } else {
-                return (mateStartPos - sa.getMatchFuzziness()) <=
-                           sa.getExtendedPos() &&
-                       sa.getPos() <= (mateEndPos + sa.getMatchFuzziness());
-            }
-        }
-    }
+    struct MateInfo {
 
-    MateInfo(int readStartPosIn,
-             int readEndPosIn,
-             ChrIndex mateChrIndexIn,
-             int mateStartPosIn,
-             int sourceType,
-             bool invertedIn)
-        : readStartPos{readStartPosIn},
-          readEndPos{readEndPosIn},
-          mateChrIndex{mateChrIndexIn},
-          mateStartPos{mateStartPosIn},
-          mateEndPos{mateStartPosIn},
-          inverted{invertedIn},
-          source{sourceType},
-          evidenceLevel{sourceType == 2 ? 3 : 1},
-          matePower{1},
-          inversionSupport{invertedIn},
-          straightSupport{!invertedIn},
-          bpLocs{},
-          saSupporter{false},
-          toRemove{false} {}
+        ChrSize readStartPos;
+        ChrSize readEndPos;
+        ChrIndex mateChrIndex;
+        ChrSize mateStartPos;
+        ChrSize mateEndPos;
+        bool inverted;
+        int source;
+        int evidenceLevel;
+        int matePower;
+        int inversionSupport;
+        int straightSupport;
+        std::vector<ChrSize> bpLocs;
+        bool saSupporter;
+        bool toRemove;
 
-    MateInfo(int readStartPosIn,
-             int readEndPosIn,
-             ChrIndex mateChrIndexIn,
-             int mateStartPosIn,
-             int sourceType,
-             bool invertedIn,
-             const std::vector<int> &bpLocsIn)
-        : readStartPos{readStartPosIn},
-          readEndPos{readEndPosIn},
-          mateChrIndex{mateChrIndexIn},
-          mateStartPos{mateStartPosIn},
-          mateEndPos{mateStartPosIn},
-          inverted{invertedIn},
-          source{sourceType},
-          evidenceLevel{sourceType == 2 ? 3 : 1},
-          matePower{1},
-          inversionSupport{invertedIn},
-          straightSupport{!invertedIn},
-          bpLocs{bpLocsIn},
-          saSupporter{false},
-          toRemove{false} {}
+        bool operator<(const MateInfo &rhs) const;
 
-    bool isToRemove() const { return toRemove; }
-};
+        bool suppAlignmentFuzzyMatch(const SuppAlignment &sa) const;
+
+        MateInfo(ChrSize readStartPosIn,
+                 ChrSize readEndPosIn,
+                 ChrIndex mateChrIndexIn,
+                 ChrSize mateStartPosIn,
+                 int sourceType,
+                 bool invertedIn);
+
+        MateInfo(ChrSize readStartPosIn,
+                 ChrSize readEndPosIn,
+                 ChrIndex mateChrIndexIn,
+                 ChrSize mateStartPosIn,
+                 int sourceType,
+                 bool invertedIn,
+                 const std::vector<ChrSize> &bpLocsIn);
+
+        bool isToRemove() const;
+        
+    };
 
 }   // namespace sophia
 #endif /* MATEINFO_H_ */

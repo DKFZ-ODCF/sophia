@@ -40,10 +40,15 @@ namespace sophia {
     class BreakpointReduced {
 
       public:
-        static int DEFAULTREADLENGTH;
-        static double CLONALITYSTRICTLOWTHRESHOLD;
-        static double ARTIFACTFREQHIGHTHRESHOLD;
-        static string PIDSINMREFSTR;
+
+        static ChrSize DEFAULT_READ_LENGTH;
+
+        static double CLONALITY_STRICT_LOW_THRESHOLD;
+
+        static double ARTIFACT_FREQ_HIGH_THRESHOLD;
+
+        static string PIDS_IN_MREF_STR;
+
         static boost::format doubleFormatter;
 
         BreakpointReduced(const Breakpoint &tmpBp, int lineIndexIn,
@@ -68,23 +73,26 @@ namespace sophia {
 
         template <typename T> int distanceTo(const T &rhs) const {
             if (chrIndex != rhs.getChrIndex()) {
+                // Just any big value?
                 return 1000000;
             } else {
+                // Effectively always >= 0.
                 return abs(pos - rhs.getPos());
             }
         }
 
         template <typename T> int distanceToBp(const T &compIn) const {
             if (chrIndex == compIn.getChrIndex()) {
-                return abs(pos - compIn.getPos());
+                return abs((int) pos - (int) compIn.getPos());
             } else {
+                // Ups. -1 is used in < comparisons. Check usages, before refactoring this.
                 return -1;
             }
         }
 
         ChrIndex getChrIndex() const { return chrIndex; }
 
-        int getPos() const { return pos; }
+        ChrSize getPos() const { return pos; }
 
 
         bool isToRemove() const { return toRemove; }
@@ -138,39 +146,41 @@ namespace sophia {
             return res;
         }
 
-        bool closeToSupp(const SuppAlignmentAnno &compIn, int fuzziness) const {
+        bool closeToSupp(const SuppAlignmentAnno &compIn, ChrSize fuzziness) const {
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
-                    fuzziness = 2.5 * DEFAULTREADLENGTH;
-                    return (pos - fuzziness) <=
-                               (compIn.getExtendedPos() + fuzziness) &&
-                           (compIn.getPos() - fuzziness) <= (pos + fuzziness);
+                    fuzziness = ChrSize(2.5 * DEFAULT_READ_LENGTH);  // truncate
+                    return ((long) pos - (long) fuzziness) <= (long) (compIn.getExtendedPos() + fuzziness) &&
+                           ((long) compIn.getPos() - (long) fuzziness) <= (long) (pos + fuzziness);
                 } else {
-                    return abs(pos - compIn.getPos()) <= fuzziness;
+                    return abs((long) pos - (long) compIn.getPos()) <= (long) fuzziness;
                 }
             } else {
                 return false;
             }
         }
 
-        int distanceToSupp(const SuppAlignmentAnno &compIn) const {
+        ChrSize distanceToSupp(const SuppAlignmentAnno &compIn) const {
+            ChrSize result;
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
                     if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
-                        return 0;
+                        result = 0;
                     } else {
                         if (pos < compIn.getPos()) {
-                            return compIn.getPos() - pos;
+                            result = ChrSize(compIn.getPos() - pos);
                         } else {
-                            return pos - compIn.getExtendedPos();
+                            // TODO Why here getExtendenPos(), but getPos() above?
+                            result = ChrSize(pos - compIn.getExtendedPos());
                         }
                     }
                 } else {
-                    return abs(pos - compIn.getPos());
+                    result = ChrSize(abs((long) pos - (long) compIn.getPos()));
                 }
             } else {
-                return 1000000;
+                result = 1000000;
             }
+            return result;
         }
 
         const MrefMatch &getMrefHits() const { return mrefHits; }
@@ -207,7 +217,7 @@ namespace sophia {
         bool toRemove;
         int lineIndex;
         ChrIndex chrIndex;
-        int pos;
+        ChrSize pos;
         int normalSpans, lowQualSpansSoft, lowQualSpansHard, unpairedBreaksSoft,
             unpairedBreaksHard, breaksShortIndel, lowQualBreaksSoft,
             lowQualBreaksHard, repetitiveOverhangBreaks;

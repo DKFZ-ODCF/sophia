@@ -32,7 +32,16 @@
 
 namespace sophia {
 
-    /** This converter provides fast by-index access to the ChrInfoTable. */
+    /** This converter provides fast by-index access to the ChrInfoTable.
+      *
+      * Manage all and compressed mref chromosomes.
+      * Allow mapping of all and compressed mref chromosomes.
+      * Freely mix (order) compressed mref chromosomes into all chromosemes.
+      *
+      * This implementation still leaks the compressed mref chromosome detail at a very low
+      * level into the code. More can probably onl be improved, if the infamous parse/business
+      * logic mash up in the client code is resolved.
+      **/
     class GenericChrConverter: public ChrConverter {
 
       public:

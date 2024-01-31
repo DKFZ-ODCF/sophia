@@ -25,25 +25,44 @@
 #ifndef CIGARCHUNK_H_
 #define CIGARCHUNK_H_
 
+#include "global.h"
+
 namespace sophia {
 
-struct CigarChunk {
-    char chunkType;
-    bool encounteredM;
-    int startPosOnRead;
-    int length;
-    int indelAdjustment;
-    CigarChunk(char chunkTypeIn, bool encounteredMIn, int startPosOnReadIn,
-               int lengthIn)
-        : chunkType{chunkTypeIn}, encounteredM{encounteredMIn},
-          startPosOnRead{startPosOnReadIn}, length{lengthIn}, indelAdjustment{
-                                                                  0} {}
-    CigarChunk(char chunkTypeIn, bool encounteredMIn, int startPosOnReadIn,
-               int lengthIn, int indelAdjustmentIn)
-        : chunkType{chunkTypeIn}, encounteredM{encounteredMIn},
-          startPosOnRead{startPosOnReadIn}, length{lengthIn},
-          indelAdjustment{indelAdjustmentIn} {}
-    ~CigarChunk() = default;
-};
+    struct CigarChunk {
+
+        char chunkType;
+
+        bool encounteredM;
+
+        ChrSize startPosOnRead;
+
+        ChrSize length;
+
+        int indelAdjustment;
+
+        CigarChunk(char chunkTypeIn,
+                   bool encounteredMIn,
+                   ChrSize startPosOnReadIn,
+                   ChrSize lengthIn)
+            : chunkType{chunkTypeIn},
+              encounteredM{encounteredMIn},
+              startPosOnRead{startPosOnReadIn},
+              length{lengthIn},
+              indelAdjustment{0} {}
+
+        CigarChunk(char chunkTypeIn,
+                   bool encounteredMIn,
+                   ChrSize startPosOnReadIn,
+                   ChrSize lengthIn,
+                   int indelAdjustmentIn)
+            : chunkType{chunkTypeIn},
+              encounteredM{encounteredMIn},
+              startPosOnRead{startPosOnReadIn},
+              length{lengthIn},
+              indelAdjustment{indelAdjustmentIn} {}
+        ~CigarChunk() = default;
+    };
+
 }   // namespace sophia
 #endif /* CIGARCHUNK_H_ */

@@ -47,48 +47,50 @@ namespace sophia {
 
         void continueConstruction();
 
+        static ChrSize LOW_QUAL_CLIP_THRESHOLD;
+
         static int
-            LOWQUALCLIPTHRESHOLD,
-            BASEQUALITYTHRESHOLD,
-            BASEQUALITYTHRESHOLDLOW,
-            CLIPPEDNUCLEOTIDECOUNTTHRESHOLD,
-            INDELNUCLEOTIDECOUNTTHRESHOLD;
+            BASE_QUALITY_THRESHOLD,
+            BASE_QUALITY_THRESHOLD_LOW;
+
+        static unsigned int CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD,
+                            INDEL_NUCLEOTIDE_COUNT_THRESHOLD;
 
         static double ISIZEMAX;
 
-        int getStartPos() const { return startPos; }
+        ChrSize getStartPos() const { return startPos; }
 
-        int getEndPos() const { return endPos; }
+        ChrSize getEndPos() const { return endPos; }
 
         int getReadType() const { return readType; }
 
-        const vector<int> &getReadBreakpoints() const { return readBreakpoints; }
+        const vector<ChrSize> &getReadBreakpoints() const { return readBreakpoints; }
 
         bool isValidLine() const { return validLine; }
 
         const string &getSamLine() const { return samLine; }
 
-        const vector<int> &getSamChunkPositions() const {
-            return samChunkPositions;
+        const vector<ChrSize> &getSamChunkPositions() const {
+            return samTabPositions;
         }
 
         bool assessOutlierMateDistance();
 
         ChrIndex getMateChrIndex() const { return mateChrIndex; }
 
-        int getMatePos() const { return matePos; }
+        ChrSize getMatePos() const { return matePos; }
 
         const vector<char> &getReadBreakpointTypes() const {
             return readBreakpointTypes;
         }
 
-        void setChosenBp(int chosenBpLoc, int alignmentIndex);
+        void setChosenBp(ChrSize chosenBpLoc, unsigned int alignmentIndex);
 
         bool isOverhangEncounteredM() const { return chosenBp->bpEncounteredM; }
 
-        int getOverhangLength() const { return chosenBp->overhangLength; }
+        ChrSize getOverhangLength() const { return ChrSize(chosenBp->overhangLength); }
 
-        int getOverhangStartIndex() const { return chosenBp->overhangStartIndex; }
+        ChrSize getOverhangStartIndex() const { return ChrSize(chosenBp->overhangStartIndex); }
 
         vector<SuppAlignment> generateSuppAlignments(ChrIndex bpChrIndex, int bpPos);
 
@@ -98,12 +100,16 @@ namespace sophia {
 
         ChrIndex getChrIndex() const { return chrIndex; }
 
-        const vector<int> &getReadBreakpointsSizes() const {
+        /** This returns a signed integer, because break-point sizes can be negative. **/
+        const vector<signed int> &getReadBreakpointsSizes() const {
             return readBreakpointSizes;
         }
 
+        /** true if mapq < 13 */
         bool isLowMapq() const { return lowMapq; }
 
+        /** mapq 0 is treated as a special case, where number of SAs and
+          * base qualities will be the sole determinants of read quality */
         bool isNullMapq() const { return nullMapq; }
 
         bool isSupplementary() const { return supplementary; }
@@ -133,6 +139,9 @@ namespace sophia {
 
         void mappingQualityCheck();
 
+        /** The `Alignment` isEventCandidate` is true, if the last CIGAR code indicates a match,
+         *  or if the CIGAR indicates a soft-clip, hard-clip, insertion, or deletion.
+         */
         bool isEventCandidate() const;
 
         void createCigarChunks();
@@ -168,17 +177,17 @@ namespace sophia {
 
         int readType;
 
-        int startPos, endPos;
+        ChrSize startPos, endPos;
 
         ChrIndex mateChrIndex;
 
-        int matePos;
+        ChrSize matePos;
 
         string samLine;
 
         bool validLine;
 
-        vector<int> samChunkPositions;
+        vector<ChrSize> samTabPositions;
 
         string::const_iterator saCbegin, saCend;
 
@@ -194,11 +203,11 @@ namespace sophia {
 
         vector<CigarChunk> cigarChunks;
 
-        vector<int> readBreakpoints;
+        vector<ChrSize> readBreakpoints;
 
         vector<char> readBreakpointTypes;
 
-        vector<int> readBreakpointSizes;
+        vector<signed int> readBreakpointSizes;
 
         vector<double> readBreakpointComplexityMaskRatios;
 

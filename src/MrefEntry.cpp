@@ -34,12 +34,14 @@ namespace sophia {
     using namespace std;
 
     boost::format MrefEntry::doubleFormatter { "%.5f" };
-    int MrefEntry::NUMPIDS { };
-    int MrefEntry::DEFAULTREADLENGTH { };
+
+    unsigned int MrefEntry::NUMPIDS { };
+
+    ChrSize MrefEntry::DEFAULT_READ_LENGTH { };
 
     MrefEntry::MrefEntry() :
                     validity { -1 },
-                    pos { -1 },
+                    pos { std::numeric_limits<ChrSize>::max() },
                     fileIndices { },
                     fileIndicesWithArtifactRatios { },
                     artifactRatios { },
@@ -181,7 +183,8 @@ namespace sophia {
             }
         }
         vector<string> fileIndicesStr { };
-        transform(fileIndices.begin(), fileIndices.end(), back_inserter(fileIndicesStr), [](int fileIndex) {return strtk::type_to_string<int>(fileIndex);});
+        transform(fileIndices.begin(), fileIndices.end(), back_inserter(fileIndicesStr),
+                  [](int fileIndex) {return strtk::type_to_string<int>(fileIndex);});
         outputFields.emplace_back(boost::join(fileIndicesStr, ","));
         return boost::join(outputFields, "\t").append("\n");
     }
@@ -189,13 +192,14 @@ namespace sophia {
     // Currently, not used.
     string MrefEntry::printArtifactRatios(const string& chromosome) {
         vector<string> outputFields { };
-        outputFields.reserve(NUMPIDS + 3);
+        outputFields.reserve(NUMPIDS + 3u);
         outputFields.emplace_back(chromosome);
         outputFields.emplace_back(strtk::type_to_string<int>(pos));
         outputFields.emplace_back(strtk::type_to_string<int>(pos + 1));
         vector<string> artifactRatiosOutput(NUMPIDS, ".");
-        for (auto i = 0; i < static_cast<int>(fileIndicesWithArtifactRatios.size()); ++i) {
-            artifactRatiosOutput[fileIndicesWithArtifactRatios[i]] = boost::str(doubleFormatter % artifactRatios[i]);
+        for (size_t i = 0; i < fileIndicesWithArtifactRatios.size(); ++i) {
+            artifactRatiosOutput[fileIndicesWithArtifactRatios[i]] =
+                boost::str(doubleFormatter % artifactRatios[i]);
         }
         for (const auto &artifactRatio : artifactRatiosOutput) {
             outputFields.push_back(artifactRatio);

@@ -46,7 +46,7 @@ namespace sophia {
         MasterRefProcessor(const vector<std::string> &filesIn,
                            const string &outputRootName,
                            const string &version,
-                           const int defaultReadLengthIn);
+                           const ChrSize DEFAULT_READ_LENGTHIn);
 
         ~MasterRefProcessor() = default;
 
@@ -58,7 +58,7 @@ namespace sophia {
         bool processBp(BreakpointReduced &bp, ChrIndex chrIndex, short fileIndex);
 
         const int NUMPIDS;
-        const int DEFAULTREADLENGTH;
+        const ChrSize DEFAULT_READ_LENGTH;
         unique_ptr<ofstream> mergedBpsOutput;
         vector<vector<MrefEntry>> mrefDb;
     };

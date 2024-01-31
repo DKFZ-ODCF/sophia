@@ -38,7 +38,8 @@ namespace sophia {
     using namespace std;
 
     double SuppAlignmentAnno::ISIZEMAX{};
-    int SuppAlignmentAnno::DEFAULTREADLENGTH{};
+
+    ChrSize SuppAlignmentAnno::DEFAULT_READ_LENGTH{};
 
     static const string STOP_CHARS = "|(\t";
     inline bool isStopChar(char c) {
@@ -71,7 +72,7 @@ namespace sophia {
 
 
         try {
-            auto index = 0;
+            unsigned int index = 0;
             if (encounteredM) {  // skip the first '|'
                 ++index;
             }
@@ -112,9 +113,9 @@ namespace sophia {
                     break;
                 } else if (saStrIn.at(index) != '|') {
                     if (!fuzzy) {
-                        pos = 10 * pos + (saStrIn.at(index) - '0');
+                        pos = 10 * pos + (unsigned int) (saStrIn.at(index) - '0');
                     } else {
-                        extendedPos = 10 * extendedPos + (saStrIn.at(index) - '0');
+                        extendedPos = 10 * extendedPos + (unsigned int) (saStrIn.at(index) - '0');
                     }
                 }
             }
@@ -220,16 +221,16 @@ namespace sophia {
           supportingIndices{saAnnoIn.getSupportingIndices()} {}
 
     SuppAlignmentAnno::SuppAlignmentAnno(ChrIndex emittingBpChrIndex,
-                                         int emittingBpPos,
+                                         ChrSize emittingBpPos,
                                          const SuppAlignmentAnno &saAnnoIn)
         : chrIndex{emittingBpChrIndex},
           pos{saAnnoIn.isDistant()
-                  ? max(1, static_cast<int>(
-                               round(emittingBpPos - 1.5 * DEFAULTREADLENGTH)))
+                  ? (unsigned int) max(1, static_cast<int>(
+                            round(emittingBpPos - 1.5 * (int) DEFAULT_READ_LENGTH)))
                   : emittingBpPos},
           extendedPos{
               saAnnoIn.isDistant()
-                  ? static_cast<int>(emittingBpPos + 1.5 * DEFAULTREADLENGTH)
+                  ? static_cast<unsigned int>(emittingBpPos + 1.5 * DEFAULT_READ_LENGTH)
                   : emittingBpPos},
           support{0}, secondarySupport{0}, mateSupport{0}, expectedDiscordants{0},
           encounteredM{true}, toRemove{true}, inverted{saAnnoIn.isInverted()},
@@ -297,16 +298,16 @@ namespace sophia {
                 if (pos <= rhs.getExtendedPos() && rhs.getPos() <= extendedPos) {
                     return true;
                 }
-                fuzziness = 2.5 * DEFAULTREADLENGTH;
+                fuzziness = 2.5 * DEFAULT_READ_LENGTH;
                 if (rhs.getPos() >= extendedPos) {
-                    return (rhs.getPos() - extendedPos) <= fuzziness;
+                    return ((long) rhs.getPos() - (long) extendedPos) <= (long) fuzziness;
                 }
-                return (pos - rhs.getExtendedPos()) <= fuzziness;
+                return ((long) pos - (long) rhs.getExtendedPos()) <= (long) fuzziness;
                 //			return (rhs.getPos() - fuzziness) <= (extendedPos +
                 //fuzziness) && (pos - fuzziness) <= (rhs.getExtendedPos() +
                 //fuzziness);
             } else {
-                return abs(pos - rhs.getPos()) <= fuzziness;
+                return abs((long) pos - (long) rhs.getPos()) <= (long) fuzziness;
             }
         } else {
             return false;
@@ -322,13 +323,13 @@ namespace sophia {
                 if (pos <= rhs.getExtendedPos() && rhs.getPos() <= extendedPos) {
                     return true;
                 }
-                fuzziness = 2.5 * DEFAULTREADLENGTH;
+                fuzziness = 2.5 * DEFAULT_READ_LENGTH;
                 if (rhs.getPos() >= extendedPos) {
-                    return (rhs.getPos() - extendedPos) <= fuzziness;
+                    return ((long) rhs.getPos() - (long) extendedPos) <= (long) fuzziness;
                 }
-                return (pos - rhs.getExtendedPos()) <= fuzziness;
+                return ((long) pos - (long) rhs.getExtendedPos()) <= (long) fuzziness;
             } else {
-                return abs(pos - rhs.getPos()) <= fuzziness;
+                return abs((long) pos - (long) rhs.getPos()) <= (long) fuzziness;
             }
         } else {
             return false;

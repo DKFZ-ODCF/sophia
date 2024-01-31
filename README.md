@@ -51,7 +51,7 @@ samtools view -F 0x600 -f 0x001 /yourPositionSorted.bam \
            --medianisize 323.0 \
            --stdisizepercentage 21.0 \
            --properpairpercentage 94.32 \
-           --defaultreadlength 101 \
+           --DEFAULT_READ_LENGTH 101 \
            --clipsize 10 \
            --basequality 23 \
            --basequalitylow 12 \
@@ -108,7 +108,7 @@ sophiaAnnotate \
   --tumorresults $tumorSampleFile \
   --controlresults $controlSampleFile \
   --mref $mRef \
-  --pidsinmref $pidsInMref \
+  --PIDS_IN_MREF $pidsInMref \
   --bpfreq $bpFreq \
   --artifactlofreq $artifactLoFreq \
   --artifacthifreq $artifactHiFreq \
@@ -116,9 +116,9 @@ sophiaAnnotate \
   --clonalitylofreq $clonalityLoFreq \
   --clonalityhifreq $clonalityHiFreq \
   --germlineoffset $germlineFuzziness \
-  --defaultreadlengthtumor $tumorDefaultReadLength \
-  --defaultreadlengthcontrol $controlDefaultReadLength \
-  --germlinedblimit $germlineDbLimit \
+  --DEFAULT_READ_LENGTHtumor $tumorDEFAULT_READ_LENGTH \
+  --DEFAULT_READ_LENGTHcontrol $controlDEFAULT_READ_LENGTH \
+  --GERMLINE_DB_LIMIT $GERMLINE_DB_LIMIT \
   > $outputFile
 ```
 
@@ -132,7 +132,7 @@ Usually, you will only need to run `sophiaMref`, if you adapt SOPHIA to a new ge
 `sophiaMref` processes a list of gzipped BED files that were generated with the `sophia` tool.
 From these it generates a reference that can be used by `sophiaAnnotate` for annotating structural variants with gene information. 
 
-The file produced by `sophiaMref` is a BED file with the following columns (see `MrefEntry::printBpInfo` for details):
+The file produced by `sophiaMref` is a BED file suffixed with with the following columns (see `MrefEntry::printBpInfo` for details):
 
 | Column | Description                                              | Format                                                                                                            |
 |--------|----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
@@ -145,7 +145,7 @@ The file produced by `sophiaMref` is a BED file with the following columns (see 
 | 7      | fileIndicesWithArtifactsRatio / NUMPIDS                  | `\d\.\d+`                                                                                                         |
 | 8      | average artifacts ratio                                  | `NA` if there are no artifacts ratios; otherwise `\d\.\d+`                                                        |
 | 9      | suppAlignments                                           | `.` if there are no supplementary alignments; otherwise the same format as columns 6 and 7 of the `sophia` output |
-| 10     | fileIndices                                              | Comma-separated list of file indices (`\d+`)                                                                       |
+| 10     | fileIndices                                              | Comma-separated list of file indices (`\d+`). Maybe empty string.                                                 |
 
 The "fileIndices" are the 0-based index into the list of gzipped control-BED input files given to `sophiaMref`.
 
@@ -327,6 +327,7 @@ If you want to know more then, currently, the only documentation of we can offer
   * Patch: A `README.md` file that is worth its name and contains first documentation about the usage of the SOPHIA binaries and input and output files.
   * Patch: Added unit tests.
   * Patch: Code readability improvements, documentation, `.editorconfig` file, and `clang-format` configuration
-  
+  * Patch: Major refactorings for code clarity (and understanding of the convoluted code) and to improve usage of C++ type system for compiler-based checks of changes.
+    
 * 35 (9e3b6ed)
   * Forked from [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)

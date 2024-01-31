@@ -44,19 +44,20 @@ namespace sophia {
        assumption of a uniform hit-probability proportional to chromosome size. */
     GenericChrConverter::ChrToIndexMap
     GenericChrConverter::buildAllChromosomeLookup(const ChrInfoTable::ChrNames &chromosomes) {
-        ChrToIndexMap result (chromosomes.size());
-        for (ChrIndex i = 0; i < chromosomes.size(); ++i) {
-            result[chromosomes[i]] = i;
+        ChrToIndexMap mapping;
+        mapping.reserve(chromosomes.size());
+        for (ChrIndex i = 0; i < (ChrIndex) chromosomes.size(); ++i) {
+            mapping[chromosomes[(unsigned long) i]] = i;
         }
-        return result;
+        return mapping;
     }
 
     std::vector<ChrIndex>
     GenericChrConverter::buildCompressedMrefToAllMapping(ChrInfoTable chrInfoIn) {
         std::vector<ChrIndex> mapping;
-        mapping.reserve(chrInfoIn.nChromosomes());
-        for (ChrIndex idx = 0; idx < chrInfoIn.nChromosomes(); ++idx) {
-            if (chrInfoIn.getChrInfos()[idx].isCompressedMref()) {
+        mapping.reserve((size_t) chrInfoIn.nChromosomes());
+        for (ChrIndex idx = 0; idx < (ChrIndex) chrInfoIn.nChromosomes(); ++idx) {
+            if (chrInfoIn.getChrInfos()[(unsigned long) idx].isCompressedMref()) {
                 mapping.emplace_back(idx);
             }
         }
@@ -66,11 +67,11 @@ namespace sophia {
     std::vector<std::optional<CompressedMrefIndex>>
     GenericChrConverter::buildAllToCompressedMrefMapping(ChrInfoTable chrInfoIn) {
         std::vector<std::optional<CompressedMrefIndex>> mapping;
-        mapping.reserve(chrInfoIn.nChromosomes());
+        mapping.reserve((size_t) chrInfoIn.nChromosomes());
         CompressedMrefIndex compressedMrefIndex = 0;
         for (ChrIndex idx = 0; idx < chrInfoIn.nChromosomes(); ++idx) {
             std::optional<CompressedMrefIndex> compressedMrefIndexO = std::nullopt;
-            if (chrInfoIn.getChrInfos()[idx].isCompressedMref()) {
+            if (chrInfoIn.getChrInfos()[(unsigned long) idx].isCompressedMref()) {
                 compressedMrefIndexO = std::optional<CompressedMrefIndex>(compressedMrefIndex);
                 ++compressedMrefIndex;
             }
@@ -95,7 +96,7 @@ namespace sophia {
 
     /** Map an index position to a chromosome name. */
     ChrName GenericChrConverter::indexToChrName(ChrIndex index) const {
-        return chrInfoTable.getChrInfos().at(index).getName();
+        return chrInfoTable.getChrInfos().at((unsigned long) index).getName();
     }
 
     /** Map a chromosome name to an index position. */
@@ -113,56 +114,55 @@ namespace sophia {
 
     /** chr1-chr22 */
     bool GenericChrConverter::isAutosome(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::AUTOSOME;
+        return chrInfoTable.getChrInfos()[(unsigned long) index].getCategory() == ChrCategory::AUTOSOME;
     }
 
     /** chrX, chrY */
     bool GenericChrConverter::isGonosome(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::GONOSOME;
+        return chrInfoTable.getChrInfos()[(unsigned long) index].getCategory() == ChrCategory::GONOSOME;
     }
 
     /** phix index. */
     bool GenericChrConverter::isTechnical(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::TECHNICAL;
+        return chrInfoTable.getChrInfos()[(unsigned long) index].getCategory() == ChrCategory::TECHNICAL;
     }
 
     /** NC_007605, EBV. */
     bool GenericChrConverter::isVirus(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::VIRUS;
+        return chrInfoTable.getChrInfos()[(unsigned long) index].getCategory() == ChrCategory::VIRUS;
     }
 
     /** Mitochondrial chromosome index. */
     bool GenericChrConverter::isExtrachromosomal(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::EXTRACHROMOSOMAL;
+        return chrInfoTable.getChrInfos()[(unsigned long) index].getCategory() == ChrCategory::EXTRACHROMOSOMAL;
     }
 
     /** Decoy sequence index. */
     bool GenericChrConverter::isDecoy(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::DECOY;
+        return chrInfoTable.getChrInfos()[(unsigned long) index].getCategory() == ChrCategory::DECOY;
     }
 
     /** ALT sequence index. */
     bool GenericChrConverter::isALT(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::ALT;
+        return chrInfoTable.getChrInfos()[(unsigned long) index].getCategory() == ChrCategory::ALT;
     }
 
     /** HLA sequence index. */
     bool GenericChrConverter::isHLA(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::HLA;
+        return chrInfoTable.getChrInfos()[(unsigned long) index].getCategory() == ChrCategory::HLA;
     }
 
     /** Unassigned (unplaced, random, unlocalized) sequence index. */
     bool GenericChrConverter::isUnassigned(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[index].getCategory() == ChrCategory::UNASSIGNED;
+        return chrInfoTable.getChrInfos()[(unsigned long) index].getCategory() == ChrCategory::UNASSIGNED;
     }
 
     bool GenericChrConverter::isCompressedMref(ChrIndex index) const {
-        return index < nChromosomes()  // Ensure no access out of range is done
-                && chrInfoTable.getChrInfos()[index].isCompressedMref();
+        return chrInfoTable.getChrInfos()[(unsigned long) index].isCompressedMref();
     }
 
     /** Number of compressedMref chromosomes. */
-    ChrIndex GenericChrConverter::nChromosomesCompressedMref() const {
+    CompressedMrefIndex GenericChrConverter::nChromosomesCompressedMref() const {
         return compressedToAllMapping.size();
     }
 
@@ -177,7 +177,7 @@ namespace sophia {
         // If global and compressed mref indices are properly type-checked (instead of
         // using/typedef declarations, which are not type-checked!), then this should be removed.
         // TODO Remove when switching to typed ChrIndex and CompressedMrefIndex.
-        if (!chrInfoTable.getChrInfos()[result].isCompressedMref())
+        if (!chrInfoTable.getChrInfos()[(unsigned long) result].isCompressedMref())
             throw_with_trace(DomainError(
                 "Compressed mref index does not map back to a compressed mref chromosome."));
         return result;
@@ -186,21 +186,21 @@ namespace sophia {
     /** Map an index from the global index-space to the compressed mref index-space. */
    CompressedMrefIndex
    GenericChrConverter::indexToCompressedMrefIndex(ChrIndex index) const {
-        if (allToCompressedMapping.at(index) == std::nullopt) {
+        if (allToCompressedMapping.at((unsigned long) index) == std::nullopt) {
             throw_with_trace(std::logic_error(
                 "Index does not map to a compressed mref chromosome."));
         }
-        return allToCompressedMapping.at(index).value();
+        return allToCompressedMapping.at((unsigned long) index).value();
    }
 
     /** Map compressed mref index to chromosome size. */
     ChrSize GenericChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
-        return chrInfoTable.getChrInfos()[compressedMrefIndexToIndex(index)].getSize();
+        return chrInfoTable.getChrInfos()[(unsigned long) compressedMrefIndexToIndex(index)].getSize();
     }
 
     /** Map an compressed mref index to a chromosome name. */
     ChrName GenericChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
-        return chrInfoTable.getChrInfos()[compressedMrefIndexToIndex(index)].getName();
+        return chrInfoTable.getChrInfos()[(unsigned long) compressedMrefIndexToIndex(index)].getName();
     }
 
 

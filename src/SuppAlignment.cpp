@@ -34,12 +34,12 @@ namespace sophia {
 
     double SuppAlignment::ISIZEMAX { };
 
-    int SuppAlignment::DEFAULTREADLENGTH { };
+    ChrSize SuppAlignment::DEFAULT_READ_LENGTH { };
 
 
     // Default constructor.
     SuppAlignment::SuppAlignment() :
-        matchFuzziness { 5 * DEFAULTREADLENGTH },
+        matchFuzziness { 5 * DEFAULT_READ_LENGTH },
         chrIndex { 0 },
         pos { 0 },
         extendedPos { 0 },
@@ -66,12 +66,12 @@ namespace sophia {
 
 
     SuppAlignment::SuppAlignment(ChrIndex chrIndexIn,
-                                 int posIn,
+                                 ChrSize posIn,
                                  int mateSupportIn,
                                  int expectedDiscordantsIn,
                                  bool encounteredMIn,
                                  bool invertedIn,
-                                 int extendedPosIn,
+                                 ChrSize extendedPosIn,
                                  bool primaryIn,
                                  bool lowMapqSourceIn,
                                  bool nullMapqSourceIn,
@@ -183,12 +183,12 @@ namespace sophia {
 
         // Update `pos` field.
         for (auto it = fieldBegins[POS]; it != fieldEnds[POS]; ++it) {
-            result.pos = 10 * result.pos + (*it - '0');
+            result.pos = 10 * result.pos + ChrPosition(*it - '0');
         }
 
         // Update `mapq` field.
         for (auto it = fieldBegins[MAPQ]; it != fieldEnds[MAPQ]; ++it) {
-            result.mapq = 10 * result.mapq + (*it - '0');
+            result.mapq = 10 * result.mapq + (int) (*it - '0');
         }
 
         // Update `inverted` field
@@ -204,10 +204,10 @@ namespace sophia {
         // Now, parse the CIGAR string and identify soft/hard-clipped segments.
         vector<CigarChunk> cigarChunks;
         auto cigarEncounteredM = false;
+        unsigned int chunkIndex = 0,
+                     largestClipIndex = 0;
         auto cumulativeNucleotideCount = 0,
              currentNucleotideCount = 0,
-             chunkIndex = 0,
-             largestClipIndex = 0,
              indelAdjustment = 0;
         auto largestClipSize = 0;
         auto leftClipAdjustment = 0;
@@ -274,9 +274,9 @@ namespace sophia {
             }
             result.extendedPos = result.pos;
 
-            result.distant = (bpChrIndex != result.chrIndex || (abs(bpPos - result.pos) > ISIZEMAX));
+            result.distant = (bpChrIndex != result.chrIndex || (abs((long) bpPos - (long) result.pos) > ISIZEMAX));
             if (bpChrIndex == result.chrIndex) {
-                result.matchFuzziness = min(abs(bpPos - result.pos), result.matchFuzziness);
+                result.matchFuzziness = min((ChrSize) abs((long) bpPos - (long) result.pos), result.matchFuzziness);
             }
         }
 
@@ -300,7 +300,7 @@ namespace sophia {
             // If the last character is a `#` then properPairErrorProne is true.
             result.properPairErrorProne = saIn.back() == '#';
 
-            auto index = 0;
+            unsigned int index = 0;
 
             // If the string starts with a `|` then encounteredM is true.
             result.encounteredM = saIn.at(0) == '|';
@@ -349,9 +349,9 @@ namespace sophia {
                     break;
                 } else if (saIn.at(index) != '|') {
                     if (!result.fuzzy) {
-                        result.pos = 10 * result.pos + (saIn.at(index) - '0');
+                        result.pos = 10 * result.pos + (unsigned int) (saIn.at(index) - '0');
                     } else {
-                        result.extendedPos = 10 * result.extendedPos + (saIn.at(index) - '0');
+                        result.extendedPos = 10 * result.extendedPos + (unsigned int) (saIn.at(index) - '0');
                     }
                 }
             }
@@ -488,11 +488,11 @@ namespace sophia {
     bool SuppAlignment::saCloseness(const SuppAlignment& rhs, int fuzziness) const {
         if (inverted == rhs.isInverted() && chrIndex == rhs.getChrIndex() && encounteredM == rhs.isEncounteredM()) {
             if (strictFuzzy || rhs.isStrictFuzzy()) {
-                fuzziness = 2.5 * DEFAULTREADLENGTH;
-                return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) &&
-                            (pos - fuzziness) <= (rhs.getExtendedPos() + fuzziness);
+                fuzziness = 2.5 * DEFAULT_READ_LENGTH;
+                return ((long) rhs.getPos() - (long) fuzziness) <= ((long) extendedPos + (long) fuzziness) &&
+                            ((long) pos - (long) fuzziness) <= ((long) rhs.getExtendedPos() + (long) fuzziness);
             } else {
-                return abs(pos - rhs.getPos()) <= fuzziness;
+                return abs((long) pos - (long) rhs.getPos()) <= (long) fuzziness;
             }
         } else {
             return false;
@@ -506,10 +506,10 @@ namespace sophia {
         }
         if (chrIndex == rhs.getChrIndex() && encounteredM == rhs.isEncounteredM()) {
             if (strictFuzzy || rhs.isStrictFuzzy()) {
-                return (rhs.getPos() - fuzziness) <= (extendedPos + fuzziness) &&
-                            (pos - fuzziness) <= (rhs.getExtendedPos() + fuzziness);
+                return ((long) rhs.getPos() - (long) fuzziness) <= ((long) extendedPos + (long) fuzziness) &&
+                            ((long) pos - (long) fuzziness) <= ((long) rhs.getExtendedPos() + (long) fuzziness);
             } else {
-                return abs(pos - rhs.getPos()) <= fuzziness;
+                return abs((long) pos - (long) rhs.getPos()) <= (long) fuzziness;
             }
         } else {
             return false;

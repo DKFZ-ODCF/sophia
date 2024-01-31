@@ -24,32 +24,49 @@
 
 #include "GlobalAppConfig.h"
 #include "strtk-wrap.h"
-#include <SvEvent.h>
+#include "SvEvent.h"
+#include <limits>
 
 namespace sophia {
 
-    int SvEvent::GERMLINEOFFSETTHRESHOLD{};
-    double SvEvent::RELAXEDBPFREQTHRESHOLD{};
-    double SvEvent::BPFREQTHRESHOLD{};
-    double SvEvent::ARTIFACTFREQLOWTHRESHOLD{};
-    double SvEvent::ARTIFACTFREQHIGHTHRESHOLD{};
-    double SvEvent::CLONALITYLOWTHRESHOLD{};
-    double SvEvent::CLONALITYSTRICTLOWTHRESHOLD{};
-    double SvEvent::CLONALITYHIGHTHRESHOLD{};
-    int SvEvent::HALFDEFAULTREADLENGTH{};
-    int SvEvent::GERMLINEDBLIMIT{};
-    string SvEvent::PIDSINMREFSTR{};
+    int SvEvent::GERMLINE_OFFSET_THRESHOLD{};
+
+    double SvEvent::RELAXED_BP_FREQ_THRESHOLD{};
+
+    double SvEvent::BP_FREQ_THRESHOLD{};
+
+    double SvEvent::ARTIFACT_FREQ_LOW_THRESHOLD{};
+
+    double SvEvent::ARTIFACT_FREQ_HIGH_THRESHOLD{};
+
+    double SvEvent::CLONALITY_LOW_THRESHOLD{};
+
+    double SvEvent::CLONALITY_STRICT_LOW_THRESHOLD{};
+
+    double SvEvent::CLONALITY_HIGH_THRESHOLD{};
+
+    int SvEvent::HALFDEFAULT_READ_LENGTH{};
+
+    int SvEvent::GERMLINE_DB_LIMIT{};
+
+    string SvEvent::PIDS_IN_MREF_STR{};
+
     boost::format SvEvent::doubleFormatter{"%.3f"};
-    bool SvEvent::ABRIDGEDOUTPUT{true};
-    bool SvEvent::NOCONTROLMODE{false};
-    bool SvEvent::DEBUGMODE{false};
+
+    bool SvEvent::ABRIDGED_OUTPUT{true};
+
+    bool SvEvent::NO_CONTROL_MODE{false};
+
+    bool SvEvent::DEBUG_MODE{false};
+
     const vector<string> SvEvent::EVENTTYPES{"UNKNOWN", "DEL", "DUP",
                                              "TRA",     "INV", "CONTAMINATION"};
 
     SvEvent::SvEvent(const BreakpointReduced &bp1In, const BreakpointReduced &bp2In,
                      const SuppAlignmentAnno &sa1In, const SuppAlignmentAnno &sa2In,
                      const vector<pair<int, string>> &overhangDb)
-        : toRemove{false}, contaminationCandidate{0},
+        : toRemove{false},
+          contaminationCandidate{0},
           chrIndex1{bp1In.getChrIndex()},
           pos1{bp1In.getPos()},
           chrIndex2{bp2In.getChrIndex()},
@@ -62,8 +79,9 @@ namespace sophia {
           distant{false},
           overhang1Compensation{false},
           overhang2Compensation{false},
-          overhang1Index{-1}, overhang2Index{-1},
-           overhang1lengthRatio{0},
+          overhang1Index{-1},
+          overhang2Index{-1},
+          overhang1lengthRatio{0},
           overhang2lengthRatio{0},
           inputScore{2},
           eventScore{0},
@@ -72,18 +90,20 @@ namespace sophia {
           span1{bp1In.getNormalSpans()},
           totalEvidence2{sa2In.getSupport() + sa2In.getSecondarySupport() +
                          sa2In.getMateSupport()},
-          span2{bp2In.getNormalSpans()}, evidenceLevel1{0},
-          evidenceLevel2{0}, mrefHits1{bp1In.getMrefHits().getNumConsevativeHits()},
+          span2{bp2In.getNormalSpans()},
+          evidenceLevel1{0},
+          evidenceLevel2{0},
+          mrefHits1{bp1In.getMrefHits().getNumConsevativeHits()},
           mrefHits1Conservative{true},
           mrefHits2{bp2In.getMrefHits().getNumConsevativeHits()},
-          mrefHits2Conservative{true}, germline{false},
+          mrefHits2Conservative{true},
+          germline{false},
           germlineClonality1{bp1In.getGermlineInfo().getConservativeClonality()},
-          germlineStatus1{bp1In.getGermlineInfo().getConservativeClonality() >
-                          0.15},
+          germlineStatus1{bp1In.getGermlineInfo().getConservativeClonality() >  0.15},
           germlineClonality2{bp2In.getGermlineInfo().getConservativeClonality()},
-          germlineStatus2{bp2In.getGermlineInfo().getConservativeClonality() >
-                          0.15},
-          selectedSa1{sa1In}, selectedSa2{sa2In},
+          germlineStatus2{bp2In.getGermlineInfo().getConservativeClonality() > 0.15},
+          selectedSa1{sa1In},
+          selectedSa2{sa2In},
           mateRatio1{sa1In.getExpectedDiscordants() > 0
                          ? sa1In.getMateSupport() /
                                (0.0 + sa1In.getExpectedDiscordants())
@@ -95,8 +115,7 @@ namespace sophia {
           suspicious{0}, semiSuspicious{sa1In.isSemiSuspicious() ||
                                         sa2In.isSemiSuspicious()} {
 
-        auto posDifferential = pos1 - pos2;
-        determineEventTypeAndSize(posDifferential, selectedSa2.isEncounteredM());
+        determineEventTypeAndSize(pos1, pos2, selectedSa2.isEncounteredM());
         if (chrIndex1 != chrIndex2) {
             distant = true;
         } else if (selectedSa1.getExpectedDiscordants() > 0 ||
@@ -148,8 +167,8 @@ namespace sophia {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
                               !selectedSa2.isProperPairErrorProne() &&
-                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex1)) &&
-                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex2));
+                              chrConverter.isAutosome(chrIndex1) &&
+                              chrConverter.isAutosome(chrIndex2);
         auto splitSupportThreshold1 =
             (strictNonDecoy && !selectedSa1.isSemiSuspicious() &&
              (mateRatio1 >= 0.6))
@@ -239,11 +258,11 @@ namespace sophia {
         mrefHits2 = mrefHits2Tmp.second;
         mrefHits2Conservative = mrefHits2Tmp.first;
         if (!germlineStatus1 && germlineClonality1 > 0 &&
-            mrefHits1 > GERMLINEDBLIMIT) {
+            mrefHits1 > GERMLINE_DB_LIMIT) {
             germlineStatus1 = true;
         }
         if (!germlineStatus2 && germlineClonality2 > 0 &&
-            mrefHits2 > GERMLINEDBLIMIT) {
+            mrefHits2 > GERMLINE_DB_LIMIT) {
             germlineStatus2 = true;
         }
         germline =
@@ -326,9 +345,7 @@ namespace sophia {
           suspicious{0},
           semiSuspicious{sa1In.isSemiSuspicious()} {
 
-        auto posDifferential = pos1 - pos2;
-        determineEventTypeAndSize(
-            posDifferential, (bp2In.getLeftCoverage() > bp2In.getRightCoverage()));
+        determineEventTypeAndSize(pos1, pos2, (bp2In.getLeftCoverage() > bp2In.getRightCoverage()));
         if (chrIndex1 != chrIndex2) {
             distant = true;
         } else if (selectedSa1.getExpectedDiscordants() > 0) {
@@ -359,8 +376,8 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex1)) &&
-                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex2));
+                              chrConverter.isAutosome(chrIndex1) &&
+                              chrConverter.isAutosome(chrIndex2);
         auto splitSupportThreshold =
             (strictNonDecoy && !selectedSa2.isSemiSuspicious() &&
              (mateRatio1 >= 0.66))
@@ -420,11 +437,11 @@ namespace sophia {
         mrefHits2 = mrefHits2Tmp.second;
         mrefHits2Conservative = mrefHits2Tmp.first;
         if (!germlineStatus1 && germlineClonality1 > 0 &&
-            mrefHits1 > GERMLINEDBLIMIT) {
+            mrefHits1 > GERMLINE_DB_LIMIT) {
             germlineStatus1 = true;
         }
         if (!germlineStatus2 && germlineClonality2 > 0 &&
-            mrefHits2 > GERMLINEDBLIMIT) {
+            mrefHits2 > GERMLINE_DB_LIMIT) {
             germlineStatus2 = true;
         }
         germline = (germlineStatus1 || germlineStatus2) &&   //
@@ -477,23 +494,36 @@ namespace sophia {
                      const vector<pair<int, string>> &overhangDb,
                      const SuppAlignmentAnno &dummySaIn)
         : toRemove{false}, contaminationCandidate{0},
-          chrIndex1{bp1In.getChrIndex()}, pos1{bp1In.getPos()},
-          chrIndex2{sa1In.getChrIndex()}, pos2{sa1In.getPos()},
-          lineIndex1{bp1In.getLineIndex()}, lineIndex2{-1}, eventType{0},
-          eventSize{0}, inverted{sa1In.isInverted()}, distant{false},
-          overhang1Compensation{false}, overhang2Compensation{false},
-          overhang1Index{-1}, overhang2Index{-1}, overhang1lengthRatio{0},
-          overhang2lengthRatio{0}, inputScore{0}, eventScore{0},
+          chrIndex1{bp1In.getChrIndex()},
+          pos1{bp1In.getPos()},
+          chrIndex2{sa1In.getChrIndex()},
+          pos2{sa1In.getPos()},
+          lineIndex1{bp1In.getLineIndex()},
+          lineIndex2{-1},
+          eventType{0},
+          eventSize{0},
+          inverted{sa1In.isInverted()},
+          distant{false},
+          overhang1Compensation{false},
+          overhang2Compensation{false},
+          overhang1Index{-1},
+          overhang2Index{-1},
+          overhang1lengthRatio{0},
+          overhang2lengthRatio{0},
+          inputScore{0},
+          eventScore{0},
           totalEvidence1{sa1In.getSupport() + sa1In.getSecondarySupport() +
                          sa1In.getMateSupport()},
-          span1{bp1In.getNormalSpans()}, totalEvidence2{0}, evidenceLevel1{0},
+          span1{bp1In.getNormalSpans()},
+          totalEvidence2{0},
+          evidenceLevel1{0},
           evidenceLevel2{0}, mrefHits1{bp1In.getMrefHits().getNumConsevativeHits()},
           mrefHits1Conservative{true},
           mrefHits2{hitsInMref2In.getNumConsevativeHits()},
-          mrefHits2Conservative{true}, germline{false},
+          mrefHits2Conservative{true},
+          germline{false},
           germlineClonality1{bp1In.getGermlineInfo().getConservativeClonality()},
-          germlineStatus1{bp1In.getGermlineInfo().getConservativeClonality() >
-                          0.15},
+          germlineStatus1{bp1In.getGermlineInfo().getConservativeClonality() > 0.15},
           germlineClonality2{germlineInfo2.getClonality()},
           germlineStatus2{germlineInfo2.getClonality() > 0.15}, selectedSa1{sa1In},
           selectedSa2{dummySaIn},
@@ -504,12 +534,12 @@ namespace sophia {
           mateRatio2{1.0}, suspicious{0}, semiSuspicious{sa1In.isSemiSuspicious()} {
         auto truePos2 = pos2;
         if (chrIndex1 == chrIndex2) {
-            if (abs(pos1 - pos2) > abs(pos1 - sa1In.getExtendedPos())) {
+            if (abs((long) pos1 - (long) pos2) > abs((long) pos1 - (long) sa1In.getExtendedPos())) {
                 truePos2 = sa1In.getExtendedPos();
             }
         }
-        auto posDifferential = pos1 - truePos2;
-        determineEventTypeAndSize(posDifferential, !selectedSa1.isEncounteredM());
+
+        determineEventTypeAndSize(pos1, truePos2, !selectedSa1.isEncounteredM());
         if (chrIndex1 != chrIndex2) {
             distant = true;
         } else if (selectedSa1.getExpectedDiscordants() > 0) {
@@ -520,9 +550,9 @@ namespace sophia {
         if (distant && selectedSa1.isFuzzy() &&
             bp1In.getChrIndex() == selectedSa1.getChrIndex() &&
             selectedSa1.isStrictFuzzyCandidate()) {
-            auto fuzDiff = selectedSa1.getExtendedPos() - selectedSa1.getPos();
-            if (max(0, pos1 - fuzDiff) <= selectedSa1.getExtendedPos() &&
-                selectedSa1.getPos() <= (pos1 + fuzDiff)) {
+            auto fuzDiff = (long) selectedSa1.getExtendedPos() - (long) selectedSa1.getPos();
+            if (max(0l, (long) pos1 - fuzDiff) <= (long) selectedSa1.getExtendedPos() &&
+                (long) selectedSa1.getPos() <= ((long) pos1 + fuzDiff)) {
                 distant = false;
             } else if (eventSize < 5000) {
                 distant = false;
@@ -556,8 +586,8 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex1)) &&
-                              chrConverter.isAutosome(chrConverter.compressedMrefIndexToIndex(chrIndex2));
+                              chrConverter.isAutosome(chrIndex1) &&
+                              chrConverter.isAutosome(chrIndex2);
         auto splitSupportThreshold =
             (strictNonDecoy && (mateRatio1 >= 0.66) ? 0 : 2);
 
@@ -607,11 +637,11 @@ namespace sophia {
         mrefHits2 = mrefHits2Tmp.second;
         mrefHits2Conservative = mrefHits2Tmp.first;
         if (!germlineStatus1 && germlineClonality1 > 0 &&
-            mrefHits1 > GERMLINEDBLIMIT) {
+            mrefHits1 > GERMLINE_DB_LIMIT) {
             germlineStatus1 = true;
         }
         if (!germlineStatus2 && germlineClonality2 > 0 &&
-            mrefHits2 > GERMLINEDBLIMIT) {
+            mrefHits2 > GERMLINE_DB_LIMIT) {
             germlineStatus2 = true;
         }
 
@@ -640,40 +670,48 @@ namespace sophia {
     }
 
     void
-    SvEvent::determineEventTypeAndSize(int posDifferential,
+    SvEvent::determineEventTypeAndSize(ChrPosition pos1In,
+                                       ChrPosition pos2In,
                                        bool matchEncounteredM) {
-        //	static vector<string> EVENTTYPES { "UNKNOWN", "DEL", "DUP", "TRA",
-        //"INV", "CONTAMINATION" };
+        int posDifferential = pos1In - pos2In;
         if (chrIndex1 != chrIndex2) {
+            // interchromosomal
             eventType = 3;
             eventSize = -1;
         } else {
             eventSize = abs(posDifferential);
-            if (posDifferential < 0) {
+            if (posDifferential < 0) {   // pos1 < pos2; pos1 left of pos2
                 if (inverted) {
+                    // inverted
                     eventType = 4;
                 } else {
+                    // Assuming, selectedSa1 and pos1 belong together, as selectedSa2 and pos2.
                     if (selectedSa1.isEncounteredM() && !matchEncounteredM) {
                         eventType = 1;
                     } else if (!selectedSa1.isEncounteredM() && matchEncounteredM) {
                         eventType = 2;
                     } else {
+                        // Both same encounteredM value
                         eventType = 3;
                     }
                 }
-            } else if (posDifferential > 0) {
+            } else if (posDifferential > 0) {  // pos1 > pos2; pos1 right of pos2
                 if (inverted) {
+                    // inverted
                     eventType = 4;
                 } else {
                     if (selectedSa1.isEncounteredM() && !matchEncounteredM) {
+                        // This is opposite of the posDifferential < 0 case.
                         eventType = 2;
                     } else if (!selectedSa1.isEncounteredM() && matchEncounteredM) {
+                        // This is opposite of the posDifferential < 0 case.
                         eventType = 1;
                     } else {
+                        // Both same encounteredM value
                         eventType = 3;
                     }
                 }
-            } else {
+            } else {  // posDifferential == 0
                 eventType = 3;
                 suspicious = 3;
             }
@@ -756,7 +794,7 @@ namespace sophia {
             }
             if (counts < 3) {
                 auto lengthRatio = (0.0 + maxOverhangLength) /
-                                   SuppAlignmentAnno::DEFAULTREADLENGTH;
+                                   SuppAlignmentAnno::DEFAULT_READ_LENGTH;
                 compensation = 0.25 <= lengthRatio && lengthRatio <= 0.8;
             }
         }
@@ -773,7 +811,7 @@ namespace sophia {
         short maxScore{0};
         short hits{initScore};
         for (const auto &saRef : hitsInMref.getSuppMatches()) {
-            if (saRef.saCloseness(sa, SuppAlignmentAnno::DEFAULTREADLENGTH * 6)) {
+            if (saRef.saCloseness(sa, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6)) {
                 saMatch = true;
                 auto score = saRef.getSecondarySupport();
                 if (score > maxScore) {
@@ -799,10 +837,9 @@ namespace sophia {
                                           double clonalityInit) const {
         auto maxClonality = clonalityInit;
         if (sa.isDistant()) {
-            auto i = 0;
+            unsigned int i = 0;
             for (const auto &saRef : bp1.getGermlineInfo().getSuppMatches()) {
-                if (saRef.saCloseness(sa,
-                                      SuppAlignmentAnno::DEFAULTREADLENGTH * 6)) {
+                if (saRef.saCloseness(sa, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6)) {
                     auto clonality = bp1.getGermlineInfo().getClonalities()[i];
                     if (clonality > maxClonality) {
                         maxClonality = clonality;
@@ -830,7 +867,7 @@ namespace sophia {
             (selectedSa2.getExpectedDiscordants() > 0 && mateRatio2 < 0.1)) {
             return 2;
         }
-        if (mrefHits1 > GERMLINEDBLIMIT) {
+        if (mrefHits1 > GERMLINE_DB_LIMIT) {
             if (selectedSa1.isSemiSuspicious() && evidenceLevel1 < 3) {
                 if (!(selectedSa1.getSupport() > 9 ||
                       selectedSa1.getSecondarySupport() > 9 ||
@@ -839,7 +876,7 @@ namespace sophia {
                 }
             }
         }
-        if (mrefHits2 > GERMLINEDBLIMIT) {
+        if (mrefHits2 > GERMLINE_DB_LIMIT) {
             if (selectedSa2.isSemiSuspicious() && evidenceLevel2 < 3) {
                 if (!(selectedSa2.getSupport() > 9 ||
                       selectedSa2.getSecondarySupport() > 9 ||
@@ -848,14 +885,14 @@ namespace sophia {
                 }
             }
         }
-        if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
-            if (clonalityRatio1 < CLONALITYSTRICTLOWTHRESHOLD &&
-                clonalityRatio2 < CLONALITYSTRICTLOWTHRESHOLD) {
+        if (mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) {
+            if (clonalityRatio1 < CLONALITY_STRICT_LOW_THRESHOLD &&
+                clonalityRatio2 < CLONALITY_STRICT_LOW_THRESHOLD) {
                 return 4;
             } else if ((!germlineStatus1 || !germlineStatus2) &&   //
-                       (mrefHits1 > GERMLINEDBLIMIT ||
-                        mrefHits2 > GERMLINEDBLIMIT) &&
-                       (eventSize > 0) && (eventSize < HALFDEFAULTREADLENGTH)) {
+                       (mrefHits1 > GERMLINE_DB_LIMIT ||
+                        mrefHits2 > GERMLINE_DB_LIMIT) &&
+                       (eventSize > 0) && (eventSize < HALFDEFAULT_READ_LENGTH)) {
                 return 5;
             }
         }
@@ -866,7 +903,7 @@ namespace sophia {
             if (selectedSa1.isStrictFuzzy() || selectedSa2.isStrictFuzzy()) {
                 return 13;
             }
-            if (mrefHits1 > GERMLINEDBLIMIT || mrefHits2 > GERMLINEDBLIMIT) {
+            if (mrefHits1 > GERMLINE_DB_LIMIT || mrefHits2 > GERMLINE_DB_LIMIT) {
                 if (totalEvidence1 < 5 || totalEvidence2 < 5) {
                     return 13;
                 }
@@ -902,12 +939,12 @@ namespace sophia {
                 if (bp1.getChrIndex() == bp2.getChrIndex()) {
                     if (selectedSa1.isStrictFuzzy() ||
                         selectedSa2.isStrictFuzzy()) {
-                        if (abs(bp1.getPos() - bp2.getPos()) < 5000) {
+                        if (abs((long) bp1.getPos() - (long) bp2.getPos()) < 5000l) {
                             return 14;
                         }
                     }
                 }
-                if (mrefHits1 > GERMLINEDBLIMIT || mrefHits2 > GERMLINEDBLIMIT) {
+                if (mrefHits1 > GERMLINE_DB_LIMIT || mrefHits2 > GERMLINE_DB_LIMIT) {
                     return 173;
                 }
                 if (selectedSa1.isFuzzy() && selectedSa2.isFuzzy()) {
@@ -928,7 +965,7 @@ namespace sophia {
             }
         }
         if (bp1.getChrIndex() != bp2.getChrIndex() ||
-            abs(bp1.getPos() - bp2.getPos()) > 150) {
+            abs((long) bp1.getPos() - (long) bp2.getPos()) > 150l) {
             auto eventTotal1 = bp1.getPairedBreaksSoft() +
                                bp1.getPairedBreaksHard() +
                                bp1.getUnpairedBreaksSoft();
@@ -949,39 +986,39 @@ namespace sophia {
         if (artifactStatus == ARTIFACT) {
             return 41;
         }
-        if (NOCONTROLMODE || germlineStatus1 || germlineStatus2) {
-            if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
+        if (NO_CONTROL_MODE || germlineStatus1 || germlineStatus2) {
+            if (mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) {
                 return 42;
             }
         }
-        if (mrefHits1 > BPFREQTHRESHOLD) {
-            if (NOCONTROLMODE || germlineStatus1 || germlineStatus2 ||
-                mrefHits2 > GERMLINEDBLIMIT) {
+        if (mrefHits1 > BP_FREQ_THRESHOLD) {
+            if (NO_CONTROL_MODE || germlineStatus1 || germlineStatus2 ||
+                mrefHits2 > GERMLINE_DB_LIMIT) {
                 return 431;
             }
-            if (mrefHits1 > RELAXEDBPFREQTHRESHOLD * 2.5) {
+            if (mrefHits1 > RELAXED_BP_FREQ_THRESHOLD * 2.5) {
                 return 431;
             }
             if (!(mrefHits1Conservative && evidenceLevel1 == 3 &&
                   evidenceLevel2 > 1 && mrefHits2 == 0 && !selectedSa1.isFuzzy() &&
                   !selectedSa2.isFuzzy())) {
-                if (mrefHits1 > RELAXEDBPFREQTHRESHOLD) {
+                if (mrefHits1 > RELAXED_BP_FREQ_THRESHOLD) {
                     return 431;
                 }
             }
         }
-        if (mrefHits2 > BPFREQTHRESHOLD) {
-            if (NOCONTROLMODE || germlineStatus1 || germlineStatus2 ||
-                mrefHits1 > GERMLINEDBLIMIT) {
+        if (mrefHits2 > BP_FREQ_THRESHOLD) {
+            if (NO_CONTROL_MODE || germlineStatus1 || germlineStatus2 ||
+                mrefHits1 > GERMLINE_DB_LIMIT) {
                 return 432;
             }
-            if (mrefHits2 > RELAXEDBPFREQTHRESHOLD * 2.5) {
+            if (mrefHits2 > RELAXED_BP_FREQ_THRESHOLD * 2.5) {
                 return 432;
             }
             if (!(mrefHits2Conservative && evidenceLevel1 > 1 &&
                   evidenceLevel2 == 3 && mrefHits1 == 0 && !selectedSa1.isFuzzy() &&
                   !selectedSa2.isFuzzy())) {
-                if (mrefHits2 > RELAXEDBPFREQTHRESHOLD) {
+                if (mrefHits2 > RELAXED_BP_FREQ_THRESHOLD) {
                     return 432;
                 }
             }
@@ -1002,11 +1039,11 @@ namespace sophia {
         if (selectedSa1.getExpectedDiscordants() > 0 && mateRatio1 < 0.1) {
             return 2;
         }
-        if (mrefHits1 > GERMLINEDBLIMIT &&
+        if (mrefHits1 > GERMLINE_DB_LIMIT &&
             !(chrConverter.isDecoy(bp1.getChrIndex()) || chrConverter.isVirus(bp1.getChrIndex()))) {
             return 171;
         }
-        if (mrefHits2 > GERMLINEDBLIMIT &&
+        if (mrefHits2 > GERMLINE_DB_LIMIT &&
             !(chrConverter.isDecoy(bp2.getChrIndex()) || chrConverter.isVirus(bp2.getChrIndex()))) {
             return 171;
         }
@@ -1014,7 +1051,7 @@ namespace sophia {
             if (inverted) {
                 return 22;
             }
-            if (eventSize > 0 && eventSize < HALFDEFAULTREADLENGTH) {
+            if (eventSize > 0 && eventSize < HALFDEFAULT_READ_LENGTH) {
                 return 23;
             }
             if (eventType == 3) {
@@ -1040,7 +1077,7 @@ namespace sophia {
                     3) {
                 return 25;
             }
-            if (mrefHits1 > GERMLINEDBLIMIT || mrefHits2 > GERMLINEDBLIMIT) {
+            if (mrefHits1 > GERMLINE_DB_LIMIT || mrefHits2 > GERMLINE_DB_LIMIT) {
                 if (totalEvidence1 < 5) {
                     return 25;
                 }
@@ -1064,10 +1101,10 @@ namespace sophia {
             if (selectedSa1.isFuzzy() || (selectedSa1.getSupport() +
                                           selectedSa1.getSecondarySupport()) < 3) {
                 if (bp1.getChrIndex() == bp2.getChrIndex()) {
-                    if (abs(bp1.getPos() - bp2.getPos()) < 5000) {
+                    if (abs((long) bp1.getPos() - (long) bp2.getPos()) < 5000l) {
                         return 26;
                     }
-                    if (inverted && abs(bp1.getPos() - bp2.getPos()) < 10000) {
+                    if (inverted && abs((long) bp1.getPos() - (long) bp2.getPos()) < 10000l) {
                         return 27;
                     }
                 }
@@ -1094,28 +1131,28 @@ namespace sophia {
         if (artifactStatus == ARTIFACT) {
             return 41;
         }
-        if (NOCONTROLMODE || germlineStatus1 || germlineStatus2) {
-            if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
+        if (NO_CONTROL_MODE || germlineStatus1 || germlineStatus2) {
+            if (mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) {
                 return 42;
             }
         }
-        if (mrefHits1 > BPFREQTHRESHOLD) {
+        if (mrefHits1 > BP_FREQ_THRESHOLD) {
             if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
-                mrefHits2 > BPFREQTHRESHOLD) {
+                mrefHits2 > BP_FREQ_THRESHOLD) {
                 return 431;
             }
-            if (mrefHits1 > RELAXEDBPFREQTHRESHOLD || NOCONTROLMODE ||
-                germlineStatus1 || germlineStatus2 || mrefHits2 > GERMLINEDBLIMIT) {
+            if (mrefHits1 > RELAXED_BP_FREQ_THRESHOLD || NO_CONTROL_MODE ||
+                germlineStatus1 || germlineStatus2 || mrefHits2 > GERMLINE_DB_LIMIT) {
                 return 431;
             }
         }
-        if (mrefHits2 > BPFREQTHRESHOLD) {
+        if (mrefHits2 > BP_FREQ_THRESHOLD) {
             if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
-                mrefHits1 > BPFREQTHRESHOLD) {
+                mrefHits1 > BP_FREQ_THRESHOLD) {
                 return 432;
             }
-            if (mrefHits2 > RELAXEDBPFREQTHRESHOLD || NOCONTROLMODE ||
-                germlineStatus1 || germlineStatus2 || mrefHits1 > GERMLINEDBLIMIT) {
+            if (mrefHits2 > RELAXED_BP_FREQ_THRESHOLD || NO_CONTROL_MODE ||
+                germlineStatus1 || germlineStatus2 || mrefHits1 > GERMLINE_DB_LIMIT) {
                 return 432;
             }
         }
@@ -1140,11 +1177,11 @@ namespace sophia {
             10) {
             return 29;
         }
-        if (mrefHits1 > GERMLINEDBLIMIT &&
+        if (mrefHits1 > GERMLINE_DB_LIMIT &&
             !(chrConverter.isDecoy(bp1.getChrIndex()) || chrConverter.isVirus(bp1.getChrIndex()))) {
             return 301;
         }
-        if (mrefHits2 > GERMLINEDBLIMIT && !(chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
+        if (mrefHits2 > GERMLINE_DB_LIMIT && !(chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
                                              chrConverter.isVirus(selectedSa1.getChrIndex()))) {
             return 302;
         }
@@ -1152,7 +1189,7 @@ namespace sophia {
             if (inverted || totalEvidence1 < 5 || evidenceLevel1 == 1) {
                 return 30;
             }
-            if (eventSize > 0 && eventSize < HALFDEFAULTREADLENGTH) {
+            if (eventSize > 0 && eventSize < HALFDEFAULT_READ_LENGTH) {
                 return 31;
             }
             if (eventType == 3) {
@@ -1162,7 +1199,7 @@ namespace sophia {
                 selectedSa1.isStrictFuzzyCandidate()) {
                 return 31;
             }
-            if (mrefHits1 > GERMLINEDBLIMIT || mrefHits2 > GERMLINEDBLIMIT) {
+            if (mrefHits1 > GERMLINE_DB_LIMIT || mrefHits2 > GERMLINE_DB_LIMIT) {
                 if (totalEvidence1 < 5) {
                     return 31;
                 }
@@ -1174,7 +1211,7 @@ namespace sophia {
                 return 18;
             }
             if (selectedSa1.getMateSupport() < 3) {
-                if ((mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) ||
+                if ((mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) ||
                     (evidenceLevel1 < 3 && selectedSa1.getSupport() < 5)) {
                     return 32;
                 }
@@ -1199,34 +1236,34 @@ namespace sophia {
         if (artifactStatus == ARTIFACT) {
             return 45;
         }
-        if (NOCONTROLMODE || (germlineStatus1 || germlineStatus2)) {
-            if (NOCONTROLMODE) {
-                if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
+        if (NO_CONTROL_MODE || (germlineStatus1 || germlineStatus2)) {
+            if (NO_CONTROL_MODE) {
+                if (mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) {
                     return 46;
                 }
             } else {
-                if (mrefHits1 > GERMLINEDBLIMIT || mrefHits2 > GERMLINEDBLIMIT) {
+                if (mrefHits1 > GERMLINE_DB_LIMIT || mrefHits2 > GERMLINE_DB_LIMIT) {
                     return 47;
                 }
             }
         }
-        if (mrefHits1 > BPFREQTHRESHOLD) {
+        if (mrefHits1 > BP_FREQ_THRESHOLD) {
             if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
-                mrefHits2 > BPFREQTHRESHOLD) {
+                mrefHits2 > BP_FREQ_THRESHOLD) {
                 return 471;
             }
-            if (mrefHits1 > 3 * BPFREQTHRESHOLD || NOCONTROLMODE ||
-                germlineStatus1 || germlineStatus2 || mrefHits2 > GERMLINEDBLIMIT) {
+            if (mrefHits1 > 3 * BP_FREQ_THRESHOLD || NO_CONTROL_MODE ||
+                germlineStatus1 || germlineStatus2 || mrefHits2 > GERMLINE_DB_LIMIT) {
                 return 471;
             }
         }
-        if (mrefHits2 > BPFREQTHRESHOLD) {
+        if (mrefHits2 > BP_FREQ_THRESHOLD) {
             if (chrConverter.isDecoy(chrIndex2) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
-                mrefHits1 > BPFREQTHRESHOLD) {
+                mrefHits1 > BP_FREQ_THRESHOLD) {
                 return 472;
             }
-            if (mrefHits2 > 3 * BPFREQTHRESHOLD || NOCONTROLMODE ||
-                germlineStatus1 || germlineStatus2 || mrefHits1 > GERMLINEDBLIMIT) {
+            if (mrefHits2 > 3 * BP_FREQ_THRESHOLD || NO_CONTROL_MODE ||
+                germlineStatus1 || germlineStatus2 || mrefHits1 > GERMLINE_DB_LIMIT) {
                 return 472;
             }
         }
@@ -1250,8 +1287,8 @@ namespace sophia {
     SvEvent::assessBreakpointClonalityStatus(double clonalityRatioIn,
                                              const BreakpointReduced &bp1[[gnu::unused]],
                                              const BreakpointReduced &bp2[[gnu::unused]]) const {
-        if (clonalityRatioIn < CLONALITYLOWTHRESHOLD) {
-            if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
+        if (clonalityRatioIn < CLONALITY_LOW_THRESHOLD) {
+            if (mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) {
                 return EXTREME_SUBCLONAL;
             }
             if (distant) {
@@ -1265,7 +1302,7 @@ namespace sophia {
                 }
             }
             return EXTREME_SUBCLONAL;
-        } else if (clonalityRatioIn >= CLONALITYHIGHTHRESHOLD) {
+        } else if (clonalityRatioIn >= CLONALITY_HIGH_THRESHOLD) {
             return HOMO;
         } else {
             return HETERO;
@@ -1278,8 +1315,8 @@ namespace sophia {
             const BreakpointReduced &bp1 [[gnu::unused]],
             const BreakpointReduced &bp2 [[gnu::unused]]
             ) const {
-        if (clonalityRatioIn < CLONALITYLOWTHRESHOLD) {
-            if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
+        if (clonalityRatioIn < CLONALITY_LOW_THRESHOLD) {
+            if (mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) {
                 return EXTREME_SUBCLONAL;
             }
             if (distant &&
@@ -1289,7 +1326,7 @@ namespace sophia {
             } else {
                 return EXTREME_SUBCLONAL;
             }
-        } else if (clonalityRatioIn >= CLONALITYHIGHTHRESHOLD) {
+        } else if (clonalityRatioIn >= CLONALITY_HIGH_THRESHOLD) {
             return HOMO;
         } else {
             return HETERO;
@@ -1301,8 +1338,8 @@ namespace sophia {
             double clonalityRatioIn,
             const BreakpointReduced &bp1 [[gnu::unused]]
             ) const {
-        if (clonalityRatioIn < CLONALITYLOWTHRESHOLD) {
-            if (mrefHits1 > GERMLINEDBLIMIT) {
+        if (clonalityRatioIn < CLONALITY_LOW_THRESHOLD) {
+            if (mrefHits1 > GERMLINE_DB_LIMIT) {
                 return EXTREME_SUBCLONAL;
             }
             if (distant &&
@@ -1312,7 +1349,7 @@ namespace sophia {
             } else {
                 return EXTREME_SUBCLONAL;
             }
-        } else if (clonalityRatioIn >= CLONALITYHIGHTHRESHOLD) {
+        } else if (clonalityRatioIn >= CLONALITY_HIGH_THRESHOLD) {
             return HOMO;
         } else {
             return HETERO;
@@ -1323,8 +1360,8 @@ namespace sophia {
     SvEvent::assessSvArtifactStatus(const BreakpointReduced &bp1 [[gnu::unused]],
                                     const BreakpointReduced &bp2 [[gnu::unused]]
                                     ) {
-        if (artifactRatio1 < ARTIFACTFREQLOWTHRESHOLD &&
-            artifactRatio2 < ARTIFACTFREQLOWTHRESHOLD) {
+        if (artifactRatio1 < ARTIFACT_FREQ_LOW_THRESHOLD &&
+            artifactRatio2 < ARTIFACT_FREQ_LOW_THRESHOLD) {
             artifactStatus = CLEAN;
             return;
         }
@@ -1338,14 +1375,14 @@ namespace sophia {
                 return;
             }
         }
-        if (artifactRatio1 > ARTIFACTFREQHIGHTHRESHOLD &&
-            artifactRatio2 > ARTIFACTFREQHIGHTHRESHOLD &&
-            (mrefHits1 > GERMLINEDBLIMIT || mrefHits1 > GERMLINEDBLIMIT)) {
+        if (artifactRatio1 > ARTIFACT_FREQ_HIGH_THRESHOLD &&
+            artifactRatio2 > ARTIFACT_FREQ_HIGH_THRESHOLD &&
+            (mrefHits1 > GERMLINE_DB_LIMIT || mrefHits1 > GERMLINE_DB_LIMIT)) {
             artifactStatus = ARTIFACT;
             return;
         }
-        if ((artifactRatio1 > ARTIFACTFREQHIGHTHRESHOLD ||
-             artifactRatio2 > ARTIFACTFREQHIGHTHRESHOLD) &&
+        if ((artifactRatio1 > ARTIFACT_FREQ_HIGH_THRESHOLD ||
+             artifactRatio2 > ARTIFACT_FREQ_HIGH_THRESHOLD) &&
             (clonalityStatus1 == EXTREME_SUBCLONAL ||
              clonalityStatus2 == EXTREME_SUBCLONAL)) {
             artifactStatus = ARTIFACT;
@@ -1356,12 +1393,12 @@ namespace sophia {
 
     void
     SvEvent::assessSvArtifactStatusUnknown() {
-        if (artifactRatio1 < ARTIFACTFREQLOWTHRESHOLD &&
-            artifactRatio2 < ARTIFACTFREQLOWTHRESHOLD) {
+        if (artifactRatio1 < ARTIFACT_FREQ_LOW_THRESHOLD &&
+            artifactRatio2 < ARTIFACT_FREQ_LOW_THRESHOLD) {
             artifactStatus = CLEAN;
             return;
         }
-        if (artifactRatio1 > ARTIFACTFREQHIGHTHRESHOLD) {
+        if (artifactRatio1 > ARTIFACT_FREQ_HIGH_THRESHOLD) {
             artifactStatus = ARTIFACT;
             return;
         }
@@ -1375,7 +1412,7 @@ namespace sophia {
         // inputscore 2: known partner with matching SA signal
         if (inputScoreCategory == 0) {
             if (distant) {
-                if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
+                if (mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) {
                     if (selectedSa1.getSupport() > 30 &&
                         selectedSa1.getSecondarySupport() < 10 &&
                         selectedSa1.getMateSupport() < 10) {
@@ -1388,7 +1425,7 @@ namespace sophia {
                         eventType = 5;
                         return 1;
                     }
-                } else if (mrefHits1 > GERMLINEDBLIMIT) {
+                } else if (mrefHits1 > GERMLINE_DB_LIMIT) {
                     if (selectedSa1.getSupport() > 50 &&
                         selectedSa1.getSecondarySupport() < 10 &&
                         selectedSa1.getMateSupport() < 10) {
@@ -1432,14 +1469,14 @@ namespace sophia {
             //(selectedSa1.getPos() == 2261373 && selectedSa2.getPos() == 2148480);
             if (!distant) {
                 if (totalEvidence1 < 5 && totalEvidence2 < 5) {
-                    if (mrefHits1 > GERMLINEDBLIMIT ||
-                        mrefHits2 > GERMLINEDBLIMIT) {
+                    if (mrefHits1 > GERMLINE_DB_LIMIT ||
+                        mrefHits2 > GERMLINE_DB_LIMIT) {
                         return 1;
                     }
                     return 3;
                 }
             } else {
-                if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
+                if (mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) {
                     if (selectedSa1.getSupport() > 30 &&
                         selectedSa1.getSecondarySupport() < 10 &&
                         selectedSa1.getMateSupport() < 10) {
@@ -1464,7 +1501,7 @@ namespace sophia {
                         eventType = 5;
                         return 2;
                     }
-                } else if (mrefHits1 > GERMLINEDBLIMIT) {
+                } else if (mrefHits1 > GERMLINE_DB_LIMIT) {
                     if (selectedSa1.getSupport() > 50 &&
                         selectedSa1.getSecondarySupport() < 10 &&
                         selectedSa1.getMateSupport() < 10) {
@@ -1478,7 +1515,7 @@ namespace sophia {
                         return 2;
                     }
 
-                } else if (mrefHits2 > GERMLINEDBLIMIT) {
+                } else if (mrefHits2 > GERMLINE_DB_LIMIT) {
                     if (selectedSa2.getSupport() > 50 &&
                         selectedSa2.getSecondarySupport() < 10 &&
                         selectedSa2.getMateSupport() < 10) {
@@ -1585,8 +1622,8 @@ namespace sophia {
                         }
                         return 2;
                     }
-                    if (!semiSuspicious && mrefHits1 < GERMLINEDBLIMIT &&
-                        mrefHits2 < GERMLINEDBLIMIT &&
+                    if (!semiSuspicious && mrefHits1 < GERMLINE_DB_LIMIT &&
+                        mrefHits2 < GERMLINE_DB_LIMIT &&
                         !(selectedSa1.isProperPairErrorProne() ||
                           selectedSa2.isProperPairErrorProne())) {
                         if (mateRatio1 >= 0.8 && mateRatio2 >= 0.8) {
@@ -1602,7 +1639,7 @@ namespace sophia {
             return 5;
         } else if (inputScoreCategory == 1) {
             if (distant) {
-                if (mrefHits1 > GERMLINEDBLIMIT && mrefHits2 > GERMLINEDBLIMIT) {
+                if (mrefHits1 > GERMLINE_DB_LIMIT && mrefHits2 > GERMLINE_DB_LIMIT) {
                     if (selectedSa1.getSupport() > 30 &&
                         selectedSa1.getSecondarySupport() < 10 &&
                         selectedSa1.getMateSupport() < 10) {
@@ -1615,7 +1652,7 @@ namespace sophia {
                         eventType = 5;
                         return 1;
                     }
-                } else if (mrefHits1 > GERMLINEDBLIMIT) {
+                } else if (mrefHits1 > GERMLINE_DB_LIMIT) {
                     if (selectedSa1.getSupport() > 50 &&
                         selectedSa1.getSecondarySupport() < 10 &&
                         selectedSa1.getMateSupport() < 10) {
@@ -1693,12 +1730,19 @@ namespace sophia {
 
     pair<int, double>
     SvEvent::assessContaminationSingleBp(
-        int overhangIndex, const vector<pair<int, string>> &overhangDb,
+        int overhangIndex,
+        const vector<pair<int, string>> &overhangDb,
         const SuppAlignmentAnno &selectedSa) {
+
+        if (overhangIndex < 0) {
+            throw_with_trace(std::invalid_argument(
+                "SvEvent::assessContaminationSingleBp has overhangIndex < 0"));
+        }
+
         auto overhangLengthMax = 0;
         auto overhangLength = 0;
-        for (auto cit = overhangDb[overhangIndex].second.cbegin();
-             cit != overhangDb[overhangIndex].second.cend(); ++cit) {
+        for (auto cit = overhangDb[(unsigned int) overhangIndex].second.cbegin();
+             cit != overhangDb[(unsigned int) overhangIndex].second.cend(); ++cit) {
             switch (*cit) {
             case '(':
                 overhangLengthMax = max(overhangLengthMax, overhangLength);
@@ -1713,7 +1757,7 @@ namespace sophia {
             }
         }
         auto maxOverhangLengthRatio =
-            (overhangLengthMax + 0.0) / SuppAlignmentAnno::DEFAULTREADLENGTH;
+            (overhangLengthMax + 0.0) / SuppAlignmentAnno::DEFAULT_READ_LENGTH;
         if (selectedSa.getSecondarySupport() > 4) {
             return {0, maxOverhangLengthRatio};
         }
@@ -1738,6 +1782,7 @@ namespace sophia {
         vector<string> outputFields;
         outputFields.reserve(20);
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+
         outputFields.emplace_back(chrConverter.indexToChrName(chrIndex1));
         outputFields.emplace_back(strtk::type_to_string<int>(pos1 - 1));
         outputFields.emplace_back(strtk::type_to_string<int>(pos1));
@@ -1751,47 +1796,49 @@ namespace sophia {
         if (!germlineStatus1) {
             outputFields.emplace_back(
                 "SOMATIC(" + strtk::type_to_string<int>(mrefHits1) + "/" +
-                PIDSINMREFSTR +
+                PIDS_IN_MREF_STR +
                 "):" + boost::str(doubleFormatter % germlineClonality1));
         } else {
-            if (germline || (mrefHits1 > GERMLINEDBLIMIT)) {
+            if (germline || (mrefHits1 > GERMLINE_DB_LIMIT)) {
                 outputFields.emplace_back(
                     "GERMLINE(" + strtk::type_to_string<int>(mrefHits1) + "/" +
-                    PIDSINMREFSTR +
+                    PIDS_IN_MREF_STR +
                     "):" + boost::str(doubleFormatter % germlineClonality1));
             } else {
                 outputFields.emplace_back(
                     "RESCUED(" + strtk::type_to_string<int>(mrefHits1) + "/" +
-                    PIDSINMREFSTR +
+                    PIDS_IN_MREF_STR +
                     "):" + boost::str(doubleFormatter % germlineClonality1));
             }
         }
+
         if (!germlineStatus2) {
             if (inputScore > 0) {
                 outputFields.emplace_back(
                     "SOMATIC(" + strtk::type_to_string<int>(mrefHits2) + "/" +
-                    PIDSINMREFSTR +
+                    PIDS_IN_MREF_STR +
                     "):" + boost::str(doubleFormatter % germlineClonality2));
             } else {
                 outputFields.emplace_back(
                     "UNKNOWN(" + strtk::type_to_string<int>(mrefHits2) + "/" +
-                    PIDSINMREFSTR +
+                    PIDS_IN_MREF_STR +
                     "):" + boost::str(doubleFormatter % germlineClonality2));
             }
 
         } else {
-            if (germline || (mrefHits2 > GERMLINEDBLIMIT)) {
+            if (germline || (mrefHits2 > GERMLINE_DB_LIMIT)) {
                 outputFields.emplace_back(
                     "GERMLINE(" + strtk::type_to_string<int>(mrefHits2) + "/" +
-                    PIDSINMREFSTR +
+                    PIDS_IN_MREF_STR +
                     "):" + boost::str(doubleFormatter % germlineClonality2));
             } else {
                 outputFields.emplace_back(
                     "RESCUED(" + strtk::type_to_string<int>(mrefHits2) + "/" +
-                    PIDSINMREFSTR +
+                    PIDS_IN_MREF_STR +
                     "):" + boost::str(doubleFormatter % germlineClonality2));
             }
         }
+
         outputFields.emplace_back(EVENTTYPES[eventType]);
         outputFields.emplace_back((suspicious == 0)
                                       ? strtk::type_to_string<int>(eventScore)
@@ -1820,14 +1867,14 @@ namespace sophia {
         outputFields.emplace_back(inputScore == 2 ? selectedSa2.print() : "_");
 
         outputFields.emplace_back(
-            overhang1Index != -1 ? overhangDb[overhang1Index].second : ".");
+            overhang1Index != -1 ? overhangDb[(unsigned int) overhang1Index].second : ".");
         outputFields.emplace_back(
-            overhang2Index != -1 ? overhangDb[overhang2Index].second : ".");
+            overhang2Index != -1 ? overhangDb[(unsigned int) overhang2Index].second : ".");
 
         return collapseRange(outputFields, "\t").append("\n");
     }
     // vector<int> SvEvent::getKey() const {
-    //	if (!DEBUGMODE && (suspicious != 0 || eventScore == 0)) {
+    //	if (!DEBUG_MODE && (suspicious != 0 || eventScore == 0)) {
     //		return {};
     //	}
     //	auto keyScore = (suspicious == 0) ? eventScore : suspicious;
@@ -1840,7 +1887,7 @@ namespace sophia {
 
     string
     SvEvent::getKey() const {
-        if (!DEBUGMODE && (suspicious != 0 || eventScore == 0)) {
+        if (!DEBUG_MODE && (suspicious != 0 || eventScore == 0)) {
             return {};
         }
         auto keyScore = (suspicious == 0) ? eventScore : suspicious;

@@ -23,12 +23,14 @@
 
 std::pair<double, double> getIsizeParameters(const std::string &ISIZEFILE);
 int main(int argc, char** argv) {
+
     using namespace sophia;
 
-    int defaultReadLength = 0,
-        clipSize = 10,
-        baseQuality = 23,
+    unsigned int DEFAULT_READ_LENGTH = 0;
+
+    int baseQuality = 23,
         baseQualityLow = 12,
+        clipSize = 10,
         lowQualClipSize = 5,
         isizeSigmaLevel = 5,
         bpSupport = 5;
@@ -54,9 +56,9 @@ int main(int argc, char** argv) {
             ("stdisizepercentage",
                 po::value<double>(),
                "percentage standard deviation of the insert size for the merged bam")
-            ("defaultreadlength",
-                po::value<int>(&defaultReadLength)->default_value(defaultReadLength),
-                "Default read length for the technology used in sequencing 101,151 etc.")
+            ("DEFAULT_READ_LENGTH",
+                po::value<unsigned int>(&DEFAULT_READ_LENGTH),
+                "Default read length for the technology used in sequencing 101, 151, etc.")
             ("clipsize",
                 po::value<int>(&clipSize)->default_value(clipSize),
                 "Minimum length of soft/hard clips in the alignment.")
@@ -96,8 +98,8 @@ int main(int argc, char** argv) {
         }
         setApplicationConfig(assemblyNameOpt);
 
-        if (inputVariables.count("defaultreadlength")) {
-            defaultReadLength = inputVariables["defaultreadlength"].as<int>();
+        if (inputVariables.count("DEFAULT_READ_LENGTH")) {
+            DEFAULT_READ_LENGTH = inputVariables["DEFAULT_READ_LENGTH"].as<unsigned int>();
         } else {
             cerr << "Default read Length not given, exiting" << endl;
             return 1;
@@ -131,8 +133,8 @@ int main(int argc, char** argv) {
             properPairRatio = inputVariables["properpairpercentage"].as<double>();
             properPairRatio /= 100;
             if (properPairRatio < 0.9) {
-                Breakpoint::PROPERPAIRCOMPENSATIONMODE = true;
-                Breakpoint::IMPROPERPAIRRATIO = 0.9 - properPairRatio;
+                Breakpoint::PROPER_PAIR_COMPENSATION_MODE = true;
+                Breakpoint::IMPROPER_PAIR_RATIO = 0.9 - properPairRatio;
             }
         }
 
@@ -159,19 +161,19 @@ int main(int argc, char** argv) {
             }
         }
 
-        Alignment::CLIPPEDNUCLEOTIDECOUNTTHRESHOLD = clipSize;
-        Alignment::BASEQUALITYTHRESHOLD = baseQuality + 33;
-        Alignment::BASEQUALITYTHRESHOLDLOW = baseQualityLow + 33;
-        Alignment::LOWQUALCLIPTHRESHOLD = lowQualClipSize;
-        Breakpoint::BPSUPPORTTHRESHOLD = bpSupport;
-        Breakpoint::DEFAULTREADLENGTH = defaultReadLength;
-        Breakpoint::DISCORDANTLOWQUALLEFTRANGE = static_cast<int>(round(defaultReadLength * 1.11));
-        Breakpoint::DISCORDANTLOWQUALRIGHTRANGE = static_cast<int>(round(defaultReadLength * 0.51));
+        Alignment::CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD = (unsigned int) clipSize;
+        Alignment::BASE_QUALITY_THRESHOLD = baseQuality + 33;
+        Alignment::BASE_QUALITY_THRESHOLD_LOW = baseQualityLow + 33;
+        Alignment::LOW_QUAL_CLIP_THRESHOLD = (ChrSize) lowQualClipSize;
+        Breakpoint::BP_SUPPORT_THRESHOLD = bpSupport;
+        Breakpoint::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTH;
+        Breakpoint::DISCORDANT_LOW_QUAL_LEFT_RANGE = static_cast<unsigned int>(round(DEFAULT_READ_LENGTH * 1.11));
+        Breakpoint::DISCORDANT_LOW_QUAL_RIGHT_RANGE = static_cast<unsigned int>(round(DEFAULT_READ_LENGTH * 0.51));
 
-        SuppAlignment::DEFAULTREADLENGTH = defaultReadLength;
-        ChosenBp::BPSUPPORTTHRESHOLD = bpSupport;
-        cout << Breakpoint::COLUMNSSTR;
-        SamSegmentMapper segmentRefMaster { defaultReadLength };
+        SuppAlignment::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTH;
+        ChosenBp::BP_SUPPORT_THRESHOLD = bpSupport;
+        cout << Breakpoint::COLUMN_STR;
+        SamSegmentMapper segmentRefMaster { DEFAULT_READ_LENGTH };
         segmentRefMaster.parseSamStream();
 
         return 0;

@@ -9,7 +9,8 @@ TESTS_DIR = ./tests
 # Compiler flags
 LIBRARY_FLAGS := -lz -lm -lrt -lboost_system -lboost_iostreams -lboost_program_options -ldl -lbacktrace -lboost_stacktrace_backtrace -DBOOST_STACKTRACE_USE_BACKTRACE
 LDFLAGS := $(LDFLAGS) -flto=auto -rdynamic -no-pie
-CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++20 -flto=auto -Wall -Wextra -c -fmessage-length=0 -Wno-attributes -lbacktrace -lboost_stacktrace_backtrace -DBOOST_STACKTRACE_USE_BACKTRACE
+# Turned on -Wsign-conversion to get warnings for conversions between signed and unsigned types. This is a cheap workaround to implementing ChrIndex and CompressedMrefIndex.
+CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++20 -flto=auto -Wall -Wextra -Wsign-conversion -Werror -c -fmessage-length=0 -Wno-attributes -lbacktrace -lboost_stacktrace_backtrace -DBOOST_STACKTRACE_USE_BACKTRACE
 
 ifeq ($(static),true)
 	LD_BEGIN_FLAGS := -L$(boost_lib_dir)
@@ -64,7 +65,7 @@ $(INCLUDE_DIR)/rapidcsv.h:
 	wget -c https://github.com/d99kris/rapidcsv/raw/v8.80/src/rapidcsv.h -O $(INCLUDE_DIR)/rapidcsv.h
 
 # General compilation rule for object files that have matching .h files.
-$(BUILD_DIR)/%.o: %.cpp %.h $(INCLUDE_DIR)/strtk.hpp $(INCLUDE_DIR)/rapidcsv.h Makefile | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(INCLUDE_DIR)/%.h $(INCLUDE_DIR)/strtk.hpp $(INCLUDE_DIR)/rapidcsv.h Makefile | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Test source files with the suffix _test.cpp
@@ -98,6 +99,7 @@ sophia: $(BUILD_DIR)/global.o \
 		$(BUILD_DIR)/ChrConverter.o \
 		$(BUILD_DIR)/Hg37ChrConverter.o \
 		$(BUILD_DIR)/GenericChrConverter.o \
+		$(BUILD_DIR)/MateInfo.o \
 		$(BUILD_DIR)/SamSegmentMapper.o \
 		$(BUILD_DIR)/Sdust.o \
 		$(BUILD_DIR)/SuppAlignment.o \
@@ -113,6 +115,7 @@ sophiaAnnotate: $(BUILD_DIR)/global.o \
 				$(BUILD_DIR)/ChrCategory.o \
 				$(BUILD_DIR)/ChrInfo.o \
 				$(BUILD_DIR)/ChrInfoTable.o \
+				$(BUILD_DIR)/MateInfo.o \
 				$(BUILD_DIR)/Alignment.o \
 				$(BUILD_DIR)/AnnotationProcessor.o \
 				$(BUILD_DIR)/Breakpoint.o \
@@ -142,6 +145,7 @@ sophiaMref: $(BUILD_DIR)/global.o \
 			$(BUILD_DIR)/ChrCategory.o \
 			$(BUILD_DIR)/ChrInfo.o \
 			$(BUILD_DIR)/ChrInfoTable.o \
+			$(BUILD_DIR)/MateInfo.o \
 			$(BUILD_DIR)/Alignment.o \
 			$(BUILD_DIR)/GlobalAppConfig.o \
 			$(BUILD_DIR)/ChrConverter.o \

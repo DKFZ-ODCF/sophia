@@ -32,187 +32,191 @@
 
 namespace sophia {
 
-using namespace std;
+    using namespace std;
 
-boost::format BreakpointReduced::doubleFormatter{"%.3f"};
-int BreakpointReduced::DEFAULTREADLENGTH{};
-double BreakpointReduced::CLONALITYSTRICTLOWTHRESHOLD{};
-double BreakpointReduced::ARTIFACTFREQHIGHTHRESHOLD{};
-string BreakpointReduced::PIDSINMREFSTR{};
+    boost::format BreakpointReduced::doubleFormatter{"%.3f"};
 
-sophia::BreakpointReduced::BreakpointReduced(const Breakpoint &tmpBp,
-                                             int lineIndexIn,
-                                             bool hasOverhangIn)
-    : hasOverhang{hasOverhangIn},
-      toRemove{false},
-      lineIndex{lineIndexIn},
-      chrIndex{tmpBp.getChrIndex()},
-      pos{tmpBp.getPos()},
-      normalSpans{tmpBp.getNormalSpans()},
-      lowQualSpansSoft{tmpBp.getLowQualBreaksSoft()},
-      lowQualSpansHard{tmpBp.getLowQualSpansHard()},
-      unpairedBreaksSoft{tmpBp.getUnpairedBreaksSoft()},
-      unpairedBreaksHard{tmpBp.getUnpairedBreaksHard()},
-      breaksShortIndel{tmpBp.getBreaksShortIndel()},
-      lowQualBreaksSoft{tmpBp.getLowQualBreaksSoft()},
-      lowQualBreaksHard{tmpBp.getLowQualBreaksHard()},
-      repetitiveOverhangBreaks{tmpBp.getRepetitiveOverhangBreaks()},
-      pairedBreaksSoft{tmpBp.getPairedBreaksSoft()},
-      pairedBreaksHard{tmpBp.getPairedBreaksHard()},
-      mateSupport{tmpBp.getMateSupport()},
-      leftCoverage{tmpBp.getLeftCoverage()},
-      rightCoverage{tmpBp.getRightCoverage()},
-      mrefHits{MrefMatch{-1, -1, 10000, {}, }},
-      germlineInfo{GermlineMatch{0.0, 0.0, {}, }},
-      suppAlignments{} {
-    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-    for (const auto &sa : tmpBp.getDoubleSidedMatches()) {
-        if (!chrConverter.isTechnical(sa.getChrIndex())) {
-            suppAlignments.emplace_back(sa);
-        }
-    }
-    for (const auto &sa : tmpBp.getSupplementsPrimary()) {
-        if (!chrConverter.isTechnical(sa.getChrIndex())) {
-            suppAlignments.emplace_back(sa);
-        }
-    }
-    complexRearrangementMateRatioRescue(true);
-    complexRearrangementMateRatioRescue(false);
-}
+    ChrSize BreakpointReduced::DEFAULT_READ_LENGTH{};
 
-void
-BreakpointReduced::complexRearrangementMateRatioRescue(bool encounteredM) {
-    auto candidateCount = 0;
-    auto cumulativeMateSupport = 0.0;
-    auto maxExpectedDiscordants = 0;
-    for (const auto &sa : suppAlignments) {
-        if (sa.isDistant() && sa.isEncounteredM() == encounteredM &&
-            !sa.isSuspicious() && sa.getMateSupport() > 4) {
-            ++candidateCount;
-            if (candidateCount == 3) {
-                return;
+    double BreakpointReduced::CLONALITY_STRICT_LOW_THRESHOLD{};
+
+    double BreakpointReduced::ARTIFACT_FREQ_HIGH_THRESHOLD{};
+
+    string BreakpointReduced::PIDS_IN_MREF_STR{};
+
+    sophia::BreakpointReduced::BreakpointReduced(const Breakpoint &tmpBp,
+                                                 int lineIndexIn,
+                                                 bool hasOverhangIn)
+        : hasOverhang{hasOverhangIn},
+          toRemove{false},
+          lineIndex{lineIndexIn},
+          chrIndex{tmpBp.getChrIndex()},
+          pos{tmpBp.getPos()},
+          normalSpans{tmpBp.getNormalSpans()},
+          lowQualSpansSoft{tmpBp.getLowQualBreaksSoft()},
+          lowQualSpansHard{tmpBp.getLowQualSpansHard()},
+          unpairedBreaksSoft{tmpBp.getUnpairedBreaksSoft()},
+          unpairedBreaksHard{tmpBp.getUnpairedBreaksHard()},
+          breaksShortIndel{tmpBp.getBreaksShortIndel()},
+          lowQualBreaksSoft{tmpBp.getLowQualBreaksSoft()},
+          lowQualBreaksHard{tmpBp.getLowQualBreaksHard()},
+          repetitiveOverhangBreaks{tmpBp.getRepetitiveOverhangBreaks()},
+          pairedBreaksSoft{tmpBp.getPairedBreaksSoft()},
+          pairedBreaksHard{tmpBp.getPairedBreaksHard()},
+          mateSupport{tmpBp.getMateSupport()},
+          leftCoverage{tmpBp.getLeftCoverage()},
+          rightCoverage{tmpBp.getRightCoverage()},
+          mrefHits{MrefMatch{-1, -1, 10000, {}, }},
+          germlineInfo{GermlineMatch{0.0, 0.0, {}, }},
+          suppAlignments{} {
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+        for (const auto &sa : tmpBp.getDoubleSidedMatches()) {
+            if (!chrConverter.isTechnical(sa.getChrIndex())) {
+                suppAlignments.emplace_back(sa);
             }
-            cumulativeMateSupport += sa.getMateSupport();
-            maxExpectedDiscordants =
-                max(maxExpectedDiscordants, sa.getExpectedDiscordants());
         }
+        for (const auto &sa : tmpBp.getSupplementsPrimary()) {
+            if (!chrConverter.isTechnical(sa.getChrIndex())) {
+                suppAlignments.emplace_back(sa);
+            }
+        }
+        complexRearrangementMateRatioRescue(true);
+        complexRearrangementMateRatioRescue(false);
     }
-    if (candidateCount == 2 &&
-        cumulativeMateSupport / maxExpectedDiscordants > 0.7) {
-        for (auto &sa : suppAlignments) {
+
+    void
+    BreakpointReduced::complexRearrangementMateRatioRescue(bool encounteredM) {
+        auto candidateCount = 0;
+        auto cumulativeMateSupport = 0.0;
+        auto maxExpectedDiscordants = 0;
+        for (const auto &sa : suppAlignments) {
             if (sa.isDistant() && sa.isEncounteredM() == encounteredM &&
                 !sa.isSuspicious() && sa.getMateSupport() > 4) {
-                sa.setExpectedDiscordants(sa.getMateSupport());
+                ++candidateCount;
+                if (candidateCount == 3) {
+                    return;
+                }
+                cumulativeMateSupport += sa.getMateSupport();
+                maxExpectedDiscordants =
+                    max(maxExpectedDiscordants, sa.getExpectedDiscordants());
+            }
+        }
+        if (candidateCount == 2 &&
+            cumulativeMateSupport / maxExpectedDiscordants > 0.7) {
+            for (auto &sa : suppAlignments) {
+                if (sa.isDistant() && sa.isEncounteredM() == encounteredM &&
+                    !sa.isSuspicious() && sa.getMateSupport() > 4) {
+                    sa.setExpectedDiscordants(sa.getMateSupport());
+                }
             }
         }
     }
-}
 
-sophia::BreakpointReduced::BreakpointReduced(
-    const SuppAlignmentAnno &sa,
-    const BreakpointReduced &emittingBp,
-    bool fuzzySecondary)
-    : hasOverhang{false},
-      toRemove{false},
-      lineIndex{-1},
-      chrIndex{sa.getChrIndex()},
-      pos{!fuzzySecondary ? sa.getPos(): sa.getExtendedPos()},
-      normalSpans{},
-      lowQualSpansSoft{},
-      lowQualSpansHard{},
-      unpairedBreaksSoft{},
-      unpairedBreaksHard{},
-      breaksShortIndel{},
-      lowQualBreaksSoft{},
-      lowQualBreaksHard{},
-      repetitiveOverhangBreaks{},
-      pairedBreaksSoft{},
-      pairedBreaksHard{},
-      mateSupport{},
-      leftCoverage{},
-      rightCoverage{},
-      mrefHits{MrefMatch{-1, -1, 10000, {}}},
-      germlineInfo{GermlineMatch{0.0, 0.0, {}}},
-      suppAlignments{} {
-    addDummySa(sa, emittingBp);
-}
+    sophia::BreakpointReduced::BreakpointReduced(
+        const SuppAlignmentAnno &sa,
+        const BreakpointReduced &emittingBp,
+        bool fuzzySecondary)
+        : hasOverhang{false},
+          toRemove{false},
+          lineIndex{-1},
+          chrIndex{sa.getChrIndex()},
+          pos{!fuzzySecondary ? sa.getPos(): sa.getExtendedPos()},
+          normalSpans{},
+          lowQualSpansSoft{},
+          lowQualSpansHard{},
+          unpairedBreaksSoft{},
+          unpairedBreaksHard{},
+          breaksShortIndel{},
+          lowQualBreaksSoft{},
+          lowQualBreaksHard{},
+          repetitiveOverhangBreaks{},
+          pairedBreaksSoft{},
+          pairedBreaksHard{},
+          mateSupport{},
+          leftCoverage{},
+          rightCoverage{},
+          mrefHits{MrefMatch{-1, -1, 10000, {}}},
+          germlineInfo{GermlineMatch{0.0, 0.0, {}}},
+          suppAlignments{} {
+        addDummySa(sa, emittingBp);
+    }
 
-void
-sophia::BreakpointReduced::addDummySa(const SuppAlignmentAnno &sa,
-                                      const BreakpointReduced &emittingBp) {
-    suppAlignments.emplace_back(emittingBp.getChrIndex(), emittingBp.getPos(),
-                                sa);
-}
+    void
+    sophia::BreakpointReduced::addDummySa(const SuppAlignmentAnno &sa,
+                                          const BreakpointReduced &emittingBp) {
+        suppAlignments.emplace_back(emittingBp.getChrIndex(), emittingBp.getPos(),
+                                    sa);
+    }
 
-const SuppAlignmentAnno &
-sophia::BreakpointReduced::getDummySa() {
-    return suppAlignments.back();
-}
+    const SuppAlignmentAnno &
+    sophia::BreakpointReduced::getDummySa() {
+        return suppAlignments.back();
+    }
 
-SuppAlignmentAnno *
-BreakpointReduced::searchFuzzySa(const SuppAlignmentAnno &fuzzySa) {
-    SuppAlignmentAnno *match = nullptr;
-    for (auto &sa : suppAlignments) {
-        if (sa.saClosenessDirectional(fuzzySa, DEFAULTREADLENGTH * 0.2)) {
-            match = &sa;
-            return match;
+    SuppAlignmentAnno *
+    BreakpointReduced::searchFuzzySa(const SuppAlignmentAnno &fuzzySa) {
+        SuppAlignmentAnno *match = nullptr;
+        for (auto &sa : suppAlignments) {
+            if (sa.saClosenessDirectional(fuzzySa, DEFAULT_READ_LENGTH * 0.2)) {
+                match = &sa;
+                return match;
+            }
         }
+        return nullptr;
     }
-    return nullptr;
-}
 
-bool
-BreakpointReduced::testOverhangBasedCandidacy() const {
-    if (pairedBreaksSoft > 0) {
-        return false;
+    bool
+    BreakpointReduced::testOverhangBasedCandidacy() const {
+        if (pairedBreaksSoft > 0) {
+            return false;
+        }
+        if (breaksShortIndel > 0) {
+            return false;
+        }
+        if (unpairedBreaksSoft < 5) {
+            return false;
+        }
+        if (((0.0 + unpairedBreaksSoft) / normalSpans) <
+            CLONALITY_STRICT_LOW_THRESHOLD) {
+            return false;
+        }
+        auto artifactTotal =
+            0.0 + lowQualSpansSoft + lowQualBreaksSoft + repetitiveOverhangBreaks;
+        if ((artifactTotal / (unpairedBreaksSoft + artifactTotal)) >
+            ARTIFACT_FREQ_HIGH_THRESHOLD) {
+            return false;
+        }
+        return true;
     }
-    if (breaksShortIndel > 0) {
-        return false;
-    }
-    if (unpairedBreaksSoft < 5) {
-        return false;
-    }
-    if (((0.0 + unpairedBreaksSoft) / normalSpans) <
-        CLONALITYSTRICTLOWTHRESHOLD) {
-        return false;
-    }
-    auto artifactTotal =
-        0.0 + lowQualSpansSoft + lowQualBreaksSoft + repetitiveOverhangBreaks;
-    if ((artifactTotal / (unpairedBreaksSoft + artifactTotal)) >
-        ARTIFACTFREQHIGHTHRESHOLD) {
-        return false;
-    }
-    return true;
-}
 
-string
-BreakpointReduced::printOverhang(double germlineClonality,
-                                 int numHits,
-                                 const string &overhang) const {
-    string res{"##"};
-    res.append(GlobalAppConfig::getInstance().getChrConverter().indexToChrName(chrIndex)).append("\t");
-    res.append(strtk::type_to_string<int>(pos - 1)).append("\t");
-    res.append(strtk::type_to_string<int>(pos)).append("\t");
-    if (germlineClonality > 0.1) {
-        res.append("GERMLINE(");
-    } else {
-        res.append("SOMATIC(");
+    string
+    BreakpointReduced::printOverhang(double germlineClonality,
+                                     int numHits,
+                                     const string &overhang) const {
+        string res{"##"};
+        res.append(GlobalAppConfig::getInstance().getChrConverter().indexToChrName(chrIndex)).append("\t");
+        res.append(strtk::type_to_string<int>(pos - 1)).append("\t");
+        res.append(strtk::type_to_string<int>(pos)).append("\t");
+        if (germlineClonality > 0.1) {
+            res.append("GERMLINE(");
+        } else {
+            res.append("SOMATIC(");
+        }
+        res.append(strtk::type_to_string<int>(numHits))
+            .append("/")
+            .append(PIDS_IN_MREF_STR)
+            .append("):");
+        res.append(boost::str(doubleFormatter % germlineClonality)).append("\t");
+        res.append(overhang).append("\n");
+        return res;
     }
-    res.append(strtk::type_to_string<int>(numHits))
-        .append("/")
-        .append(PIDSINMREFSTR)
-        .append("):");
-    res.append(boost::str(doubleFormatter % germlineClonality)).append("\t");
-    res.append(overhang).append("\n");
-    return res;
-}
 
-void
-BreakpointReduced::removeMarkedFuzzies() {
-    suppAlignments.erase(
-        remove_if(suppAlignments.begin(), suppAlignments.end(),
-                  [](const SuppAlignmentAnno &sa) { return sa.isToRemove(); }),
-        suppAlignments.end());
-}
+    void
+    BreakpointReduced::removeMarkedFuzzies() {
+        suppAlignments.erase(
+            remove_if(suppAlignments.begin(), suppAlignments.end(),
+                      [](const SuppAlignmentAnno &sa) { return sa.isToRemove(); }),
+            suppAlignments.end());
+    }
 
 } /* namespace sophia */

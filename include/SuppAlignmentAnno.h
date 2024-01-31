@@ -38,6 +38,7 @@ namespace sophia {
     using namespace std;
 
     class SuppAlignmentAnno {
+
       public:
 
         SuppAlignmentAnno(const string &saStrIn);
@@ -47,17 +48,18 @@ namespace sophia {
         SuppAlignmentAnno(const SuppAlignmentAnno &saAnnoIn);
 
         SuppAlignmentAnno(ChrIndex emittingBpChrIndex,
-                          int emittingBpPos,
+                          ChrSize emittingBpPos,
                           const SuppAlignmentAnno &saAnnoIn);
 
         ~SuppAlignmentAnno() = default;
 
         static double ISIZEMAX;
-        static int DEFAULTREADLENGTH;
+
+        static ChrSize DEFAULT_READ_LENGTH;
 
         string print() const;
 
-        void extendSuppAlignment(int minPos, int maxPos) {
+        void extendSuppAlignment(ChrSize minPos, ChrSize maxPos) {
             pos = min(pos, minPos);
             extendedPos = max(extendedPos, maxPos);
         }
@@ -88,7 +90,7 @@ namespace sophia {
 
         void setMateSupport(int mateSupportIn) { mateSupport = mateSupportIn; }
 
-        int getPos() const { return pos; }
+        ChrSize getPos() const { return pos; }
 
         int getSupport() const { return support; }
 
@@ -114,7 +116,7 @@ namespace sophia {
 
         bool isStrictFuzzy() const { return strictFuzzy; }
 
-        int getExtendedPos() const { return extendedPos; }
+        ChrSize getExtendedPos() const { return extendedPos; }
 
         bool isSemiSuspicious() const { return semiSuspicious; }
 
@@ -147,7 +149,7 @@ namespace sophia {
             supportingIndices.push_back(fileIndex);
         }
 
-        void mrefSaConsensus(const unordered_set<short> &fileIndices) {
+        void mrefSaConsensus(const unordered_set<unsigned short> &fileIndices) {
             supportingIndices.clear();
             for (const auto &index : fileIndices) {
                 supportingIndices.push_back(index);
@@ -164,8 +166,8 @@ namespace sophia {
 
       private:
         ChrIndex chrIndex;
-        int pos;
-        int extendedPos;
+        ChrSize pos;
+        ChrSize extendedPos;
         int support;
         int secondarySupport;
         int mateSupport;

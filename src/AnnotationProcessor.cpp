@@ -39,26 +39,29 @@ namespace sophia {
 
 using namespace std;
 
-bool AnnotationProcessor::ABRIDGEDOUTPUT{false};
+bool AnnotationProcessor::ABRIDGED_OUTPUT{false};
 
 AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
                                          vector<vector<MrefEntryAnno>> &mref,
-                                         int defaultReadLengthTumorIn,
+                                         ChrSize DEFAULT_READ_LENGTHTumorIn,
                                          bool controlCheckMode,
-                                         int germlineDbLimit)
-    : NOCONTROLMODE{true},
-      GERMLINEDBLIMIT{germlineDbLimit},
+                                         int GERMLINE_DB_LIMIT)
+    : NO_CONTROL_MODE{true},
+      GERMLINE_DB_LIMIT{GERMLINE_DB_LIMIT},
       contaminationObserved{false},
       massiveInvFilteringLevel{0},
       filteredResults{},
       visitedLineIndices{} {
 
-    ChrIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
+    CompressedMrefIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
         getChrConverter().nChromosomesCompressedMref();
+    vector<vector<BreakpointReduced>>::size_type vectorSize =
+        vector<vector<BreakpointReduced>>::size_type(nCompressedMrefChromosomes);
+
     tumorResults = vector<vector<BreakpointReduced>>
-        { nCompressedMrefChromosomes, vector<BreakpointReduced>{} };
+        { vectorSize, vector<BreakpointReduced>{} };
     controlResults = vector<vector<BreakpointReduced>>
-        { nCompressedMrefChromosomes, vector<BreakpointReduced>{} };
+        { vectorSize, vector<BreakpointReduced>{} };
 
     unique_ptr<ifstream> tumorInputHandle{
         make_unique<ifstream>(tumorResultsIn, ios_base::in | ios_base::binary)};
@@ -100,7 +103,7 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
         ++lineIndex;
     }
     for (auto &tres : tumorResults) {
-        DeFuzzier deFuzzier{defaultReadLengthTumorIn * 6, false};
+        DeFuzzier deFuzzier { DEFAULT_READ_LENGTHTumorIn * 6, false };
         deFuzzier.deFuzzyDb(tres);
     }
     searchMatches(mref);
@@ -123,23 +126,26 @@ AnnotationProcessor::AnnotationProcessor(
         const string &tumorResultsIn,
         vector<vector<MrefEntryAnno>> &mref,
         const string &controlResultsIn,
-        int defaultReadLengthTumorIn,
-        int defaultReadLengthControlIn,
-        int germlineDbLimit,
+        ChrSize DEFAULT_READ_LENGTHTumorIn,
+        ChrSize DEFAULT_READ_LENGTHControlIn,
+        int GERMLINE_DB_LIMIT,
         int lowQualControlIn,
         bool pathogenInControlIn)
-    : NOCONTROLMODE{false},
-      GERMLINEDBLIMIT{germlineDbLimit},
+    : NO_CONTROL_MODE{false},
+      GERMLINE_DB_LIMIT{GERMLINE_DB_LIMIT},
       contaminationObserved{false},
       massiveInvFilteringLevel{0},
       filteredResults{} {
 
-    ChrIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
+    CompressedMrefIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
         getChrConverter().nChromosomesCompressedMref();
+    vector<vector<BreakpointReduced>>::size_type vectorSize =
+        vector<vector<BreakpointReduced>>::size_type(nCompressedMrefChromosomes);
+
     tumorResults = vector<vector<BreakpointReduced>>
-        { nCompressedMrefChromosomes, vector<BreakpointReduced>{} };
+        { vectorSize, vector<BreakpointReduced>{} };
     controlResults = vector<vector<BreakpointReduced>>
-        { nCompressedMrefChromosomes, vector<BreakpointReduced>{} };
+        { vectorSize, vector<BreakpointReduced>{} };
 
     unique_ptr<ifstream> controlInputHandle{make_unique<ifstream>(
         controlResultsIn, ios_base::in | ios_base::binary)};
@@ -184,7 +190,7 @@ AnnotationProcessor::AnnotationProcessor(
                         }
                     }
                     auto maxOverhangLengthRatio =
-                        (maxOverhangLength + 0.0) / defaultReadLengthControlIn;
+                        (maxOverhangLength + 0.0) / DEFAULT_READ_LENGTHControlIn;
                     if (maxOverhangLengthRatio > 0.7) {
                         continue;
                     }
@@ -220,7 +226,7 @@ AnnotationProcessor::AnnotationProcessor(
                 }
             } else {
                 if (bestSa->isInverted()) {
-                    auto suppDist = tmpBp.distanceToSupp(*bestSa);
+                    signed int suppDist = tmpBp.distanceToSupp(*bestSa);
                     if (suppDist > 0) {
                         if (suppDist < 10000) {
                             if (lowQualControlIn == 2) {
@@ -251,7 +257,7 @@ AnnotationProcessor::AnnotationProcessor(
         ++lineIndex;
     }
     for (auto &cres : controlResults) {
-        DeFuzzier deFuzzierControl{defaultReadLengthControlIn * 6, false};
+        DeFuzzier deFuzzierControl{DEFAULT_READ_LENGTHControlIn * 6, false};
         deFuzzierControl.deFuzzyDb(cres);
     }
     unique_ptr<ifstream> tumorInputHandle{
@@ -291,7 +297,7 @@ AnnotationProcessor::AnnotationProcessor(
         ++lineIndex;
     }
     for (auto &tres : tumorResults) {
-        DeFuzzier deFuzzierTumor{defaultReadLengthTumorIn * 6, false};
+        DeFuzzier deFuzzierTumor{DEFAULT_READ_LENGTHTumorIn * 6, false};
         deFuzzierTumor.deFuzzyDb(tres);
     }
     searchMatches(mref);
@@ -313,10 +319,10 @@ void
 AnnotationProcessor::searchMatches(vector<vector<MrefEntryAnno>> &mref) {
     CompressedMrefIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
         getChrConverter().nChromosomesCompressedMref();
-    for (CompressedMrefIndex j = 0; j < nCompressedMrefChromosomes; ++j) {
-        for (auto i = 0u; i < tumorResults[j].size(); ++i) {
+    for (CompressedMrefIndex j = 0u; j < nCompressedMrefChromosomes; ++j) {
+        for (size_t i = 0; i < tumorResults[j].size(); ++i) {
             for (const auto &sa : tumorResults[j][i].getSuppAlignments()) {
-                if (SvEvent::DEBUGMODE || !sa.isSuspicious()) {
+                if (SvEvent::DEBUG_MODE || !sa.isSuspicious()) {
                     if (sa.getSecondarySupport() > 0 ||
                         (sa.getSupport() > 0 && sa.getMateSupport() > 0)) {
                         searchSa(j, i, sa, true, mref);
@@ -331,28 +337,28 @@ AnnotationProcessor::searchMatches(vector<vector<MrefEntryAnno>> &mref) {
 
 void
 AnnotationProcessor::searchSa(CompressedMrefIndex compressedMrefIndex,
-                              int dbIndex,
+                              size_t dbIndex,
                               const SuppAlignmentAnno &sa,
                               bool doubleSupportSa,
                               vector<vector<MrefEntryAnno>> &mref) {
     if (sa.getSupport() + sa.getSecondarySupport() + sa.getMateSupport() < 3) {
         return;
     }
-    if (sa.getChrIndex() == 1001) {
+    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+    if (chrConverter.isExtrachromosomal(sa.getChrIndex())) {
         if (createUnknownMatchSvPreCheck(sa, doubleSupportSa)) {
             createUnknownMatchSv(tumorResults[compressedMrefIndex][dbIndex], sa, mref,
                                  doubleSupportSa);
         }
         return;
     }
-    const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-    ChrIndex saChrIndex;
+    CompressedMrefIndex saChrIndex;
     if (!chrConverter.isCompressedMref(sa.getChrIndex())) {
         return;
     } else {
         saChrIndex = chrConverter.indexToCompressedMrefIndex(sa.getChrIndex());
     }
-    auto fuzziness = 3 * SuppAlignmentAnno::DEFAULTREADLENGTH;
+    unsigned int fuzziness = 3 * SuppAlignmentAnno::DEFAULT_READ_LENGTH;
     vector<pair<int, vector<BreakpointReduced>::iterator>> dbHits{};
 
     if (!tumorResults[saChrIndex].empty()) {
@@ -447,22 +453,22 @@ AnnotationProcessor::createDoubleMatchSv(BreakpointReduced &sourceBp,
     if (checkOrder) {
         if (sourceBp.getMrefHits().getNumConsevativeHits() == -1) {
             auto germlineInfo = searchGermlineHitsNew(
-                sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                SvEvent::GERMLINEOFFSETTHRESHOLD);
+                sourceBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                SvEvent::GERMLINE_OFFSET_THRESHOLD);
             sourceBp.setGermlineInfo(germlineInfo);
             auto mrefInfo = searchMrefHitsNew(
-                sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                SvEvent::GERMLINEOFFSETTHRESHOLD, mref);
+                sourceBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                SvEvent::GERMLINE_OFFSET_THRESHOLD, mref);
             sourceBp.setMrefHits(mrefInfo);
         }
         if (targetBp.getMrefHits().getNumConsevativeHits() == -1) {
             auto germlineInfo = searchGermlineHitsNew(
-                targetBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                SvEvent::GERMLINEOFFSETTHRESHOLD);
+                targetBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                SvEvent::GERMLINE_OFFSET_THRESHOLD);
             targetBp.setGermlineInfo(germlineInfo);
             auto mrefInfo = searchMrefHitsNew(
-                targetBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                SvEvent::GERMLINEOFFSETTHRESHOLD, mref);
+                targetBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                SvEvent::GERMLINE_OFFSET_THRESHOLD, mref);
             targetBp.setMrefHits(mrefInfo);
         }
         if (targetBp.fullSmaller(sourceBp)) {
@@ -477,7 +483,7 @@ AnnotationProcessor::createDoubleMatchSv(BreakpointReduced &sourceBp,
 bool
 AnnotationProcessor::createDoubleMatchSvPreCheck(
     const SuppAlignmentAnno &saMatch) {
-    if (SvEvent::DEBUGMODE || !saMatch.isSuspicious()) {
+    if (SvEvent::DEBUG_MODE || !saMatch.isSuspicious()) {
         return true;
     }
     return false;
@@ -489,21 +495,21 @@ AnnotationProcessor::createUnmatchedSaSv(BreakpointReduced &sourceBp,
                                          vector<vector<MrefEntryAnno>> &mref) {
     if (sourceBp.getMrefHits().getNumConsevativeHits() == -1) {
         auto germlineInfo = searchGermlineHitsNew(
-            sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-            SvEvent::GERMLINEOFFSETTHRESHOLD);
+            sourceBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+            SvEvent::GERMLINE_OFFSET_THRESHOLD);
         sourceBp.setGermlineInfo(germlineInfo);
         auto mrefInfo = searchMrefHitsNew(
-            sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-            SvEvent::GERMLINEOFFSETTHRESHOLD, mref);
+            sourceBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+            SvEvent::GERMLINE_OFFSET_THRESHOLD, mref);
         sourceBp.setMrefHits(mrefInfo);
     }
     targetBp.addDummySa(sa, sourceBp);
     auto germlineInfo = searchGermlineHitsNew(
-        targetBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-        SvEvent::GERMLINEOFFSETTHRESHOLD);
+        targetBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+        SvEvent::GERMLINE_OFFSET_THRESHOLD);
     auto mrefHits =
-        searchMrefHitsNew(targetBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                          SvEvent::GERMLINEOFFSETTHRESHOLD, mref);
+        searchMrefHitsNew(targetBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                          SvEvent::GERMLINE_OFFSET_THRESHOLD, mref);
     targetBp.setMrefHits(mrefHits);
     targetBp.setGermlineInfo(germlineInfo);
     visitedLineIndices.push_back(sourceBp.getLineIndex());
@@ -516,7 +522,7 @@ AnnotationProcessor::createUnmatchedSaSv(BreakpointReduced &sourceBp,
 bool
 AnnotationProcessor::createUnknownMatchSvPreCheck(const SuppAlignmentAnno &sa,
                                                   bool doubleSupportSa) {
-    if (SvEvent::DEBUGMODE || !sa.isSemiSuspicious()) {
+    if (SvEvent::DEBUG_MODE || !sa.isSemiSuspicious()) {
         if (doubleSupportSa ||
             (!sa.isFuzzy() &&
              (sa.getSupport() > 0 || sa.getSecondarySupport() > 0))) {
@@ -532,29 +538,29 @@ AnnotationProcessor::createUnknownMatchSv(BreakpointReduced &sourceBp,
                                           bool doubleSupportSa[[gnu::unused]] // TODO: remove
                                           ) {
     auto germlineInfo = searchGermlineHitsNew(
-        sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-        SvEvent::GERMLINEOFFSETTHRESHOLD);
+        sourceBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+        SvEvent::GERMLINE_OFFSET_THRESHOLD);
     sourceBp.setGermlineInfo(germlineInfo);
     auto mrefInfo =
-        searchMrefHitsNew(sourceBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                          SvEvent::GERMLINEOFFSETTHRESHOLD, mref);
+        searchMrefHitsNew(sourceBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                          SvEvent::GERMLINE_OFFSET_THRESHOLD, mref);
     sourceBp.setMrefHits(mrefInfo);
     BreakpointReduced dummyBp{sa, sourceBp, false};
     auto dummyGermline =
-        searchGermlineHitsNew(dummyBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                              SvEvent::GERMLINEOFFSETTHRESHOLD * 3);
+        searchGermlineHitsNew(dummyBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                              SvEvent::GERMLINE_OFFSET_THRESHOLD * 3);
     auto dummyMref =
-        searchMrefHitsNew(dummyBp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                          SvEvent::GERMLINEOFFSETTHRESHOLD * 3, mref);
-    if (sa.isFuzzy() && sa.getExtendedPos() - sa.getPos() >
-                            3 * SvEvent::GERMLINEOFFSETTHRESHOLD) {
+        searchMrefHitsNew(dummyBp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                          SvEvent::GERMLINE_OFFSET_THRESHOLD * 3, mref);
+    if (sa.isFuzzy() &&
+        (long) sa.getExtendedPos() - (long) sa.getPos() > 3 * SvEvent::GERMLINE_OFFSET_THRESHOLD) {
         BreakpointReduced dummyBp2{sa, sourceBp, true};
         auto dummyGermline2 = searchGermlineHitsNew(
-            dummyBp2, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-            SvEvent::GERMLINEOFFSETTHRESHOLD * 3);
+            dummyBp2, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+            SvEvent::GERMLINE_OFFSET_THRESHOLD * 3);
         auto dummyMref2 = searchMrefHitsNew(
-            dummyBp2, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-            SvEvent::GERMLINEOFFSETTHRESHOLD * 3, mref);
+            dummyBp2, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+            SvEvent::GERMLINE_OFFSET_THRESHOLD * 3, mref);
         if (dummyMref2.getNumConsevativeHits() >
             dummyMref.getNumConsevativeHits()) {
             dummyMref = dummyMref2;
@@ -597,8 +603,8 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
         return MrefMatch{0, 0, 10000, suppMatches};
     }
     if (itStart != mref[convertedChrIndex].begin() &&
-        !(itStart->distanceTo(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) &&
-        prev(itStart)->distanceTo(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) {
+        !(itStart->distanceTo(bpIn) < SvEvent::GERMLINE_OFFSET_THRESHOLD) &&
+        prev(itStart)->distanceTo( bpIn) < SvEvent::GERMLINE_OFFSET_THRESHOLD) {
         --itStart;
     }
     auto it = itStart;
@@ -607,7 +613,7 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
     vector<vector<MrefEntryAnno>::iterator> dbHitsConservative{};
     while (true) {
         auto tmpDistance = it->distanceTo(bpIn);
-        if (tmpDistance < SvEvent::GERMLINEOFFSETTHRESHOLD) {
+        if (tmpDistance < SvEvent::GERMLINE_OFFSET_THRESHOLD) {
             dbHitsConservative.push_back(it);
         }
         if (tmpDistance < distanceThreshold) {
@@ -627,7 +633,7 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
                 break;
             }
             auto tmpDistance = it->distanceTo(bpIn);
-            if (tmpDistance < SvEvent::GERMLINEOFFSETTHRESHOLD) {
+            if (tmpDistance < SvEvent::GERMLINE_OFFSET_THRESHOLD) {
                 dbHitsConservative.push_back(it);
             }
             if (tmpDistance < distanceThreshold) {
@@ -647,14 +653,14 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
         auto saMatch = false;
         for (const auto &saRef : res->getSuppAlignments()) {
             for (const auto &sa : bpIn.getSuppAlignments()) {
-                if (saRef.saCloseness(sa, SuppAlignmentAnno::DEFAULTREADLENGTH /
+                if (saRef.saCloseness(sa, SuppAlignmentAnno::DEFAULT_READ_LENGTH /
                                               2)) {
                     saMatch = true;
                     auto previouslyRecorded = false;
                     for (auto &saTmp : suppMatches) {
                         if (saRef.saCloseness(
                                 saTmp,
-                                SuppAlignmentAnno::DEFAULTREADLENGTH / 2)) {
+                                SuppAlignmentAnno::DEFAULT_READ_LENGTH / 2)) {
                             previouslyRecorded = true;
                             if (saTmp.isFuzzy()) {
                                 if (saRef.isFuzzy()) {
@@ -695,7 +701,7 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
     short conservativeScore{0};
     for (const auto res : dbHitsConservative) {
         auto tmpScore = res->getNumHits();
-        if (tmpScore < SvEvent::RELAXEDBPFREQTHRESHOLD) {
+        if (tmpScore < SvEvent::RELAXED_BP_FREQ_THRESHOLD) {
             auto sas = res->getSuppAlignments();
             if (sas.size() == 1) {
                 if ((sas[0].getSupport() + 0.0) / tmpScore > 0.8) {
@@ -721,7 +727,7 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
                                  vector<pair<SuppAlignmentAnno, double>>{}};
     GermlineMatch dummyMatchFalse{0.0, 0.0,
                                   vector<pair<SuppAlignmentAnno, double>>{}};
-    if (NOCONTROLMODE) {
+    if (NO_CONTROL_MODE) {
         return dummyMatchTrue;
     }
 
@@ -742,8 +748,8 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
         return dummyMatchFalse;
     }
     if (itStart != controlResults[convertedChrIndex].cbegin() &&
-        !(itStart->distanceToBp(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) &&
-        prev(itStart)->distanceToBp(bpIn) < SvEvent::GERMLINEOFFSETTHRESHOLD) {
+        !(itStart->distanceToBp(bpIn) < SvEvent::GERMLINE_OFFSET_THRESHOLD) &&
+        prev(itStart)->distanceToBp(bpIn) < SvEvent::GERMLINE_OFFSET_THRESHOLD) {
         --itStart;
     }
     auto it = itStart;
@@ -828,13 +834,13 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
             res->getPairedBreaksHard() + res->getUnpairedBreaksHard();
         for (const auto &saRef : res->getSuppAlignments()) {
             for (const auto &sa : bpIn.getSuppAlignments()) {
-                if (saRef.saCloseness(sa, SuppAlignmentAnno::DEFAULTREADLENGTH /
+                if (saRef.saCloseness(sa, SuppAlignmentAnno::DEFAULT_READ_LENGTH /
                                               2)) {
                     auto previouslyRecorded = false;
                     for (auto &saTmp : suppMatches) {
                         if (saRef.saClosenessDirectional(
                                 saTmp.first,
-                                SuppAlignmentAnno::DEFAULTREADLENGTH / 2)) {
+                                SuppAlignmentAnno::DEFAULT_READ_LENGTH / 2)) {
                             previouslyRecorded = true;
                             if (saTmp.first.isFuzzy()) {
                                 if (saRef.isFuzzy()) {
@@ -1222,15 +1228,15 @@ AnnotationProcessor::printUnresolvedRareOverhangs(
             }
             if (bp.testOverhangBasedCandidacy()) {
                 auto mrefHits = searchMrefHitsNew(
-                    bp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                    SvEvent::GERMLINEOFFSETTHRESHOLD, mref);
-                if (mrefHits.getNumHits() < SvEvent::GERMLINEDBLIMIT) {
+                    bp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                    SvEvent::GERMLINE_OFFSET_THRESHOLD, mref);
+                if (mrefHits.getNumHits() < SvEvent::GERMLINE_DB_LIMIT) {
                     auto germlineClonality = 1.0;
-                    if (!NOCONTROLMODE) {
+                    if (!NO_CONTROL_MODE) {
                         germlineClonality =
                             searchGermlineHitsNew(
-                                bp, SuppAlignmentAnno::DEFAULTREADLENGTH * 6,
-                                SvEvent::GERMLINEOFFSETTHRESHOLD)
+                                bp, SuppAlignmentAnno::DEFAULT_READ_LENGTH * 6,
+                                SvEvent::GERMLINE_OFFSET_THRESHOLD)
                                 .getClonality();
                     }
                     string overhang{""};

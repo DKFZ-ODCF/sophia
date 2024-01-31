@@ -41,12 +41,20 @@ namespace sophia {
         DomainError(const std::string &msg) : std::domain_error(msg) {}
     };
 
+    using ChrName = std::string;
+
     // These two are only to make the code clearer, but are not type checked. There are no opaque
     // or strongly type-checked type-"aliases" in C++17. A type-safe solution would use classes.
-    using ChrName = std::string;
-    using ChrIndex = size_t;
-    using CompressedMrefIndex = size_t ;
+    //
+    // By making them signed and unsigned, though, the compiler at least warns about conversions
+    // between the two, and therefore hints at incorrect conversions.
+    using ChrIndex = signed long int;
+    using CompressedMrefIndex = unsigned long int;
+
     using ChrSize = long unsigned int;
+    using ChrPosition = long unsigned int;
+    using ChrDistance = long unsigned int;
+    using ChrPositionDifference = long signed int;
 
     std::string get_trace(const boost::exception &e);
 

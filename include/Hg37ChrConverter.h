@@ -36,7 +36,7 @@ namespace sophia {
         Hg37ChrConverter(const std::vector<std::string>& indexToChr,
                          const std::vector<std::string>& indexToChrCompressedMref,
                          const std::vector<ChrSize>& chrSizesCompressedMref,
-                         const std::vector<ChrIndex>& indexConverter);
+                         const std::vector<ChrIndex>& compressedMrefToIndex);
 
         /** Mapping indices to chromosome names. */
         const std::vector<std::string> indexToChr;
@@ -45,10 +45,10 @@ namespace sophia {
         const std::vector<std::string> indexToChrCompressedMref;
 
         /** Chromosome sizes in base pairs, only for compressed mref chromosomes. */
-        const std::vector<CompressedMrefIndex> chrSizesCompressedMref;
+        const std::vector<ChrSize> chrSizesCompressedMref;
 
         /** Mapping compressed mref indices names to indices. */
-        const std::vector<ChrIndex> indexConverter;
+        const std::vector<ChrIndex> compressedMrefToIndex;
 
         static const ChrIndex phixChrIndex;
 
@@ -115,9 +115,11 @@ namespace sophia {
         /** Map a chromosome name to an index position. */
         ChrIndex chrNameToIndex(std::string chrName) const;
 
+        bool isInBlockedRegion(ChrIndex chrIndex, ChrSize position) const;
+
         /* This is parsing code. It takes a position in a character stream, and translates the
-           following character(s) into index positions (see ChrConverter::indexToChr). It is slightly
-           modified from the original implementation by Umut Toprak.
+           following character(s) into index positions (see ChrConverter::indexToChr). It is
+           slightly modified from the original implementation by Umut Toprak.
 
            If the first position is a digit, read up to the next stopChar.
 

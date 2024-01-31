@@ -46,12 +46,12 @@ namespace sophia {
 
       public:
         SuppAlignment(ChrIndex chrIndexIn,
-                      int posIn,
+                      ChrSize posIn,
                       int mateSupportIn,
                       int expectedDiscordantsIn,
                       bool encounteredMIn,
                       bool invertedIn,
-                      int extendedPosIn,
+                      ChrSize extendedPosIn,
                       bool primaryIn,
                       bool lowMapqSourceIn,
                       bool nullMapqSourceIn,
@@ -76,14 +76,15 @@ namespace sophia {
         ~SuppAlignment() = default;
 
         static double ISIZEMAX;
-        static int DEFAULTREADLENGTH;
+
+        static ChrSize DEFAULT_READ_LENGTH;
 
         /** Print the supplementary alignment information as displayed in columns 6 and 7 of the
           * breakpoints BED format. This will be parsed by
           * `SuppAlignmentAnno::SuppAlignmentAnno(const string&)`. */
         string print() const;
 
-        void extendSuppAlignment(int minPos, int maxPos) {
+        void extendSuppAlignment(ChrSize minPos, ChrSize maxPos) {
             pos = min(pos, minPos);
             extendedPos = max(extendedPos, maxPos);
         }
@@ -118,7 +119,7 @@ namespace sophia {
 
         void setMateSupport(int mateSupportIn) { mateSupport = mateSupportIn; }
 
-        int getPos() const { return pos; }
+        ChrSize getPos() const { return pos; }
 
         bool isPrimary() const { return primary; }
 
@@ -175,13 +176,13 @@ namespace sophia {
 
         int getDistinctReads() const { return distinctReads; }
 
-        int getMatchFuzziness() const { return matchFuzziness; }
+        ChrSize getMatchFuzziness() const { return matchFuzziness; }
 
         bool isFuzzy() const { return fuzzy; }
 
         bool isStrictFuzzy() const { return strictFuzzy; }
 
-        int getExtendedPos() const { return extendedPos; }
+        ChrSize getExtendedPos() const { return extendedPos; }
 
         bool isLowMapqSource() const { return lowMapqSource; }
 
@@ -192,7 +193,7 @@ namespace sophia {
             supportingIndices.push_back(fileIndex);
         }
 
-        void mrefSaConsensus(const unordered_set<short> &fileIndices) {
+        void mrefSaConsensus(const unordered_set<unsigned short> &fileIndices) {
             supportingIndices.clear();
             for (const auto &index : fileIndices) {
                 supportingIndices.push_back(index);
@@ -259,10 +260,10 @@ namespace sophia {
         }
 
       private:
-        int matchFuzziness;
+        ChrSize matchFuzziness;
         ChrIndex chrIndex;
-        int pos;
-        int extendedPos;
+        ChrSize pos;
+        ChrSize extendedPos;
         int mapq;
         vector<int> supportingIndices;
         vector<int> supportingIndicesSecondary;

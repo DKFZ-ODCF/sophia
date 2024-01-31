@@ -105,6 +105,9 @@ namespace sophia {
         /** Map compressed mref index to chromosome size. */
         virtual ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const = 0;
 
+        /** Returns true, if the region of the read is aligned to is blocked. */
+        virtual bool isInBlockedRegion(ChrIndex chrIndex, ChrSize position) const;
+
         /** Parse chromosome index.
           *
           * 1. Input is a plain chromosome string separated from the following string by '\t' when

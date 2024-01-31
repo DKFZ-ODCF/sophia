@@ -24,55 +24,87 @@
 
 #ifndef SDUST_H_
 #define SDUST_H_
+#include "global.h"
 #include <algorithm>
 #include <deque>
 #include <set>
 #include <vector>
+
 namespace sophia {
 
-using namespace std;
+    using namespace std;
 
-struct PerfectInterval;
-class Sdust {
-  public:
-    Sdust(const vector<int> &overhangIn);
-    ~Sdust() = default;
-    const vector<PerfectInterval> &getRes() const { return res; }
+    struct PerfectInterval;
 
-  private:
-    static const int SCORETHRESHOLD = 20;
-    static const int WINDOWSIZE = 64;
-    vector<PerfectInterval> res;
-    set<PerfectInterval> P;
-    deque<int> w;
-    int L;
-    int rW;
-    int rV;
-    vector<int> cW;
-    vector<int> cV;
-    void saveMaskedRegions(int wStart);
-    int triplet(const vector<int> &overhangIn, int indexPos);
-    void shiftWindow(int t);
-    void addTripletInfo(int &r, vector<int> &c, int t);
-    void removeTripletInfo(int &r, vector<int> &c, int t);
-    void findPerfectRegions(int wStart, int r, vector<int> c);
-};
-struct PerfectInterval {
-    int startIndex;
-    int endIndex;
-    double score;
-    bool operator<(const PerfectInterval &rhs) const {
-        if (startIndex > rhs.startIndex)
-            return true;
-        if (startIndex < rhs.startIndex)
+    class Sdust {
+
+      public:
+
+        Sdust(const vector<int> &overhangIn);
+
+        ~Sdust() = default;
+
+        const vector<PerfectInterval> &getRes() const { return res; }
+
+      private:
+
+        static const int SCORE_THRESHOLD = 20;
+
+        static const int WINDOW_SIZE = 64;
+
+        vector<PerfectInterval> res;
+
+        set<PerfectInterval> P;
+
+        deque<int> w;
+
+        int L;
+
+        int rW;
+
+        int rV;
+
+        vector<int> cW;
+
+        vector<int> cV;
+
+        void saveMaskedRegions(int wStart);
+
+        int triplet(const vector<int> &overhangIn, int indexPos);
+
+        void shiftWindow(int t);
+
+        void addTripletInfo(int &r, vector<int> &c, int t);
+
+
+        void removeTripletInfo(int &r, vector<int> &c, int t);
+
+        void findPerfectRegions(int wStart, int r, vector<int> c);
+
+    };
+
+    struct PerfectInterval {
+
+        int startIndex;
+
+        int endIndex;
+
+        double score;
+
+        bool operator<(const PerfectInterval &rhs) const {
+            if (startIndex > rhs.startIndex)
+                return true;
+            if (startIndex < rhs.startIndex)
+                return false;
+            if (endIndex > rhs.endIndex)
+                return false;
+            if (endIndex < rhs.endIndex)
+                return true;
             return false;
-        if (endIndex > rhs.endIndex)
-            return false;
-        if (endIndex < rhs.endIndex)
-            return true;
-        return false;
-    }
-};
+        }
+
+    };
+
 } /* namespace sophia */
 
 #endif /* SDUST_H_ */

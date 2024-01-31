@@ -42,7 +42,7 @@ using namespace std;
     class SamSegmentMapper {
       public:
 
-        SamSegmentMapper(int defaultReadLengthIn);
+        SamSegmentMapper(ChrSize DEFAULT_READ_LENGTHIn);
 
         ~SamSegmentMapper() = default;
 
@@ -53,7 +53,7 @@ using namespace std;
         // Does not print anything by itself, but lets via via another call to
         // Breakpoint::finalizeBreakpoint and then Breakpoint::printBreakpointReport it
         // prints to stdout.
-        void printBps(int alignmentStart);
+        void printBps(ChrSize alignmentStart);
 
         void switchChromosome(const Alignment &alignment);
 
@@ -63,20 +63,26 @@ using namespace std;
 
         const time_t STARTTIME;
 
-        const bool PROPERPARIRCOMPENSATIONMODE;
+        const bool PROPER_PAIR_COMPENSATION_MODE;
 
-        const int DISCORDANTLEFTRANGE;
+        const ChrSize DISCORDANT_LEFT_RANGE;
 
-        const int DISCORDANTRIGHTRANGE;
+        const ChrSize DISCORDANT_RIGHT_RANGE;
 
         unsigned int printedBps;
 
         ChrIndex chrIndexCurrent;
-        int minPos, maxPos;
-        map<int, Breakpoint> breakpointsCurrent;
+
+        ChrSize minPos, maxPos;
+
+        map<ChrSize, Breakpoint> breakpointsCurrent;
+
         deque<CoverageAtBase> coverageProfiles;
+
         deque<MateInfo> discordantAlignmentsPool;
+
         deque<MateInfo> discordantAlignmentCandidatesPool;
+
         deque<MateInfo> discordantLowQualAlignmentsPool;
     };
 

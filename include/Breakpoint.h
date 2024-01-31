@@ -42,25 +42,36 @@ namespace sophia {
       public:
 
         Breakpoint(ChrIndex chrIndexIn,
-                   int posIn);
+                   ChrSize posIn);
 
         static Breakpoint parse(const string &bpIn,
                                 bool ignoreOverhang);
 
         ~Breakpoint() = default;
 
-        static const int PERMISSIBLEMISMATCHES = 2;
-        static const int MAXPERMISSIBLESOFTCLIPS = 2000;
-        static const int MAXPERMISSIBLEHARDCLIPS = 2000;
-        static const int MAXPERMISSIBLELOWMAPQHARDCLIPS = 50;
-        static int BPSUPPORTTHRESHOLD;
-        static int DEFAULTREADLENGTH;
-        static int DISCORDANTLOWQUALLEFTRANGE;
-        static int DISCORDANTLOWQUALRIGHTRANGE;
-        static double IMPROPERPAIRRATIO;
-        static bool PROPERPAIRCOMPENSATIONMODE;
+        static const int PERMISSIBLE_MISMATCHES = 2;
+
+        static const int MAX_PERMISSIBLE_SOFTCLIPS = 2000;
+
+        static const int MAX_PERMISSIBLE_HARDCLIPS = 2000;
+
+        static const int MAX_PERMISSIBLE_LOW_MAPQ_HARDCLIPS = 50;
+
+        static int BP_SUPPORT_THRESHOLD;
+
+        static ChrSize DEFAULT_READ_LENGTH;
+
+        static ChrSize DISCORDANT_LOW_QUAL_LEFT_RANGE;
+
+        static ChrSize DISCORDANT_LOW_QUAL_RIGHT_RANGE;
+
+        static double IMPROPER_PAIR_RATIO;
+
+        static bool PROPER_PAIR_COMPENSATION_MODE;
+
         static int bpindex;
-        static const string COLUMNSSTR;
+
+        static const string COLUMN_STR;
 
         void addSoftAlignment(shared_ptr<Alignment> alignmentIn);
 
@@ -119,39 +130,42 @@ namespace sophia {
             return (pos < rhs.getPos());
         }
 
-        bool closeToSupp(const SuppAlignment &compIn, int fuzziness) const {
+        bool closeToSupp(const SuppAlignment &compIn, ChrSize fuzziness) const {
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
-                    fuzziness = 2.5 * DEFAULTREADLENGTH;
+                    fuzziness = ChrSize(2.5 * DEFAULT_READ_LENGTH);  // Truncates to lower integer.
                     return (pos - fuzziness) <=
                                (compIn.getExtendedPos() + fuzziness) &&
                            (compIn.getPos() - fuzziness) <= (pos + fuzziness);
                 } else {
-                    return abs(pos - compIn.getPos()) <= fuzziness;
+                    return (unsigned long) abs((long) pos - (long) compIn.getPos()) <= fuzziness;
                 }
             } else {
                 return false;
             }
         }
 
-        int distanceToSupp(const SuppAlignmentAnno &compIn) const {
+        ChrSize distanceToSupp(const SuppAlignmentAnno &compIn) const {
+            ChrSize result;
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
                     if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
-                        return 0;
+                        result = 0;
                     } else {
                         if (pos < compIn.getPos()) {
-                            return compIn.getPos() - pos;
+                            result = ChrSize(compIn.getPos() - pos);
                         } else {
-                            return pos - compIn.getExtendedPos();
+                            // TODO Why here return the difference of getExtendePos(), but getPos() in the other branch?
+                            result = ChrSize(pos - compIn.getExtendedPos());
                         }
                     }
                 } else {
-                    return abs(pos - compIn.getPos());
+                    result = ChrSize(abs((long) pos - (long) compIn.getPos()));
                 }
             } else {
-                return 1000000;
+                result = 1000000;
             }
+            return result;
         }
 
         template <typename T> int distanceToBp(const T &compIn) const {
@@ -168,7 +182,7 @@ namespace sophia {
 
         ChrIndex getChrIndex() const { return chrIndex; }
 
-        int getPos() const { return pos; }
+        ChrSize getPos() const { return pos; }
 
         bool isMissingInfoBp() const { return missingInfoBp; }
 
@@ -281,19 +295,28 @@ namespace sophia {
 
         ChrIndex chrIndex;
 
-        int pos;
+        ChrSize pos;
 
-        int normalSpans, lowQualSpansSoft, lowQualSpansHard, unpairedBreaksSoft,
-            unpairedBreaksHard, breaksShortIndel, lowQualBreaksSoft,
-            lowQualBreaksHard, repetitiveOverhangBreaks;
+        int normalSpans,
+            lowQualSpansSoft,
+            lowQualSpansHard,
+            unpairedBreaksSoft,
+            unpairedBreaksHard,
+            breaksShortIndel,
+            lowQualBreaksSoft,
+            lowQualBreaksHard,
+            repetitiveOverhangBreaks;
 
-        int pairedBreaksSoft, pairedBreaksHard;
+        int pairedBreaksSoft,
+            pairedBreaksHard;
 
-        int leftSideDiscordantCandidates, rightSideDiscordantCandidates;
+        int leftSideDiscordantCandidates,
+            rightSideDiscordantCandidates;
 
         int mateSupport;
 
-        int leftCoverage, rightCoverage;
+        int leftCoverage,
+            rightCoverage;
 
         int totalLowMapqHardClips;
 

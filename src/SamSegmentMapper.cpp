@@ -30,15 +30,15 @@
 
 namespace sophia {
 
-    SamSegmentMapper::SamSegmentMapper(int defaultReadLengthIn)
+    SamSegmentMapper::SamSegmentMapper(ChrSize DEFAULT_READ_LENGTHIn)
         : STARTTIME{time(nullptr)},
-          PROPERPARIRCOMPENSATIONMODE{Breakpoint::PROPERPAIRCOMPENSATIONMODE},
-          DISCORDANTLEFTRANGE{static_cast<int>(round(defaultReadLengthIn * 3))},
-          DISCORDANTRIGHTRANGE{static_cast<int>(round(defaultReadLengthIn * 2.51))},
+          PROPER_PAIR_COMPENSATION_MODE{Breakpoint::PROPER_PAIR_COMPENSATION_MODE},
+          DISCORDANT_LEFT_RANGE{static_cast<ChrSize>(round(DEFAULT_READ_LENGTHIn * 3))},
+          DISCORDANT_RIGHT_RANGE{static_cast<ChrSize>(round(DEFAULT_READ_LENGTHIn * 2.51))},
           printedBps{0u},
           chrIndexCurrent{0},
-          minPos{-1},
-          maxPos{-1},
+          minPos{std::numeric_limits<ChrSize>::max()},
+          maxPos{std::numeric_limits<ChrSize>::min()},
           breakpointsCurrent{},
           discordantAlignmentsPool{},
           discordantAlignmentCandidatesPool{},
@@ -82,18 +82,18 @@ namespace sophia {
         breakpointsCurrent.clear();
         coverageProfiles.clear();
         discordantAlignmentsPool.clear();
-        if (PROPERPARIRCOMPENSATIONMODE) {
+        if (PROPER_PAIR_COMPENSATION_MODE) {
             discordantAlignmentCandidatesPool.clear();
         }
         discordantLowQualAlignmentsPool.clear();
-        minPos = -1;
-        maxPos = -1;
+        minPos = std::numeric_limits<ChrSize>::max();
+        maxPos = std::numeric_limits<ChrSize>::min();
     }
 
     /** Does a lot of stuff, and -- just by the way -- also prints the results to stdout :(.
       **/
     void
-    SamSegmentMapper::printBps(int alignmentStart) {
+    SamSegmentMapper::printBps(ChrSize alignmentStart) {
         for (auto &bp : breakpointsCurrent) {
             if (!bp.second.isCovFinalized() && ((bp.first) + 1 < alignmentStart)) {
                 auto posDiff = bp.first - minPos;
@@ -124,23 +124,23 @@ namespace sophia {
                 bp.second.setCovFinalized(true);
             }
         }
-        if (minPos != -1) {
-            while (minPos + 2 + DISCORDANTLEFTRANGE < alignmentStart) {
+        if (minPos != std::numeric_limits<ChrSize>::max()) {
+            while (minPos + 2 + DISCORDANT_LEFT_RANGE < alignmentStart) {
                 if (minPos != maxPos) {
                     coverageProfiles.pop_front();
                     ++minPos;
                 } else {
                     coverageProfiles.clear();
-                    minPos = -1;
-                    maxPos = -1;
+                    minPos = std::numeric_limits<ChrSize>::max();
+                    maxPos = std::numeric_limits<ChrSize>::min();
                     break;
                 }
             }
         }
         for (auto bpIt = breakpointsCurrent.begin();
              bpIt != breakpointsCurrent.end();) {
-            if ((bpIt->first) + DISCORDANTRIGHTRANGE < alignmentStart) {
-                if (bpIt->second.finalizeBreakpoint(   // Sideeffect: prints the breakpoint!
+            if ((bpIt->first) + DISCORDANT_RIGHT_RANGE < alignmentStart) {
+                if (bpIt->second.finalizeBreakpoint(   // Side effect: prints the breakpoint!
                         discordantAlignmentsPool, discordantLowQualAlignmentsPool,
                         discordantAlignmentCandidatesPool)) {
                     ++printedBps;
@@ -152,21 +152,21 @@ namespace sophia {
         }
         while (!discordantAlignmentsPool.empty() &&
                (discordantAlignmentsPool.front().readStartPos +
-                    DISCORDANTLEFTRANGE + DISCORDANTRIGHTRANGE <
+                    DISCORDANT_LEFT_RANGE + DISCORDANT_RIGHT_RANGE <
                 alignmentStart)) {
             discordantAlignmentsPool.pop_front();
         }
-        if (PROPERPARIRCOMPENSATIONMODE) {
+        if (PROPER_PAIR_COMPENSATION_MODE) {
             while (!discordantAlignmentCandidatesPool.empty() &&
                    (discordantAlignmentCandidatesPool.front().readStartPos +
-                        DISCORDANTLEFTRANGE + DISCORDANTRIGHTRANGE <
+                        DISCORDANT_LEFT_RANGE + DISCORDANT_RIGHT_RANGE <
                     alignmentStart)) {
                 discordantAlignmentCandidatesPool.pop_front();
             }
         }
         while (!discordantLowQualAlignmentsPool.empty() &&
                (discordantLowQualAlignmentsPool.front().readStartPos +
-                    DISCORDANTLEFTRANGE + DISCORDANTRIGHTRANGE <
+                    DISCORDANT_LEFT_RANGE + DISCORDANT_RIGHT_RANGE <
                 alignmentStart)) {
             discordantLowQualAlignmentsPool.pop_front();
         }
@@ -174,7 +174,7 @@ namespace sophia {
 
     void
     SamSegmentMapper::incrementCoverages(const Alignment &alignment) {
-        if (minPos == -1) {
+        if (minPos == std::numeric_limits<ChrSize>::max()) {
             for (auto i = alignment.getStartPos(); i < alignment.getEndPos(); ++i) {
                 coverageProfiles.emplace_back();
             }
@@ -198,9 +198,13 @@ namespace sophia {
                 coverageProfiles[i - minPos].incrementCoverage();
                 coverageProfiles[i - minPos].incrementNormalSpans();
             }
-            if (PROPERPARIRCOMPENSATIONMODE) {
+            if (PROPER_PAIR_COMPENSATION_MODE) {
                 discordantAlignmentCandidatesPool.emplace_back(
-                    alignment.getStartPos(), alignment.getEndPos(), -1, -1, -1,
+                    alignment.getStartPos(),
+                    alignment.getEndPos(),
+                    std::numeric_limits<ChrIndex>::max(), // mateChrIndexIn
+                    std::numeric_limits<ChrSize>::max(), // mateStartPosIn
+                    -1, // sourceType
                     false);
             }
             break;
@@ -223,20 +227,26 @@ namespace sophia {
                 coverageProfiles[i - minPos].incrementCoverage();
                 coverageProfiles[i - minPos].incrementNormalSpans();
             }
-            if (!chrConverter.isTechnical(alignment.getMateChrIndex()) &&
-                !(alignment.getMateChrIndex() == 2 &&
-                  (alignment.getMatePos() / 10000 == 3314))) {
-                  // TODO What is this? Is this a special case in the hg37 assembly?
-                if (PROPERPARIRCOMPENSATIONMODE) {
+            if (!chrConverter.isTechnical(alignment.getMateChrIndex())
+                && !chrConverter.isInBlockedRegion(alignment.getMateChrIndex(),
+                                                   alignment.getMatePos())) {
+
+                if (PROPER_PAIR_COMPENSATION_MODE) {
                     discordantAlignmentCandidatesPool.emplace_back(
-                        alignment.getStartPos(), alignment.getEndPos(),
-                        alignment.getMateChrIndex(), alignment.getMatePos(), 2,
+                        alignment.getStartPos(),
+                        alignment.getEndPos(),
+                        alignment.getMateChrIndex(),
+                        alignment.getMatePos(),
+                        2,   // TODO is this a chromosome index
                         alignment.isInvertedMate());
                 }
                 if (!alignment.isNullMapq()) {
                     discordantAlignmentsPool.emplace_back(
-                        alignment.getStartPos(), alignment.getEndPos(),
-                        alignment.getMateChrIndex(), alignment.getMatePos(), 2,
+                        alignment.getStartPos(),
+                        alignment.getEndPos(),
+                        alignment.getMateChrIndex(),
+                        alignment.getMatePos(),
+                        2,   // TODO is this a chromosome index
                         alignment.isInvertedMate());
                 } else {
                     discordantLowQualAlignmentsPool.emplace_back(
@@ -248,16 +258,14 @@ namespace sophia {
             break;
         case 2:
             if (!(alignment.isLowMapq() || alignment.isNullMapq())) {
-                for (auto i = alignment.getStartPos(); i < alignment.getEndPos();
-                     ++i) {
+                for (auto i = alignment.getStartPos(); i < alignment.getEndPos(); ++i) {
                     if (i > maxPos) {
                         coverageProfiles.emplace_back();
                         ++maxPos;
                     }
                 }
             } else {
-                for (auto i = alignment.getStartPos(); i < alignment.getEndPos();
-                     ++i) {
+                for (auto i = alignment.getStartPos(); i < alignment.getEndPos(); ++i) {
                     if (i > maxPos) {
                         coverageProfiles.emplace_back();
                         ++maxPos;
@@ -277,22 +285,27 @@ namespace sophia {
             if (!alignment.isSupplementary() &&
                 !chrConverter.isTechnical(alignment.getMateChrIndex()) &&
                 alignment.isDistantMate()) {
-                if (!(alignment.getMateChrIndex() == 2 &&
-                      (alignment.getMatePos() / 10000 == 3314))) {
+                if (!chrConverter.isInBlockedRegion(alignment.getMateChrIndex(),
+                                                    alignment.getMatePos())) {
                     discordantLowQualAlignmentsPool.emplace_back(
-                        alignment.getStartPos(), alignment.getEndPos(),
-                        alignment.getMateChrIndex(), alignment.getMatePos(), 2,
-                        alignment.isInvertedMate(), alignment.getReadBreakpoints());
+                        alignment.getStartPos(),
+                        alignment.getEndPos(),
+                        alignment.getMateChrIndex(),
+                        alignment.getMatePos(),
+                        2,   // TODO Is this a chromosome index?
+                        alignment.isInvertedMate(),
+                        alignment.getReadBreakpoints());
                 }
             }
             break;
         default:
             break;
         }
+
         switch (alignment.getReadType()) {
         case 1:
             for (auto j = 0u; j < alignment.getReadBreakpoints().size(); ++j) {
-                auto bpPos = alignment.getReadBreakpoints()[j];
+                ChrSize bpPos = alignment.getReadBreakpoints()[j];
                 if (bpPos > maxPos) {
                     coverageProfiles.emplace_back();
                     ++maxPos;
@@ -309,9 +322,8 @@ namespace sophia {
                     break;
                 case 'D':
                     coverageProfiles[bpPos - minPos].incrementNormalBpsShortIndel();
-                    for (auto k = 0; k != alignment.getReadBreakpointsSizes()[j];
-                         ++k) {
-                        coverageProfiles[bpPos - minPos + k].decrementNormalSpans();
+                    for (signed int k = 0; k != alignment.getReadBreakpointsSizes()[j]; ++k) {
+                        coverageProfiles[bpPos - minPos + (unsigned int) k].decrementNormalSpans();
                     }
                     break;
                 default:
@@ -332,9 +344,8 @@ namespace sophia {
                     break;
                 case 'D':
                     coverageProfiles[bpPos - minPos].incrementNormalBpsShortIndel();
-                    for (auto k = 0; k != alignment.getReadBreakpointsSizes()[j];
-                         ++k) {
-                        coverageProfiles[bpPos - minPos + k].decrementNormalSpans();
+                    for (signed int k = 0; k != alignment.getReadBreakpointsSizes()[j]; ++k) {
+                        coverageProfiles[bpPos - minPos + (unsigned int) k].decrementNormalSpans();
                     }
                     break;
                 default:
@@ -381,9 +392,8 @@ namespace sophia {
                         break;
                     case 'D':
                         coverageProfiles[bpPos - minPos].incrementLowQualBpsHard();
-                        for (auto k = 0;
-                             k != alignment.getReadBreakpointsSizes()[j]; ++k) {
-                            coverageProfiles[bpPos - minPos + k]
+                        for (signed int k = 0; k != alignment.getReadBreakpointsSizes()[j]; ++k) {
+                            coverageProfiles[bpPos - minPos + (unsigned int) k]
                                 .decrementLowQualSpansHard();
                         }
                         break;
@@ -414,9 +424,8 @@ namespace sophia {
                     break;
                 case 'D':
                     coverageProfiles[bpPos - minPos].incrementLowQualBpsSoft();
-                    for (auto k = 0; k != alignment.getReadBreakpointsSizes()[j];
-                         ++k) {
-                        coverageProfiles[bpPos - minPos + k]
+                    for (signed int k = 0; k != alignment.getReadBreakpointsSizes()[j]; ++k) {
+                        coverageProfiles[bpPos - minPos + (unsigned int) k]
                             .decrementLowQualSpansSoft();
                     }
                     break;
@@ -436,7 +445,7 @@ namespace sophia {
         case 1:
             for (auto i = 0u; i < alignment->getReadBreakpoints().size(); ++i) {
                 if (alignment->getReadBreakpointTypes()[i] == 'S') {
-                    auto bpLoc = alignment->getReadBreakpoints()[i];
+                    unsigned int bpLoc = alignment->getReadBreakpoints()[i];
                     auto it = breakpointsCurrent.find(bpLoc);
                     if (it == breakpointsCurrent.end()) {
                         auto newIt = breakpointsCurrent.emplace(
@@ -473,18 +482,18 @@ namespace sophia {
     // void SamSegmentMapper::printMetadata(int ISIZESIGMALEVEL) {
     //	auto elapsedTime = div(difftime(time(nullptr), STARTTIME), 60);
     //	*metaOutputHandle << "#Using soft/hard clip length threshold " <<
-    //Alignment::CLIPPEDNUCLEOTIDECOUNTTHRESHOLD << endl; 	*metaOutputHandle <<
+    //Alignment::CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD << endl; 	*metaOutputHandle <<
     //"#Using low quality clipped overhang length threshold " <<
-    //Alignment::LOWQUALCLIPTHRESHOLD << endl; 	*metaOutputHandle << "#Using Base
-    //Quality Threshold " << Alignment::BASEQUALITYTHRESHOLD << endl;
+    //Alignment::LOW_QUAL_CLIP_THRESHOLD << endl; 	*metaOutputHandle << "#Using Base
+    //Quality Threshold " << Alignment::BASE_QUALITY_THRESHOLD << endl;
     //	*metaOutputHandle << "#Using Base Quality Threshold Low " <<
-    //Alignment::BASEQUALITYTHRESHOLDLOW << endl; 	*metaOutputHandle << "#Using
+    //Alignment::BASE_QUALITY_THRESHOLD_LOW << endl; 	*metaOutputHandle << "#Using
     //sigmas = " << ISIZESIGMALEVEL << " away from the median insert size for
     //'distant' classification" << endl; 	*metaOutputHandle << "#Using minimum isize
     //for 'distant' classification = " << Alignment::ISIZEMAX << " bps" << endl;
     //	*metaOutputHandle << "#Using minimum reads supporting a breakpoint " <<
-    //Breakpoint::BPSUPPORTTHRESHOLD << endl; 	*metaOutputHandle << "#Using minimum
-    //reads supporting a discordant mate contig " << Breakpoint::BPSUPPORTTHRESHOLD
+    //Breakpoint::BP_SUPPORT_THRESHOLD << endl; 	*metaOutputHandle << "#Using minimum
+    //reads supporting a discordant mate contig " << Breakpoint::BP_SUPPORT_THRESHOLD
     //<< endl; 	*metaOutputHandle << "#Using (-F 0x600 -f 0x001)" << endl;
     //	*metaOutputHandle << "#done\t" << printedBps << " lines printed in " <<
     //elapsedTime.quot << " minutes, " << elapsedTime.rem << " seconds" << endl;

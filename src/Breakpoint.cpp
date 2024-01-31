@@ -35,7 +35,7 @@
 
 namespace sophia {
 
-    const string Breakpoint::COLUMNSSTR = boost::join(
+    const string Breakpoint::COLUMN_STR = boost::join(
         vector<string>{
             "#chr", "start", "end",
             "covTypes(pairedBreaksSoft,pairedBreaksHard,mateReadSupport,"
@@ -46,12 +46,19 @@ namespace sophia {
             "suppAlignmentsDoubleSupport(primary,secondary,mate)",
             "suppAlignments(primary,0,mate)", "significantOverhangs\n"},
         "\t");
-    int Breakpoint::BPSUPPORTTHRESHOLD{};
-    int Breakpoint::DEFAULTREADLENGTH{};
-    int Breakpoint::DISCORDANTLOWQUALLEFTRANGE{};
-    int Breakpoint::DISCORDANTLOWQUALRIGHTRANGE{};
-    double Breakpoint::IMPROPERPAIRRATIO{0.0};
-    bool Breakpoint::PROPERPAIRCOMPENSATIONMODE{false};
+
+    int Breakpoint::BP_SUPPORT_THRESHOLD{};
+
+    ChrSize Breakpoint::DEFAULT_READ_LENGTH{};
+
+    ChrSize Breakpoint::DISCORDANT_LOW_QUAL_LEFT_RANGE{};
+
+    ChrSize Breakpoint::DISCORDANT_LOW_QUAL_RIGHT_RANGE{};
+
+    double Breakpoint::IMPROPER_PAIR_RATIO{0.0};
+
+    bool Breakpoint::PROPER_PAIR_COMPENSATION_MODE{false};
+
     int Breakpoint::bpindex{0};
 
 
@@ -76,7 +83,7 @@ namespace sophia {
     void
     Breakpoint::addSoftAlignment(shared_ptr<Alignment> alignmentIn) {
         if (!alignmentIn->isSupplementary()) {
-            if (supportingSoftAlignments.size() <= MAXPERMISSIBLESOFTCLIPS) {
+            if (supportingSoftAlignments.size() <= MAX_PERMISSIBLE_SOFTCLIPS) {
                 supportingSoftAlignments.push_back(alignmentIn);
             }
         }
@@ -86,11 +93,11 @@ namespace sophia {
     Breakpoint::addHardAlignment(shared_ptr<Alignment> alignmentIn) {
         if (alignmentIn->isSupplementary()) {
             if (!(alignmentIn->isLowMapq() || alignmentIn->isNullMapq())) {
-                if (supportingHardAlignments.size() <= MAXPERMISSIBLEHARDCLIPS) {
+                if (supportingHardAlignments.size() <= MAX_PERMISSIBLE_HARDCLIPS) {
                     supportingHardAlignments.push_back(alignmentIn);
                 }
             } else {
-                if (totalLowMapqHardClips < MAXPERMISSIBLELOWMAPQHARDCLIPS) {
+                if (totalLowMapqHardClips < MAX_PERMISSIBLE_LOW_MAPQ_HARDCLIPS) {
                     supportingHardLowMapqAlignments.push_back(alignmentIn);
                     ++totalLowMapqHardClips;
                 } else {
@@ -115,19 +122,19 @@ namespace sophia {
             ++bpindex;
             missingInfoBp = true;
         } else if (static_cast<int>(supportingSoftAlignments.size()) ==
-                       MAXPERMISSIBLESOFTCLIPS &&
+                       MAX_PERMISSIBLE_SOFTCLIPS &&
                    eventTotal + normalSpans + artifactTotal >
-                       MAXPERMISSIBLEHARDCLIPS * 20) {
+                       MAX_PERMISSIBLE_HARDCLIPS * 20) {
             ++bpindex;
             missingInfoBp = true;
         } else {
             fillMatePool(discordantAlignmentsPool, discordantLowQualAlignmentsPool,
                          discordantAlignmentCandidatesPool);
-            if (eventTotal < BPSUPPORTTHRESHOLD &&
-                static_cast<int>(poolLeft.size()) < BPSUPPORTTHRESHOLD &&
-                static_cast<int>(poolLowQualLeft.size()) < BPSUPPORTTHRESHOLD &&
-                static_cast<int>(poolRight.size()) < BPSUPPORTTHRESHOLD &&
-                static_cast<int>(poolLowQualRight.size()) < BPSUPPORTTHRESHOLD) {
+            if (eventTotal < BP_SUPPORT_THRESHOLD &&
+                static_cast<int>(poolLeft.size()) < BP_SUPPORT_THRESHOLD &&
+                static_cast<int>(poolLowQualLeft.size()) < BP_SUPPORT_THRESHOLD &&
+                static_cast<int>(poolRight.size()) < BP_SUPPORT_THRESHOLD &&
+                static_cast<int>(poolLowQualRight.size()) < BP_SUPPORT_THRESHOLD) {
                 if (artifactTotal < normalSpans) {
                     return false;
                 } else {
@@ -140,8 +147,8 @@ namespace sophia {
                 collectMateSupport();
             }
         }
-        if (eventTotal + mateSupport + artifactTotal < BPSUPPORTTHRESHOLD ||
-            (eventTotal + artifactTotal < BPSUPPORTTHRESHOLD &&
+        if (eventTotal + mateSupport + artifactTotal < BP_SUPPORT_THRESHOLD ||
+            (eventTotal + artifactTotal < BP_SUPPORT_THRESHOLD &&
              doubleSidedMatches.empty() && supplementsPrimary.empty())) {
             return false;
         }
@@ -227,7 +234,7 @@ namespace sophia {
     Breakpoint::finalizeOverhangs() {
         ++bpindex;
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        for (auto i = 0u; i < supportingSoftAlignments.size(); ++i) {
+        for (size_t i = 0u; i < supportingSoftAlignments.size(); ++i) {
             supportingSoftAlignments[i]->setChosenBp(pos, i);
             if (supportingSoftAlignments[i]->assessOutlierMateDistance()) {
                 if (!chrConverter.isTechnical(
@@ -340,7 +347,7 @@ namespace sophia {
             auto indexStr = strtk::type_to_string<int>(bpindex);
             for (const auto &overhangParent : supportingSoftParentAlignments) {
                 if (static_cast<int>(overhangParent->getChildrenNodes().size()) >=
-                    BPSUPPORTTHRESHOLD) {
+                    BP_SUPPORT_THRESHOLD) {
                     consensusOverhangsTmp.append(">")
                         .append(indexStr)
                         .append("_")
@@ -419,40 +426,40 @@ namespace sophia {
         auto mismatches = 0;
         char cLong{};
         char cShort{};
-        auto shortS = shortAlignment->getOverhangLength();
-        auto longStart = longAlignment->getOverhangStartIndex();
-        auto shortStart = shortAlignment->getOverhangStartIndex();
+        ChrSize shortS = shortAlignment->getOverhangLength();
+        ChrSize longStart = longAlignment->getOverhangStartIndex();
+        ChrSize shortStart = shortAlignment->getOverhangStartIndex();
         const auto pointerToLongSeq = &longAlignment->getSamLine();
         const auto pointerToShortSeq = &shortAlignment->getSamLine();
         if (!longAlignment->isOverhangEncounteredM() &&
             !shortAlignment->isOverhangEncounteredM()) {
             auto lenDiff = longAlignment->getOverhangLength() - shortS;
             for (int i = shortS - 1; i >= 0; --i) {
-                cLong = (*pointerToLongSeq)[longStart + i + lenDiff];
+                cLong = (*pointerToLongSeq)[longStart + (size_t) i + lenDiff];
                 if (cLong == 'N')
                     continue;
-                cShort = (*pointerToShortSeq)[shortStart + i];
+                cShort = (*pointerToShortSeq)[shortStart + (size_t) i];
                 if (cShort == 'N')
                     continue;
                 if (cLong != cShort) {
                     ++mismatches;
-                    if (mismatches > PERMISSIBLEMISMATCHES)
+                    if (mismatches > PERMISSIBLE_MISMATCHES)
                         return false;
                 }
             }
             return true;
         } else if (longAlignment->isOverhangEncounteredM() &&
                    shortAlignment->isOverhangEncounteredM()) {
-            for (auto i = 0; i < shortS; ++i) {
-                cLong = (*pointerToLongSeq)[longStart + i];
+            for (ChrSize i = 0; i < shortS; ++i) {
+                cLong = (*pointerToLongSeq)[longStart + (size_t) i];
                 if (cLong == 'N')
                     continue;
-                cShort = (*pointerToShortSeq)[shortStart + i];
+                cShort = (*pointerToShortSeq)[shortStart + (size_t) i];
                 if (cShort == 'N')
                     continue;
                 if (cLong != cShort) {
                     ++mismatches;
-                    if (mismatches > PERMISSIBLEMISMATCHES)
+                    if (mismatches > PERMISSIBLE_MISMATCHES)
                         return false;
                 }
             }
@@ -682,11 +689,11 @@ namespace sophia {
         }
         auto leftSideExpectedErrors = 0.0;
         auto rightSideExpectedErrors = 0.0;
-        if (PROPERPAIRCOMPENSATIONMODE) {
+        if (PROPER_PAIR_COMPENSATION_MODE) {
             leftSideExpectedErrors =
-                leftSideDiscordantCandidates * IMPROPERPAIRRATIO;
+                leftSideDiscordantCandidates * IMPROPER_PAIR_RATIO;
             rightSideExpectedErrors =
-                rightSideDiscordantCandidates * IMPROPERPAIRRATIO;
+                rightSideDiscordantCandidates * IMPROPER_PAIR_RATIO;
             leftDiscordantsTotal =
                 max(0, static_cast<int>(
                            round(leftDiscordantsTotal - leftSideExpectedErrors)));
@@ -716,13 +723,13 @@ namespace sophia {
                     sa.setExpectedDiscordants(rightDiscordantsTotal);
                     collectMateSupportHelper(sa, poolRight, poolLowQualRight);
                 }
-            } else if (sa.getSupport() < BPSUPPORTTHRESHOLD) {
+            } else if (sa.getSupport() < BP_SUPPORT_THRESHOLD) {
                 sa.setToRemove(true);
             }
         }
         for (auto &sa : supplementsPrimary) {
             if (sa.getMapq() == 0 && sa.getMateSupport() == 0 &&
-                sa.getDistinctReads() < 2 * BPSUPPORTTHRESHOLD) {
+                sa.getDistinctReads() < 2 * BP_SUPPORT_THRESHOLD) {
                 sa.setToRemove(true);
             }
         }
@@ -799,7 +806,7 @@ namespace sophia {
         for (const auto &mateInfo : poolLeft) {
             if (!mateInfo.saSupporter && mateInfo.evidenceLevel == 3 &&
                 mateInfo.matePower / (0.0 + leftDiscordantsTotal) >= 0.33 &&
-                (pos - mateInfo.readEndPos) < DEFAULTREADLENGTH / 2) {
+                (pos - mateInfo.readEndPos) < DEFAULT_READ_LENGTH / 2) {
                 supplementsPrimary.emplace_back(
                     mateInfo.mateChrIndex, mateInfo.mateStartPos,
                     mateInfo.matePower, leftDiscordantsTotal, true,
@@ -810,7 +817,7 @@ namespace sophia {
         for (const auto &mateInfo : poolRight) {
             if (!mateInfo.saSupporter && mateInfo.evidenceLevel == 3 &&
                 mateInfo.matePower / (0.0 + rightDiscordantsTotal) >= 0.33 &&
-                (mateInfo.readStartPos - pos) < DEFAULTREADLENGTH / 2) {
+                (mateInfo.readStartPos - pos) < DEFAULT_READ_LENGTH / 2) {
                 supplementsPrimary.emplace_back(
                     mateInfo.mateChrIndex, mateInfo.mateStartPos,
                     mateInfo.matePower, rightDiscordantsTotal, false,
@@ -843,10 +850,10 @@ namespace sophia {
         for (auto &sa : doubleSidedMatches) {
             if (!(sa.getSupport() > 0 && sa.getSecondarySupport() > 0) &&
                 sa.getSupport() + sa.getSecondarySupport() + sa.getMateSupport() <
-                    BPSUPPORTTHRESHOLD) {
+                    BP_SUPPORT_THRESHOLD) {
                 sa.setToRemove(true);
             } else {
-                if (sa.isDistant() && PROPERPAIRCOMPENSATIONMODE) {
+                if (sa.isDistant() && PROPER_PAIR_COMPENSATION_MODE) {
                     if (sa.isEncounteredM()) {
                         if (sa.getMateSupport() < leftSideExpectedErrors) {
                             sa.setProperPairErrorProne(true);
@@ -866,10 +873,10 @@ namespace sophia {
         for (auto &sa : supplementsPrimary) {
             if (!(sa.getSupport() > 0 && sa.getSecondarySupport() > 0) &&
                 sa.getSupport() + sa.getSecondarySupport() + sa.getMateSupport() <
-                    BPSUPPORTTHRESHOLD) {
+                    BP_SUPPORT_THRESHOLD) {
                 sa.setToRemove(true);
             } else {
-                if (sa.isDistant() && PROPERPAIRCOMPENSATIONMODE) {
+                if (sa.isDistant() && PROPER_PAIR_COMPENSATION_MODE) {
                     if (sa.isEncounteredM()) {
                         if (sa.getMateSupport() < leftSideExpectedErrors) {
                             sa.setProperPairErrorProne(true);
@@ -892,14 +899,13 @@ namespace sophia {
     Breakpoint::compressMatePool(vector<MateInfo> &discordantAlignmentsPool) {
         if (discordantAlignmentsPool.empty())
             return;
-        auto lastIndex = 0;
-        for (auto i = 1; i < static_cast<int>(discordantAlignmentsPool.size());
-             ++i) {
+        unsigned int lastIndex = 0;
+        for (size_t i = 1; i < discordantAlignmentsPool.size(); ++i) {
             if (discordantAlignmentsPool[lastIndex].mateChrIndex !=
                     discordantAlignmentsPool[i].mateChrIndex ||   //
                 discordantAlignmentsPool[i].mateStartPos -
                         discordantAlignmentsPool[lastIndex].mateEndPos >
-                    3.5 * DEFAULTREADLENGTH) {
+                    3.5 * DEFAULT_READ_LENGTH) {
                 lastIndex = i;
             } else {
                 discordantAlignmentsPool[lastIndex].mateEndPos =
@@ -914,11 +920,11 @@ namespace sophia {
                 } else {
                     ++discordantAlignmentsPool[lastIndex].straightSupport;
                 }
-                if (abs(pos - discordantAlignmentsPool[i].readStartPos) <=
-                    abs(pos - discordantAlignmentsPool[i].readEndPos)) {
+                if (abs((long) pos - (long) discordantAlignmentsPool[i].readStartPos) <=
+                    abs((long) pos - (long) discordantAlignmentsPool[i].readEndPos)) {
                     // left side
-                    if (abs(pos - discordantAlignmentsPool[lastIndex].readEndPos) >
-                        abs(pos - discordantAlignmentsPool[i].readEndPos)) {
+                    if (abs((long) pos - (long) discordantAlignmentsPool[lastIndex].readEndPos) >
+                        abs((long) pos - (long) discordantAlignmentsPool[i].readEndPos)) {
                         discordantAlignmentsPool[lastIndex].readStartPos =
                             discordantAlignmentsPool[i].readStartPos;
                         discordantAlignmentsPool[lastIndex].readEndPos =
@@ -926,9 +932,8 @@ namespace sophia {
                     }
                 } else {
                     // right side
-                    if (abs(pos -
-                            discordantAlignmentsPool[lastIndex].readStartPos) >
-                        abs(pos - discordantAlignmentsPool[i].readStartPos)) {
+                    if (abs((long) pos - (long) discordantAlignmentsPool[lastIndex].readStartPos) >
+                        abs((long) pos - (long) discordantAlignmentsPool[i].readStartPos)) {
                         discordantAlignmentsPool[lastIndex].readStartPos =
                             discordantAlignmentsPool[i].readStartPos;
                         discordantAlignmentsPool[lastIndex].readEndPos =
@@ -953,7 +958,7 @@ namespace sophia {
 
         for (auto &cluster : discordantAlignmentsPool) {
             if (cluster.evidenceLevel == 1 &&
-                cluster.matePower < BPSUPPORTTHRESHOLD) {
+                cluster.matePower < BP_SUPPORT_THRESHOLD) {
                 cluster.toRemove = true;
             }
         }
@@ -985,7 +990,7 @@ namespace sophia {
                 poolRight.push_back(discordantAlignmentsPool[i]);
             }
         }
-        if (PROPERPAIRCOMPENSATIONMODE) {
+        if (PROPER_PAIR_COMPENSATION_MODE) {
             auto i = 0u;
             for (; i < discordantAlignmentCandidatesPool.size(); ++i) {
                 if (discordantAlignmentCandidatesPool[i].readStartPos >= pos) {
@@ -1009,7 +1014,7 @@ namespace sophia {
             auto i = 0u;
             for (; i < discordantLowQualAlignmentsPool.size(); ++i) {
                 if (discordantLowQualAlignmentsPool[i].readStartPos <
-                    pos - DISCORDANTLOWQUALLEFTRANGE) {
+                    pos - DISCORDANT_LOW_QUAL_LEFT_RANGE) {
                     continue;
                 }
                 if (discordantLowQualAlignmentsPool[i].readStartPos >= pos) {
@@ -1028,7 +1033,7 @@ namespace sophia {
             }
             for (; i < discordantLowQualAlignmentsPool.size(); ++i) {
                 if (discordantLowQualAlignmentsPool[i].readStartPos >
-                    pos + DISCORDANTLOWQUALRIGHTRANGE) {
+                    pos + DISCORDANT_LOW_QUAL_RIGHT_RANGE) {
                     break;
                 }
                 poolLowQualRight.push_back(discordantLowQualAlignmentsPool[i]);
@@ -1067,7 +1072,7 @@ namespace sophia {
                 sa.incrementMateSupport(1);
                 ++lowQualSupports;
                 auto bpPosMatch = false;
-                for (const auto bpPos : mateInfo.bpLocs) {
+                for (const ChrSize bpPos : mateInfo.bpLocs) {
                     if (bpPos == pos) {
                         bpPosMatch = true;
                         break;
@@ -1089,7 +1094,7 @@ namespace sophia {
                                   lowQualDiscordantSupports);
         if (sa.getMateSupport() == 0) {
             if (sa.getSecondarySupport() == 0 &&
-                sa.getSupport() < BPSUPPORTTHRESHOLD) {
+                sa.getSupport() < BP_SUPPORT_THRESHOLD) {
                 sa.setToRemove(true);
             } else {
                 sa.setSuspicious(true);
@@ -1100,7 +1105,7 @@ namespace sophia {
                 if (!((0.0 + sa.getMateSupport()) / (sa.getExpectedDiscordants()) >
                       0.33)) {
                     if (sa.getSecondarySupport() == 0 &&
-                        sa.getSupport() < BPSUPPORTTHRESHOLD) {
+                        sa.getSupport() < BP_SUPPORT_THRESHOLD) {
                         sa.setToRemove(true);
                     }
                 }
@@ -1112,7 +1117,7 @@ namespace sophia {
 
 
     Breakpoint::Breakpoint(ChrIndex chrIndexIn,
-                           int posIn)
+                           ChrSize posIn)
         : covFinalized{false},
           missingInfoBp{false},
           chrIndex{chrIndexIn},
@@ -1150,10 +1155,10 @@ namespace sophia {
         result.covFinalized = true;
         result.hitsInMref = 0;
 
-        auto index = 0;
+        unsigned int index = 0;
 
         // Collect ends of the columns in BED file. The end of the last column won't be contained.
-        vector<int> columnSeparatorPos {};
+        vector<unsigned int> columnSeparatorPos {};
         columnSeparatorPos.reserve(7);
         for (auto it = bpIn.cbegin(); it != bpIn.cend(); ++it) {
             if (*it == '\t') {
@@ -1190,7 +1195,7 @@ namespace sophia {
         // Column 2: start position
         for (auto i = startStart; i < startEnd; ++i) {
             // TODO Centralize this parsing code into global.h as inline function.
-            result.pos = result.pos * 10 + (bpIn[i] - '0');
+            result.pos = result.pos * 10 + ChrSize(bpIn[i] - '0');
         }
 
         // Column 3: end position (not parsed)

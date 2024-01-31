@@ -36,8 +36,11 @@ namespace sophia {
 
     class MrefEntry {
       public:
-        static int NUMPIDS;
-        static int DEFAULTREADLENGTH;
+
+        static unsigned int NUMPIDS;
+
+        static ChrSize DEFAULT_READ_LENGTH;
+
         static boost::format doubleFormatter;
 
         MrefEntry();
@@ -48,11 +51,16 @@ namespace sophia {
 
         void mergeMrefEntries(MrefEntry &entry2);
 
-        int getPos() const { return pos; }
+        ChrSize getPos() const {
+            if (!isValid()) {
+                throw_with_trace(logic_error("MrefEntry is invalid"));
+            }
+            return pos;
+        }
 
         const vector<float> &getArtifactRatios() const { return artifactRatios; }
 
-        const vector<short> &getFileIndices() const { return fileIndices; }
+        const vector<unsigned short> &getFileIndices() const { return fileIndices; }
 
         short getValidityScore() const { return validity; }
 
@@ -79,7 +87,7 @@ namespace sophia {
             return res;
         }
 
-        const vector<short> &getFileIndicesWithArtifactRatios() const {
+        const vector<unsigned short> &getFileIndicesWithArtifactRatios() const {
             return fileIndicesWithArtifactRatios;
         }
 
@@ -88,8 +96,12 @@ namespace sophia {
         }
 
         void setAsInvalid() {
-            pos = -1;
+            pos = std::numeric_limits<ChrSize>::max();
             validity = -1;
+        }
+
+        bool isValid() const {
+            return pos != std::numeric_limits<ChrSize>::max();
         }
 
       private:
@@ -98,11 +110,16 @@ namespace sophia {
 
         void finalizeFileIndices();
 
-        short validity;   //-1 nothing, 0 only sa, 1 sa and support
-        int pos;
-        vector<short> fileIndices;
-        vector<short> fileIndicesWithArtifactRatios;
+        short validity;   // -1 nothing, 0 only sa, 1 sa and support
+
+        ChrSize pos;
+
+        vector<unsigned short> fileIndices;
+
+        vector<unsigned short> fileIndicesWithArtifactRatios;
+
         vector<float> artifactRatios;
+
         vector<SuppAlignmentAnno> suppAlignments;
     };
 

@@ -100,6 +100,21 @@ namespace sophia {
         EXPECT_THROW(converter.compressedMrefIndexToIndex(3366), std::logic_error); // phix
     }
 
+    TEST_F(GenericChrConverterFixture, GenericChrConverter_indexToCompressedMrefIndex) {
+        const GenericChrConverter &converter =
+                dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+        EXPECT_EQ(converter.indexToCompressedMrefIndex(0), 0);   // chr1
+        EXPECT_EQ(converter.indexToCompressedMrefIndex(23), 23); // chrY
+        // chrM = global::24 is missing from compressed mrefs, ...
+        // [this is an interesting case, because it demonstrates that the GenericChrConverter
+        //  is not constrained to support only compressed Mref chromosomes strictly separated from
+        //  the rest of the chromosomes, but that they isCompressedMref() flag can freely be used.]
+        EXPECT_THROW(converter.indexToCompressedMrefIndex(24), std::logic_error); // phix
+        // ... therefore, compressed::24 = global::25
+        EXPECT_EQ(converter.indexToCompressedMrefIndex(25), 24); // chr1_KI270706v1_random
+        EXPECT_THROW(converter.indexToCompressedMrefIndex(3366), std::logic_error); // phix
+    }
+
     TEST_F(GenericChrConverterFixture, GenericChrConverterTest_ParseSimpleStrings) {
         const std::string test1 = "chr1\tsomething\telse\n";
         const GenericChrConverter &converter =

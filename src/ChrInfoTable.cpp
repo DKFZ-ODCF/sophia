@@ -45,8 +45,8 @@ namespace sophia {
 
     }
 
-    std::vector<ChrInfo>::size_type ChrInfoTable::nChromosomes() const {
-        return chrInfos.size();
+    ChrIndex ChrInfoTable::nChromosomes() const {
+        return ChrIndex(chrInfos.size());
     }
 
     const std::vector<ChrInfo>& ChrInfoTable::getChrInfos() const {

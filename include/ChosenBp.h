@@ -36,27 +36,40 @@ using namespace std;
         friend class Alignment;
 
       public:
-        ChosenBp(char bpTypeIn, int bpSizeIn, bool bpEncounteredMIn,
-                 int overhangStartIndexIn, int overhangLengthIn,
+        ChosenBp(char bpTypeIn,
+                 int bpSizeIn,
+                 bool bpEncounteredMIn,
+                 int overhangStartIndexIn,
+                 int overhangLengthIn,
                  int selfNodeIndexIn)
             : bpType{bpTypeIn}, bpSize{bpSizeIn}, bpEncounteredM{bpEncounteredMIn},
               overhangStartIndex{overhangStartIndexIn},
               overhangLength{overhangLengthIn}, supplementaryAlignments{},
               childrenNodes{{selfNodeIndexIn}}, selfNodeIndex{selfNodeIndexIn} {}
+
         ~ChosenBp() = default;
-        static int BPSUPPORTTHRESHOLD;
+
+        static int BP_SUPPORT_THRESHOLD;
 
       private:
+
         char bpType;
+
         int bpSize;
+
         bool bpEncounteredM;
+
         int overhangStartIndex, overhangLength;
+
         vector<SuppAlignment> supplementaryAlignments;
+
         vector<int> childrenNodes;
+
         int selfNodeIndex;
+
         void addChildNode(int indexIn);
-        void
-        addSupplementaryAlignments(const vector<SuppAlignment> &suppAlignments);
+
+        void addSupplementaryAlignments(const vector<SuppAlignment> &suppAlignments);
     };
 
 }   // namespace sophia
