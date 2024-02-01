@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 
     using namespace sophia;
 
-    unsigned int DEFAULT_READ_LENGTH = 0;
+    unsigned int defaultReadLength = 0;
 
     int baseQuality = 23,
         baseQualityLow = 12,
@@ -56,8 +56,8 @@ int main(int argc, char** argv) {
             ("stdisizepercentage",
                 po::value<double>(),
                "percentage standard deviation of the insert size for the merged bam")
-            ("DEFAULT_READ_LENGTH",
-                po::value<unsigned int>(&DEFAULT_READ_LENGTH),
+            ("defaultreadlength",
+                po::value<unsigned int>(&defaultReadLength),
                 "Default read length for the technology used in sequencing 101, 151, etc.")
             ("clipsize",
                 po::value<int>(&clipSize)->default_value(clipSize),
@@ -98,8 +98,8 @@ int main(int argc, char** argv) {
         }
         setApplicationConfig(assemblyNameOpt);
 
-        if (inputVariables.count("DEFAULT_READ_LENGTH")) {
-            DEFAULT_READ_LENGTH = inputVariables["DEFAULT_READ_LENGTH"].as<unsigned int>();
+        if (inputVariables.count("defaultreadlength")) {
+            defaultReadLength = inputVariables["defaultreadlength"].as<unsigned int>();
         } else {
             cerr << "Default read Length not given, exiting" << endl;
             return 1;
@@ -166,14 +166,14 @@ int main(int argc, char** argv) {
         Alignment::BASE_QUALITY_THRESHOLD_LOW = baseQualityLow + 33;
         Alignment::LOW_QUAL_CLIP_THRESHOLD = (ChrSize) lowQualClipSize;
         Breakpoint::BP_SUPPORT_THRESHOLD = bpSupport;
-        Breakpoint::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTH;
-        Breakpoint::DISCORDANT_LOW_QUAL_LEFT_RANGE = static_cast<unsigned int>(round(DEFAULT_READ_LENGTH * 1.11));
-        Breakpoint::DISCORDANT_LOW_QUAL_RIGHT_RANGE = static_cast<unsigned int>(round(DEFAULT_READ_LENGTH * 0.51));
+        Breakpoint::DEFAULT_READ_LENGTH = defaultReadLength;
+        Breakpoint::DISCORDANT_LOW_QUAL_LEFT_RANGE = static_cast<unsigned int>(round(defaultReadLength * 1.11));
+        Breakpoint::DISCORDANT_LOW_QUAL_RIGHT_RANGE = static_cast<unsigned int>(round(defaultReadLength * 0.51));
 
-        SuppAlignment::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTH;
+        SuppAlignment::DEFAULT_READ_LENGTH = defaultReadLength;
         ChosenBp::BP_SUPPORT_THRESHOLD = bpSupport;
         cout << Breakpoint::COLUMN_STR;
-        SamSegmentMapper segmentRefMaster { DEFAULT_READ_LENGTH };
+        SamSegmentMapper segmentRefMaster { defaultReadLength };
         segmentRefMaster.parseSamStream();
 
         return 0;

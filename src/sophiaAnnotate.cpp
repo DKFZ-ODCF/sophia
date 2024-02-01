@@ -38,8 +38,8 @@ int main(int argc, char** argv) {
     int germlineOffset { 5 };
     int GERMLINE_DB_LIMIT { 5 };
     int PIDS_IN_MREF { 0 };
-    unsigned int DEFAULT_READ_LENGTHTumor { 0 };
-    unsigned int DEFAULT_READ_LENGTHControl { 0 };
+    unsigned int defaultReadLengthTumor { 0 };
+    unsigned int defaultReadLengthControl { 0 };
 
     try {
         ios_base::sync_with_stdio(false);
@@ -61,11 +61,11 @@ int main(int argc, char** argv) {
             ("assemblyname",
                 po::value<string>(&assemblyName)->default_value(assemblyName),
                 "assembly name (classic_hg37, hg38, ...)")
-            ("DEFAULT_READ_LENGTHtumor",
-                po::value<unsigned int>(&DEFAULT_READ_LENGTHTumor),
+            ("defaultreadlengthtumor",
+                po::value<unsigned int>(&defaultReadLengthTumor),
                 "Default read length for the technology used in sequencing 101,151 etc., tumor")
-            ("DEFAULT_READ_LENGTHcontrol",
-                po::value<unsigned int>(&DEFAULT_READ_LENGTHControl),
+            ("defaultreadlengthcontrol",
+                po::value<unsigned int>(&defaultReadLengthControl),
                 "Default read length for the technology used in sequencing 101,151 etc., tumor")
             ("PIDS_IN_MREF",
                 po::value<int>(&PIDS_IN_MREF)->default_value(PIDS_IN_MREF),
@@ -137,8 +137,8 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        if (inputVariables.count("DEFAULT_READ_LENGTHtumor")) {
-            DEFAULT_READ_LENGTHTumor = inputVariables["DEFAULT_READ_LENGTHtumor"].as<unsigned int>();
+        if (inputVariables.count("defaultreadlengthtumor")) {
+            defaultReadLengthTumor = inputVariables["defaultreadlengthtumor"].as<unsigned int>();
         } else {
             cerr << "Default read Length not given, exiting" << endl;
             return 1;
@@ -219,11 +219,11 @@ int main(int argc, char** argv) {
         SvEvent::RELAXED_BP_FREQ_THRESHOLD = 3 * SvEvent::BP_FREQ_THRESHOLD;
         SvEvent::PIDS_IN_MREF_STR = strtk::type_to_string<int>(PIDS_IN_MREF);
         BreakpointReduced::PIDS_IN_MREF_STR = SvEvent::PIDS_IN_MREF_STR;
-        BreakpointReduced::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTHTumor;
-        Breakpoint::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTHTumor;
-        SuppAlignment::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTHTumor;
-        SuppAlignmentAnno::DEFAULT_READ_LENGTH = DEFAULT_READ_LENGTHTumor;
-        SvEvent::HALFDEFAULT_READ_LENGTH = round(DEFAULT_READ_LENGTHTumor / 2.0);
+        BreakpointReduced::DEFAULT_READ_LENGTH = defaultReadLengthTumor;
+        Breakpoint::DEFAULT_READ_LENGTH = defaultReadLengthTumor;
+        SuppAlignment::DEFAULT_READ_LENGTH = defaultReadLengthTumor;
+        SuppAlignmentAnno::DEFAULT_READ_LENGTH = defaultReadLengthTumor;
+        SvEvent::HALF_DEFAULT_READ_LENGTH = round(defaultReadLengthTumor / 2.0);
         SvEvent::GERMLINE_OFFSET_THRESHOLD = germlineOffset;
         SvEvent::GERMLINE_DB_LIMIT = GERMLINE_DB_LIMIT;
         SvEvent::ABRIDGED_OUTPUT = true;
@@ -236,8 +236,8 @@ int main(int argc, char** argv) {
         Breakpoint::BP_SUPPORT_THRESHOLD = 3;
         if (inputVariables.count("controlresults")) {
             string controlResults { inputVariables["controlresults"].as<string>() };
-            if (inputVariables.count("DEFAULT_READ_LENGTHcontrol")) {
-                DEFAULT_READ_LENGTHControl = inputVariables["DEFAULT_READ_LENGTHtumor"].as<unsigned int>();
+            if (inputVariables.count("defaultreadlengthcontrol")) {
+                defaultReadLengthControl = inputVariables["defaultreadlengthtumor"].as<unsigned int>();
             } else {
                 cerr << "Default read Length not given, exiting" << endl;
                 return 1;
@@ -246,16 +246,16 @@ int main(int argc, char** argv) {
             auto pathogenInControl = false;
             {
                 SvEvent::NO_CONTROL_MODE = true;
-                AnnotationProcessor annotationProcessorControlCheck { controlResults, mref, DEFAULT_READ_LENGTHControl, true, GERMLINE_DB_LIMIT };
+                AnnotationProcessor annotationProcessorControlCheck { controlResults, mref, defaultReadLengthControl, true, GERMLINE_DB_LIMIT };
                 lowQualControl = annotationProcessorControlCheck.getMassiveInvFilteringLevel();
                 pathogenInControl = annotationProcessorControlCheck.isContaminationObserved();
                 SvEvent::NO_CONTROL_MODE = false;
             }
-            AnnotationProcessor annotationProcessor { tumorResults, mref, controlResults, DEFAULT_READ_LENGTHTumor, DEFAULT_READ_LENGTHControl, GERMLINE_DB_LIMIT, lowQualControl, pathogenInControl };
+            AnnotationProcessor annotationProcessor { tumorResults, mref, controlResults, defaultReadLengthTumor, defaultReadLengthControl, GERMLINE_DB_LIMIT, lowQualControl, pathogenInControl };
             annotationProcessor.printFilteredResults(pathogenInControl, lowQualControl);
         } else {
             SvEvent::NO_CONTROL_MODE = true;
-            AnnotationProcessor annotationProcessor { tumorResults, mref, DEFAULT_READ_LENGTHTumor, false, GERMLINE_DB_LIMIT };
+            AnnotationProcessor annotationProcessor { tumorResults, mref, defaultReadLengthTumor, false, GERMLINE_DB_LIMIT };
             annotationProcessor.printFilteredResults(false, 0);
         }
 

@@ -49,14 +49,14 @@ namespace sophia {
 
         AnnotationProcessor(const string &tumorResultsIn,
                             vector<vector<MrefEntryAnno>> &mref,
-                            ChrSize DEFAULT_READ_LENGTHTumorIn,
+                            ChrSize defaultReadLengthTumorIn,
                             bool controlCheckModeIn,
                             int GERMLINE_DB_LIMIT);
 
         AnnotationProcessor(const string &tumorResultsIn,
                             vector<vector<MrefEntryAnno>> &mref,
                             const string &controlResultsIn,
-                            ChrSize DEFAULT_READ_LENGTHTumorIn,
+                            ChrSize defaultReadLengthTumorIn,
                             ChrSize DEFAULT_READ_LENGTHControlIn,
                             int GERMLINE_DB_LIMIT,
                             int lowQualControlIn,

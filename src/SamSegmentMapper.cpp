@@ -30,11 +30,11 @@
 
 namespace sophia {
 
-    SamSegmentMapper::SamSegmentMapper(ChrSize DEFAULT_READ_LENGTHIn)
+    SamSegmentMapper::SamSegmentMapper(ChrSize defaultReadLengthIn)
         : STARTTIME{time(nullptr)},
           PROPER_PAIR_COMPENSATION_MODE{Breakpoint::PROPER_PAIR_COMPENSATION_MODE},
-          DISCORDANT_LEFT_RANGE{static_cast<ChrSize>(round(DEFAULT_READ_LENGTHIn * 3))},
-          DISCORDANT_RIGHT_RANGE{static_cast<ChrSize>(round(DEFAULT_READ_LENGTHIn * 2.51))},
+          DISCORDANT_LEFT_RANGE{static_cast<ChrSize>(round(defaultReadLengthIn * 3))},
+          DISCORDANT_RIGHT_RANGE{static_cast<ChrSize>(round(defaultReadLengthIn * 2.51))},
           printedBps{0u},
           chrIndexCurrent{0},
           minPos{std::numeric_limits<ChrSize>::max()},

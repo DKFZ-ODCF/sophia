@@ -43,7 +43,7 @@ bool AnnotationProcessor::ABRIDGED_OUTPUT{false};
 
 AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
                                          vector<vector<MrefEntryAnno>> &mref,
-                                         ChrSize DEFAULT_READ_LENGTHTumorIn,
+                                         ChrSize defaultReadLengthTumorIn,
                                          bool controlCheckMode,
                                          int GERMLINE_DB_LIMIT)
     : NO_CONTROL_MODE{true},
@@ -103,7 +103,7 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
         ++lineIndex;
     }
     for (auto &tres : tumorResults) {
-        DeFuzzier deFuzzier { DEFAULT_READ_LENGTHTumorIn * 6, false };
+        DeFuzzier deFuzzier { defaultReadLengthTumorIn * 6, false };
         deFuzzier.deFuzzyDb(tres);
     }
     searchMatches(mref);
@@ -126,8 +126,8 @@ AnnotationProcessor::AnnotationProcessor(
         const string &tumorResultsIn,
         vector<vector<MrefEntryAnno>> &mref,
         const string &controlResultsIn,
-        ChrSize DEFAULT_READ_LENGTHTumorIn,
-        ChrSize DEFAULT_READ_LENGTHControlIn,
+        ChrSize defaultReadLengthTumorIn,
+        ChrSize defaultReadLengthControlIn,
         int GERMLINE_DB_LIMIT,
         int lowQualControlIn,
         bool pathogenInControlIn)
@@ -190,7 +190,7 @@ AnnotationProcessor::AnnotationProcessor(
                         }
                     }
                     auto maxOverhangLengthRatio =
-                        (maxOverhangLength + 0.0) / DEFAULT_READ_LENGTHControlIn;
+                        (maxOverhangLength + 0.0) / defaultReadLengthControlIn;
                     if (maxOverhangLengthRatio > 0.7) {
                         continue;
                     }
@@ -257,7 +257,7 @@ AnnotationProcessor::AnnotationProcessor(
         ++lineIndex;
     }
     for (auto &cres : controlResults) {
-        DeFuzzier deFuzzierControl{DEFAULT_READ_LENGTHControlIn * 6, false};
+        DeFuzzier deFuzzierControl{defaultReadLengthControlIn * 6, false};
         deFuzzierControl.deFuzzyDb(cres);
     }
     unique_ptr<ifstream> tumorInputHandle{
@@ -297,7 +297,7 @@ AnnotationProcessor::AnnotationProcessor(
         ++lineIndex;
     }
     for (auto &tres : tumorResults) {
-        DeFuzzier deFuzzierTumor{DEFAULT_READ_LENGTHTumorIn * 6, false};
+        DeFuzzier deFuzzierTumor{defaultReadLengthTumorIn * 6, false};
         deFuzzierTumor.deFuzzyDb(tres);
     }
     searchMatches(mref);

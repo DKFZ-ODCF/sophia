@@ -45,7 +45,7 @@ namespace sophia {
 
     double SvEvent::CLONALITY_HIGH_THRESHOLD{};
 
-    int SvEvent::HALFDEFAULT_READ_LENGTH{};
+    int SvEvent::HALF_DEFAULT_READ_LENGTH{};
 
     int SvEvent::GERMLINE_DB_LIMIT{};
 
@@ -892,7 +892,7 @@ namespace sophia {
             } else if ((!germlineStatus1 || !germlineStatus2) &&   //
                        (mrefHits1 > GERMLINE_DB_LIMIT ||
                         mrefHits2 > GERMLINE_DB_LIMIT) &&
-                       (eventSize > 0) && (eventSize < HALFDEFAULT_READ_LENGTH)) {
+                       (eventSize > 0) && (eventSize < HALF_DEFAULT_READ_LENGTH)) {
                 return 5;
             }
         }
@@ -1051,7 +1051,7 @@ namespace sophia {
             if (inverted) {
                 return 22;
             }
-            if (eventSize > 0 && eventSize < HALFDEFAULT_READ_LENGTH) {
+            if (eventSize > 0 && eventSize < HALF_DEFAULT_READ_LENGTH) {
                 return 23;
             }
             if (eventType == 3) {
@@ -1189,7 +1189,7 @@ namespace sophia {
             if (inverted || totalEvidence1 < 5 || evidenceLevel1 == 1) {
                 return 30;
             }
-            if (eventSize > 0 && eventSize < HALFDEFAULT_READ_LENGTH) {
+            if (eventSize > 0 && eventSize < HALF_DEFAULT_READ_LENGTH) {
                 return 31;
             }
             if (eventType == 3) {

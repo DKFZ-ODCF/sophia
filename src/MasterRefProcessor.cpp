@@ -45,14 +45,14 @@ namespace sophia {
       * @param filesIn            vector if input gzFile names.
       * @param outputRootName     base name/path for the output files
       * @param version            the version is matched in the gzFile name to find the realPidName.
-      * @param DEFAULT_READ_LENGTH  Value for the default read length used for the DeFuzzier.
+      * @param defaultreadlength  Value for the default read length used for the DeFuzzier.
       */
     MasterRefProcessor::MasterRefProcessor(const vector<string> &filesIn,
                                            const string &outputRootName,
                                            const string &version,
-                                           const ChrSize DEFAULT_READ_LENGTHIn)
+                                           const ChrSize defaultReadLengthIn)
         : NUMPIDS { static_cast<int>(filesIn.size()) },
-          DEFAULT_READ_LENGTH{ DEFAULT_READ_LENGTHIn },
+          DEFAULT_READ_LENGTH{ defaultReadLengthIn },
           mrefDb {} {
 
         // Initialize the mrefDb with default values. Only for compressed Mref indices.
