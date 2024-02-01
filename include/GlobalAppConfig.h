@@ -36,9 +36,9 @@ namespace sophia {
         static GlobalAppConfig *instance_;
         static std::mutex mutex_;
 
-      protected:
-
         GlobalAppConfig(std::unique_ptr<ChrConverter const> chrConverter);
+
+      protected:
 
         /** The chromosome converter. */
         const std::unique_ptr<ChrConverter const> chrConverter;

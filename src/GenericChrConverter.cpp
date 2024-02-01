@@ -163,15 +163,15 @@ namespace sophia {
 
     /** Number of compressedMref chromosomes. */
     CompressedMrefIndex GenericChrConverter::nChromosomesCompressedMref() const {
-        return compressedToAllMapping.size();
+        return CompressedMrefIndex(compressedToAllMapping.size());
     }
 
     /** Map the compressed mref index to the uncompressed mref index. */
-    ChrIndex GenericChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
-        if (index >= nChromosomesCompressedMref()) {
+    ChrIndex GenericChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex compressedMrefIndex) const {
+        if (compressedMrefIndex >= nChromosomesCompressedMref()) {
             throw_with_trace(std::logic_error("Compressed mref index out of range."));
         }
-        ChrIndex result = compressedToAllMapping[index];
+        ChrIndex result = compressedToAllMapping[(unsigned int) compressedMrefIndex];
         // The following is just a crude logic test. It will fail, if there is something wrong
         // with the index space mapping and it is rather a guard against programming errors.
         // If global and compressed mref indices are properly type-checked (instead of

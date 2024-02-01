@@ -30,25 +30,25 @@
 
 namespace sophia {
 
-using namespace std;
+    using namespace std;
 
-class MrefMatch {
-  public:
-    MrefMatch(short numHitsIn, short numConsevativeHitsIn, int offsetDistanceIn,
-              const vector<SuppAlignmentAnno> &suppMatchesIn);
-    short getNumConsevativeHits() const { return numConsevativeHits; }
-    short getNumHits() const { return numHits; }
-    int getOffsetDistance() const { return offsetDistance; }
-    const vector<SuppAlignmentAnno> &getSuppMatches() const {
-        return suppMatches;
-    }
+    class MrefMatch {
+      public:
+        MrefMatch(short numHitsIn, short numConsevativeHitsIn, int offsetDistanceIn,
+                  const vector<SuppAlignmentAnno> &suppMatchesIn);
+        short getNumConsevativeHits() const { return numConsevativeHits; }
+        short getNumHits() const { return numHits; }
+        int getOffsetDistance() const { return offsetDistance; }
+        const vector<SuppAlignmentAnno> &getSuppMatches() const {
+            return suppMatches;
+        }
 
-  private:
-    short numHits;
-    short numConsevativeHits;
-    int offsetDistance;
-    vector<SuppAlignmentAnno> suppMatches;
-};
+      private:
+        short numHits;
+        short numConsevativeHits;
+        int offsetDistance;
+        vector<SuppAlignmentAnno> suppMatches;
+    };
 
 } /* namespace sophia */
 

@@ -36,8 +36,8 @@ int main(int argc, char** argv) {
     int clonalityhifreq { 85 };
     int bpFreq { 3 };
     int germlineOffset { 5 };
-    int GERMLINE_DB_LIMIT { 5 };
-    int PIDS_IN_MREF { 0 };
+    int germlineDbLimit { 5 };
+    int pidsInMref { 0 };
     unsigned int defaultReadLengthTumor { 0 };
     unsigned int defaultReadLengthControl { 0 };
 
@@ -67,8 +67,8 @@ int main(int argc, char** argv) {
             ("defaultreadlengthcontrol",
                 po::value<unsigned int>(&defaultReadLengthControl),
                 "Default read length for the technology used in sequencing 101,151 etc., tumor")
-            ("PIDS_IN_MREF",
-                po::value<int>(&PIDS_IN_MREF)->default_value(PIDS_IN_MREF),
+            ("pidsinmref",
+                po::value<int>(&pidsInMref)->default_value(pidsInMref),
                 "Number of PIDs in the MREF")
             ("artifactlofreq",
                 po::value<int>(&artifactlofreq)->default_value(artifactlofreq),
@@ -91,8 +91,8 @@ int main(int argc, char** argv) {
             ("germlineoffset",
                 po::value<int>(&germlineOffset)->default_value(germlineOffset),
                 "Minimum offset a germline bp and a control bp")
-            ("GERMLINE_DB_LIMIT",
-                po::value<int>(&GERMLINE_DB_LIMIT)->default_value(GERMLINE_DB_LIMIT),
+            ("germlinedblimit",
+                po::value<int>(&germlineDbLimit)->default_value(germlineDbLimit),
                 "Maximum occurrence of germline variants in the db")
             ("DEBUG_MODE",
                 "DEBUG_MODE")
@@ -113,10 +113,10 @@ int main(int argc, char** argv) {
         }
         setApplicationConfig(assemblyNameOpt);
 
-        vector<MrefEntryAnno>::size_type vectorSize =
+        CompressedMrefIndex vectorSize =
             GlobalAppConfig::getInstance().getChrConverter().nChromosomesCompressedMref();
 
-        vector<vector<MrefEntryAnno>> mref { vectorSize, vector<MrefEntryAnno> { } };
+        vector<vector<MrefEntryAnno>> mref { (unsigned int) vectorSize, vector<MrefEntryAnno> { } };
         if (!inputVariables.count("mref")) {
             cerr << "No mref file given, exiting" << endl;
             return 1;
@@ -130,8 +130,8 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        if (inputVariables.count("PIDS_IN_MREF")) {
-            PIDS_IN_MREF = inputVariables["PIDS_IN_MREF"].as<int>();
+        if (inputVariables.count("pidsinmref")) {
+            pidsInMref = inputVariables["pidsinmref"].as<int>();
         } else {
             cerr << "number of PIDS in the MREF not given, exiting" << endl;
             return 1;
@@ -172,11 +172,11 @@ int main(int argc, char** argv) {
             germlineOffset = inputVariables["germlineoffset"].as<int>();
         }
 
-        if (inputVariables.count("GERMLINE_DB_LIMIT")) {
-            GERMLINE_DB_LIMIT = inputVariables["GERMLINE_DB_LIMIT"].as<int>();
+        if (inputVariables.count("germlinedblimit")) {
+            germlineDbLimit = inputVariables["germlinedblimit"].as<int>();
         }
 
-        MrefEntryAnno::PIDS_IN_MREF = PIDS_IN_MREF;
+        MrefEntryAnno::PIDS_IN_MREF = pidsInMref;
         unique_ptr<ifstream> mrefInputHandle
             { make_unique<ifstream>(inputVariables["mref"].as<string>(), ios_base::in | ios_base::binary) };
         unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle
@@ -205,7 +205,7 @@ int main(int argc, char** argv) {
                 continue;
             } else {
                 chrIndex = chrConverter.indexToCompressedMrefIndex(globalIndex);
-                mref[chrIndex].emplace_back(line);
+                mref[(unsigned int) chrIndex].emplace_back(line);
             }
         }
         SvEvent::ARTIFACT_FREQ_LOW_THRESHOLD = (artifactlofreq + 0.0) / 100;
@@ -215,9 +215,9 @@ int main(int argc, char** argv) {
         SvEvent::CLONALITY_STRICT_LOW_THRESHOLD = (clonalitystrictlofreq + 0.0) / 100;
         BreakpointReduced::CLONALITY_STRICT_LOW_THRESHOLD = SvEvent::CLONALITY_STRICT_LOW_THRESHOLD;
         SvEvent::CLONALITY_HIGH_THRESHOLD = (clonalityhifreq + 0.0) / 100;
-        SvEvent::BP_FREQ_THRESHOLD = PIDS_IN_MREF * (bpFreq + 0.0) / 100;
+        SvEvent::BP_FREQ_THRESHOLD = pidsInMref * (bpFreq + 0.0) / 100;
         SvEvent::RELAXED_BP_FREQ_THRESHOLD = 3 * SvEvent::BP_FREQ_THRESHOLD;
-        SvEvent::PIDS_IN_MREF_STR = strtk::type_to_string<int>(PIDS_IN_MREF);
+        SvEvent::PIDS_IN_MREF_STR = strtk::type_to_string<int>(pidsInMref);
         BreakpointReduced::PIDS_IN_MREF_STR = SvEvent::PIDS_IN_MREF_STR;
         BreakpointReduced::DEFAULT_READ_LENGTH = defaultReadLengthTumor;
         Breakpoint::DEFAULT_READ_LENGTH = defaultReadLengthTumor;
@@ -225,7 +225,7 @@ int main(int argc, char** argv) {
         SuppAlignmentAnno::DEFAULT_READ_LENGTH = defaultReadLengthTumor;
         SvEvent::HALF_DEFAULT_READ_LENGTH = round(defaultReadLengthTumor / 2.0);
         SvEvent::GERMLINE_OFFSET_THRESHOLD = germlineOffset;
-        SvEvent::GERMLINE_DB_LIMIT = GERMLINE_DB_LIMIT;
+        SvEvent::GERMLINE_DB_LIMIT = germlineDbLimit;
         SvEvent::ABRIDGED_OUTPUT = true;
         if (inputVariables.count("DEBUG_MODE")) {
             SvEvent::DEBUG_MODE = true;
@@ -246,16 +246,16 @@ int main(int argc, char** argv) {
             auto pathogenInControl = false;
             {
                 SvEvent::NO_CONTROL_MODE = true;
-                AnnotationProcessor annotationProcessorControlCheck { controlResults, mref, defaultReadLengthControl, true, GERMLINE_DB_LIMIT };
+                AnnotationProcessor annotationProcessorControlCheck { controlResults, mref, defaultReadLengthControl, true, germlineDbLimit };
                 lowQualControl = annotationProcessorControlCheck.getMassiveInvFilteringLevel();
                 pathogenInControl = annotationProcessorControlCheck.isContaminationObserved();
                 SvEvent::NO_CONTROL_MODE = false;
             }
-            AnnotationProcessor annotationProcessor { tumorResults, mref, controlResults, defaultReadLengthTumor, defaultReadLengthControl, GERMLINE_DB_LIMIT, lowQualControl, pathogenInControl };
+            AnnotationProcessor annotationProcessor { tumorResults, mref, controlResults, defaultReadLengthTumor, defaultReadLengthControl, germlineDbLimit, lowQualControl, pathogenInControl };
             annotationProcessor.printFilteredResults(pathogenInControl, lowQualControl);
         } else {
             SvEvent::NO_CONTROL_MODE = true;
-            AnnotationProcessor annotationProcessor { tumorResults, mref, defaultReadLengthTumor, false, GERMLINE_DB_LIMIT };
+            AnnotationProcessor annotationProcessor { tumorResults, mref, defaultReadLengthTumor, false, germlineDbLimit };
             annotationProcessor.printFilteredResults(false, 0);
         }
 

@@ -61,6 +61,12 @@ namespace sophia {
             return pos < rhs.getPos();
         }
 
+        /** This seems to be a function used for sorting positions, that assumes that the ordering
+          * of chromosomes produces a total order, i.e., e.g., that all positions on chr1 are
+          * "smaller" than all positions on chr2 (if chr1 has a smaller index than chr2).
+          *
+          * I doubt there is a biological meaning in the ordering of the chromosomes in the
+          * classic Hg37ChrConverter. */
         bool fullSmaller(const BreakpointReduced &rhs) const {
             if (chrIndex < rhs.getChrIndex()) {
                 return true;

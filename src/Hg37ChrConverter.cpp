@@ -242,7 +242,12 @@ namespace sophia {
         static const ChrIndex virusIndex = 1000;
         static const ChrIndex mtIndex = 1001;
         static const ChrIndex phixIndex = 1002;
-        static const ChrIndex INVALID = 1002;
+        static const ChrIndex INVALID = 1003;
+
+        // Used to be -2, but in the global chromosome index space, all of -2, 0, 1003 are invalid,
+        // and -2 has the disadvantage that it cannot be represented as an unsigned integer.
+        static const ChrIndex NA = INVALID;
+
 
         static const std::vector<ChrName> indexToChrCompressedMref {
             "1",          "2",          "3",          "4",          "5",
@@ -279,8 +284,6 @@ namespace sophia {
             33825,     41934,     42153,     43524,     43342,     39930,
             36652,     38155,     36423,     39787,     38503,     35477944,
             171824};
-
-        static const ChrIndex NA = -2;
 
         static const std::vector<ChrIndex> compressedMrefToIndex {
             NA, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
@@ -368,52 +371,59 @@ namespace sophia {
     }
 
     CompressedMrefIndex Hg37ChrConverter::nChromosomesCompressedMref() const {
-        return indexToChrCompressedMref.size();
+        return CompressedMrefIndex(indexToChrCompressedMref.size());
     }
 
     /** Map an index position to a chromosome name. */
     ChrName Hg37ChrConverter::indexToChrName(ChrIndex index) const {
-        ChrName name = indexToChr[(unsigned long) index];
-        if (name == "INVALID" || name == "0") {
-            throw_with_trace(std::runtime_error("Invalid chromosome index." +
+        if (index == hg37::INVALID || index == hg37::ZERO || index == hg37::NA) {
+            throw_with_trace(std::runtime_error("Invalid chromosome index: " +
                              std::to_string(index)));
         }
-        return name;
+        return indexToChr[(unsigned long) index];
     }
 
     /** chr1-chr22, ... */
     bool Hg37ChrConverter::isAutosome(ChrIndex index) const {
-        return index != hg37::ZERO && index <= hg37::maxAutosomeIndex;
+        return index != hg37::ZERO &&
+               index <= hg37::maxAutosomeIndex;
     }
 
     /** chrX, chrY */
     bool Hg37ChrConverter::isGonosome(ChrIndex index) const {
-        return index != hg37::ZERO && (index == hg37::xIndex || index == hg37::yIndex);
+        return index != hg37::ZERO &&
+               (index == hg37::xIndex || index == hg37::yIndex);
     }
 
 
     /** phix index. */
     bool Hg37ChrConverter::isTechnical(ChrIndex index) const {
-        return index != hg37::ZERO && index == hg37::phixIndex;
+        return index != hg37::ZERO &&
+               index == hg37::phixIndex;
     }
 
     /** NC_007605. */
     bool Hg37ChrConverter::isVirus(ChrIndex index) const {
-        return index != hg37::ZERO && index == hg37::virusIndex;
+        return index != hg37::ZERO &&
+               index == hg37::virusIndex;
     }
 
     /** Mitochondrial chromosome index. */
     bool Hg37ChrConverter::isExtrachromosomal(ChrIndex index) const {
-        return index != hg37::ZERO && index == hg37::mtIndex;
+        return index != hg37::ZERO &&
+               index == hg37::mtIndex;
     }
 
     /** Decoy sequence index. */
     bool Hg37ChrConverter::isDecoy(ChrIndex index) const {
-        return index != hg37::ZERO && index == hg37::decoyIndex;
+        return index != hg37::ZERO &&
+               index == hg37::decoyIndex;
     }
 
     bool Hg37ChrConverter::isUnassigned(ChrIndex index) const {
-        return index != hg37::ZERO && index >= hg37::minUnassignedIndex && index <= hg37::maxUnassignedIndex;
+        return index != hg37::ZERO &&
+               index >= hg37::minUnassignedIndex &&
+               index <= hg37::maxUnassignedIndex;
     }
 
     bool Hg37ChrConverter::isALT(ChrIndex index [[gnu::unused]]) const {
@@ -425,13 +435,16 @@ namespace sophia {
     }
 
     bool Hg37ChrConverter::isCompressedMref(ChrIndex index) const {
-        return index != hg37::ZERO && index <= 1000;  // 1000 == 'NC_007605' (i.e. excluding MT and phiX)
+        return index != hg37::ZERO &&
+               index != hg37::INVALID &&
+               index != hg37::NA &&
+               index <= 1000;  // 1000 == 'NC_007605' (i.e. excluding MT and phiX)
     }
 
     /** Map an index position to a compressed mref index position. */
     ChrName
     Hg37ChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
-        return indexToChrCompressedMref[index];
+        return indexToChrCompressedMref[(unsigned int) index];
     }
 
     /** Map an index from the global index-space to the compressed mref index-space. */
@@ -445,16 +458,16 @@ namespace sophia {
       * no big deal here. */
     ChrIndex
     Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
-        if (index >= (CompressedMrefIndex) compressedMrefToIndex.size())
+        if (index >= CompressedMrefIndex(compressedMrefToIndex.size()))
             throw_with_trace(std::invalid_argument("Index must be < " +
                                                    std::to_string(compressedMrefToIndex.size())));
-        return compressedMrefToIndex[index];
+        return compressedMrefToIndex[(unsigned int) index];
     }
 
     /** Map compressed mref index to chromosome size. */
     ChrSize
     Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
-        return chrSizesCompressedMref[index];
+        return chrSizesCompressedMref[(unsigned int) index];
     }
 
     ChrIndex
@@ -507,12 +520,12 @@ namespace sophia {
             char stopChar,
             const std::string &stopCharExt[[gnu::unused]]  // Attribute to remove the warning
             ) const {
-        int chrIndex {0};
+        ChrIndex chrIndex {0};
         /* if (start == end) {
             throw_with_trace(DomainError("Chromosome identifier is empty."));
         } else */ if (isdigit(*start)) {
             for (auto chr_cit = start; chr_cit != end && *chr_cit != stopChar; ++chr_cit) {
-                chrIndex = chrIndex * 10 + (*chr_cit - '0');
+                chrIndex = chrIndex * 10 + ChrIndex(*chr_cit - '0');
             }
         } else {
             switch (*start) {
@@ -524,7 +537,7 @@ namespace sophia {
                     break;
                 case 'G':   // Match GL...... chromosomes.
                     for (auto cit = next(start, 2); *cit != '.'; ++cit) {
-                        chrIndex = 10 * chrIndex + *cit - '0';
+                        chrIndex = 10 * chrIndex + ChrIndex(*cit - '0');
                     }
                     break;
                 case 'Y':

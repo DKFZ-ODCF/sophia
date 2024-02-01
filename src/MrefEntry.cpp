@@ -35,7 +35,7 @@ namespace sophia {
 
     boost::format MrefEntry::doubleFormatter { "%.5f" };
 
-    unsigned int MrefEntry::NUMPIDS { };
+    unsigned int MrefEntry::NUM_PIDS { };
 
     ChrSize MrefEntry::DEFAULT_READ_LENGTH { };
 
@@ -158,8 +158,8 @@ namespace sophia {
         outputFields.emplace_back(strtk::type_to_string<int>(pos + 1));
         outputFields.emplace_back(strtk::type_to_string<int>(fileIndices.size()));
         outputFields.emplace_back(strtk::type_to_string<int>(fileIndicesWithArtifactRatios.size()));
-        outputFields.emplace_back(boost::str(doubleFormatter % ((fileIndices.size() + 0.0) / NUMPIDS)));
-        outputFields.emplace_back(boost::str(doubleFormatter % ((fileIndicesWithArtifactRatios.size() + 0.0) / NUMPIDS)));
+        outputFields.emplace_back(boost::str(doubleFormatter % ((fileIndices.size() + 0.0) / NUM_PIDS)));
+        outputFields.emplace_back(boost::str(doubleFormatter % ((fileIndicesWithArtifactRatios.size() + 0.0) / NUM_PIDS)));
         if (!artifactRatios.empty()) {
             outputFields.emplace_back(boost::str(doubleFormatter % (accumulate(artifactRatios.cbegin(), artifactRatios.cend(), 0.0) / artifactRatios.size())));
         } else {
@@ -192,11 +192,11 @@ namespace sophia {
     // Currently, not used.
     string MrefEntry::printArtifactRatios(const string& chromosome) {
         vector<string> outputFields { };
-        outputFields.reserve(NUMPIDS + 3u);
+        outputFields.reserve(NUM_PIDS + 3u);
         outputFields.emplace_back(chromosome);
         outputFields.emplace_back(strtk::type_to_string<int>(pos));
         outputFields.emplace_back(strtk::type_to_string<int>(pos + 1));
-        vector<string> artifactRatiosOutput(NUMPIDS, ".");
+        vector<string> artifactRatiosOutput(NUM_PIDS, ".");
         for (size_t i = 0; i < fileIndicesWithArtifactRatios.size(); ++i) {
             artifactRatiosOutput[fileIndicesWithArtifactRatios[i]] =
                 boost::str(doubleFormatter % artifactRatios[i]);

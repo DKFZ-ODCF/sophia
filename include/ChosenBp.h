@@ -42,10 +42,14 @@ using namespace std;
                  int overhangStartIndexIn,
                  int overhangLengthIn,
                  int selfNodeIndexIn)
-            : bpType{bpTypeIn}, bpSize{bpSizeIn}, bpEncounteredM{bpEncounteredMIn},
+            : bpType{bpTypeIn},
+              bpSize{bpSizeIn},
+              bpEncounteredM{bpEncounteredMIn},
               overhangStartIndex{overhangStartIndexIn},
-              overhangLength{overhangLengthIn}, supplementaryAlignments{},
-              childrenNodes{{selfNodeIndexIn}}, selfNodeIndex{selfNodeIndexIn} {}
+              overhangLength{overhangLengthIn},
+              supplementaryAlignments{},
+              childrenNodes{{selfNodeIndexIn}},
+              selfNodeIndex{selfNodeIndexIn} {}
 
         ~ChosenBp() = default;
 

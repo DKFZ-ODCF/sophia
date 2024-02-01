@@ -85,7 +85,8 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
             compressedMrefChrIndex = chrConverter.indexToCompressedMrefIndex(tmpBp.getChrIndex());
         }
         auto hasOverhang = line.back() != '.' && line.back() != '#';
-        tumorResults[compressedMrefChrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
+        tumorResults[(unsigned int) compressedMrefChrIndex].
+            emplace_back(tmpBp, lineIndex, hasOverhang);
         if (hasOverhang) {
             string overhang{};
             for (auto it = line.rbegin(); it != line.rend(); ++it) {
@@ -252,7 +253,7 @@ AnnotationProcessor::AnnotationProcessor(
                 }
             }
         }
-        controlResults[chrConverter.indexToCompressedMrefIndex(tmpBp.getChrIndex())]
+        controlResults[(unsigned int) chrConverter.indexToCompressedMrefIndex(tmpBp.getChrIndex())]
             .push_back(tmpBp);
         ++lineIndex;
     }
@@ -279,7 +280,7 @@ AnnotationProcessor::AnnotationProcessor(
             compressedMrefChrIndex = chrConverter.indexToCompressedMrefIndex(tmpBp.getChrIndex());
         }
         auto hasOverhang = line.back() != '.' && line.back() != '#';
-        tumorResults[compressedMrefChrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
+        tumorResults[(unsigned int) compressedMrefChrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
         if (line.back() != '.' && line.back() != '#') {
             string overhang{};
             for (auto it = line.rbegin(); it != line.rend(); ++it) {
@@ -319,15 +320,15 @@ void
 AnnotationProcessor::searchMatches(vector<vector<MrefEntryAnno>> &mref) {
     CompressedMrefIndex nCompressedMrefChromosomes = GlobalAppConfig::getInstance().
         getChrConverter().nChromosomesCompressedMref();
-    for (CompressedMrefIndex j = 0u; j < nCompressedMrefChromosomes; ++j) {
-        for (size_t i = 0; i < tumorResults[j].size(); ++i) {
-            for (const auto &sa : tumorResults[j][i].getSuppAlignments()) {
+    for (CompressedMrefIndex mrefIdx = 0; mrefIdx < nCompressedMrefChromosomes; ++mrefIdx) {
+        for (size_t dbIdx = 0; dbIdx < tumorResults[(unsigned int) mrefIdx].size(); ++dbIdx) {
+            for (const auto &sa : tumorResults[(unsigned int) mrefIdx][dbIdx].getSuppAlignments()) {
                 if (SvEvent::DEBUG_MODE || !sa.isSuspicious()) {
                     if (sa.getSecondarySupport() > 0 ||
                         (sa.getSupport() > 0 && sa.getMateSupport() > 0)) {
-                        searchSa(j, i, sa, true, mref);
+                        searchSa(mrefIdx, dbIdx, sa, true, mref);
                     } else {
-                        searchSa(j, i, sa, false, mref);
+                        searchSa(mrefIdx, dbIdx, sa, false, mref);
                     }
                 }
             }
@@ -347,7 +348,7 @@ AnnotationProcessor::searchSa(CompressedMrefIndex compressedMrefIndex,
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     if (chrConverter.isExtrachromosomal(sa.getChrIndex())) {
         if (createUnknownMatchSvPreCheck(sa, doubleSupportSa)) {
-            createUnknownMatchSv(tumorResults[compressedMrefIndex][dbIndex], sa, mref,
+            createUnknownMatchSv(tumorResults[(unsigned int) compressedMrefIndex][dbIndex], sa, mref,
                                  doubleSupportSa);
         }
         return;
@@ -361,26 +362,28 @@ AnnotationProcessor::searchSa(CompressedMrefIndex compressedMrefIndex,
     unsigned int fuzziness = 3 * SuppAlignmentAnno::DEFAULT_READ_LENGTH;
     vector<pair<int, vector<BreakpointReduced>::iterator>> dbHits{};
 
-    if (!tumorResults[saChrIndex].empty()) {
-        auto itStart = lower_bound(tumorResults[saChrIndex].begin(),
-                                   tumorResults[saChrIndex].end(), sa);
-        if (itStart == tumorResults[saChrIndex].end()) {
+    if (!tumorResults[(unsigned int) saChrIndex].empty()) {
+        auto itStart = lower_bound(tumorResults[(unsigned int) saChrIndex].begin(),
+                                   tumorResults[(unsigned int) saChrIndex].end(), sa);
+        if (itStart == tumorResults[(unsigned int) saChrIndex].end()) {
             --itStart;
         }
-        if (itStart != tumorResults[saChrIndex].begin() &&
+        if (itStart != tumorResults[(unsigned int) saChrIndex].begin() &&
             !itStart->closeToSupp(sa, fuzziness)) {
             --itStart;
             if (!itStart->closeToSupp(sa, fuzziness)) {
                 if (createUnknownMatchSvPreCheck(sa, doubleSupportSa)) {
 
-                    createUnknownMatchSv(tumorResults[compressedMrefIndex][dbIndex], sa,
-                                         mref, doubleSupportSa);
+                    createUnknownMatchSv(tumorResults[(unsigned int) compressedMrefIndex][dbIndex],
+                                         sa,
+                                         mref,
+                                         doubleSupportSa);
                 }
                 return;
             }
         }
         auto it = itStart;
-        while (it != tumorResults[saChrIndex].begin()) {
+        while (it != tumorResults[(unsigned int) saChrIndex].begin()) {
             auto distance = it->distanceToSupp(sa);
             if (distance <= fuzziness) {
                 dbHits.emplace_back(distance, it);
@@ -389,9 +392,9 @@ AnnotationProcessor::searchSa(CompressedMrefIndex compressedMrefIndex,
                 break;
             }
         }
-        if (itStart != tumorResults[saChrIndex].end()) {
+        if (itStart != tumorResults[(unsigned int) saChrIndex].end()) {
             auto it = next(itStart);
-            while (it != tumorResults[saChrIndex].end()) {
+            while (it != tumorResults[(unsigned int) saChrIndex].end()) {
                 auto distance = it->distanceToSupp(sa);
                 if (distance <= fuzziness) {
                     dbHits.emplace_back(distance, it);
@@ -405,7 +408,9 @@ AnnotationProcessor::searchSa(CompressedMrefIndex compressedMrefIndex,
     }
     if (dbHits.empty()) {
         if (createUnknownMatchSvPreCheck(sa, doubleSupportSa)) {
-            createUnknownMatchSv(tumorResults[compressedMrefIndex][dbIndex], sa, mref,
+            createUnknownMatchSv(tumorResults[(unsigned int) compressedMrefIndex][dbIndex],
+                                 sa,
+                                 mref,
                                  doubleSupportSa);
         }
         return;
@@ -413,10 +418,10 @@ AnnotationProcessor::searchSa(CompressedMrefIndex compressedMrefIndex,
         auto createdMatch = false;
         for (auto &res : dbHits) {
             for (const auto &saMatch : res.second->getSuppAlignments()) {
-                if (tumorResults[compressedMrefIndex][dbIndex].closeToSupp(saMatch,
-                                                                fuzziness)) {
+                if (tumorResults[(unsigned int) compressedMrefIndex][dbIndex].closeToSupp(
+                        saMatch, fuzziness)) {
                     if (createDoubleMatchSvPreCheck(saMatch)) {
-                        createDoubleMatchSv(tumorResults[compressedMrefIndex][dbIndex],
+                        createDoubleMatchSv(tumorResults[(unsigned int) compressedMrefIndex][dbIndex],
                                             *res.second, sa, saMatch, true,
                                             mref);
                         createdMatch = true;
@@ -427,17 +432,17 @@ AnnotationProcessor::searchSa(CompressedMrefIndex compressedMrefIndex,
         if (!createdMatch) {
             auto res = dbHits[0];
             for (const auto &saMatch : res.second->getSuppAlignments()) {
-                if (tumorResults[compressedMrefIndex][dbIndex].closeToSupp(
+                if (tumorResults[(unsigned int) compressedMrefIndex][dbIndex].closeToSupp(
                         saMatch, fuzziness * 3)) {
                     if (createDoubleMatchSvPreCheck(saMatch)) {
-                        createDoubleMatchSv(tumorResults[compressedMrefIndex][dbIndex],
+                        createDoubleMatchSv(tumorResults[(unsigned int) compressedMrefIndex][dbIndex],
                                             *res.second, sa, saMatch, true,
                                             mref);
                         return;
                     }
                 }
             }
-            createUnmatchedSaSv(tumorResults[compressedMrefIndex][dbIndex], *res.second,
+            createUnmatchedSaSv(tumorResults[(unsigned int) compressedMrefIndex][dbIndex], *res.second,
                                 sa, mref);
         }
     }
@@ -591,18 +596,18 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
                                        vector<vector<MrefEntryAnno>> &mref) {
     const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     vector<SuppAlignmentAnno> suppMatches{};
-    CompressedMrefIndex convertedChrIndex;
+    CompressedMrefIndex compressedMrefIndex;
     if (!chrConverter.isCompressedMref(bpIn.getChrIndex())) {
         return MrefMatch{0, 0, 10000, suppMatches};
     } else {
-        convertedChrIndex = chrConverter.indexToCompressedMrefIndex(bpIn.getChrIndex());
+        compressedMrefIndex = chrConverter.indexToCompressedMrefIndex(bpIn.getChrIndex());
     }
-    auto itStart = lower_bound(mref[convertedChrIndex].begin(),
-                               mref[convertedChrIndex].end(), bpIn);
-    if (itStart == mref[convertedChrIndex].end()) {
+    auto itStart = lower_bound(mref[(unsigned int) compressedMrefIndex].begin(),
+                               mref[(unsigned int) compressedMrefIndex].end(), bpIn);
+    if (itStart == mref[(unsigned int) compressedMrefIndex].end()) {
         return MrefMatch{0, 0, 10000, suppMatches};
     }
-    if (itStart != mref[convertedChrIndex].begin() &&
+    if (itStart != mref[(unsigned int) compressedMrefIndex].begin() &&
         !(itStart->distanceTo(bpIn) < SvEvent::GERMLINE_OFFSET_THRESHOLD) &&
         prev(itStart)->distanceTo( bpIn) < SvEvent::GERMLINE_OFFSET_THRESHOLD) {
         --itStart;
@@ -621,15 +626,15 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
         } else {
             break;
         }
-        if (it == mref[convertedChrIndex].begin()) {
+        if (it == mref[(unsigned int) compressedMrefIndex].begin()) {
             break;
         }
         --it;
     }
-    if (itStart != mref[convertedChrIndex].end()) {
+    if (itStart != mref[(unsigned int) compressedMrefIndex].end()) {
         it = next(itStart);
         while (true) {
-            if (it == mref[convertedChrIndex].end()) {
+            if (it == mref[(unsigned int) compressedMrefIndex].end()) {
                 break;
             }
             auto tmpDistance = it->distanceTo(bpIn);
@@ -731,23 +736,23 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
         return dummyMatchTrue;
     }
 
-    CompressedMrefIndex convertedChrIndex;
+    CompressedMrefIndex compressedMrefIndex;
     if (!chrConverter.isCompressedMref(bpIn.getChrIndex())) {
         return dummyMatchFalse;
     } else {
-        convertedChrIndex = GlobalAppConfig::getInstance().getChrConverter().
+        compressedMrefIndex = GlobalAppConfig::getInstance().getChrConverter().
             indexToCompressedMrefIndex(bpIn.getChrIndex());
     }
 
-    if (controlResults[convertedChrIndex].empty()) {
+    if (controlResults[(unsigned int) compressedMrefIndex].empty()) {
         return dummyMatchFalse;
     }
-    auto itStart = lower_bound(controlResults[convertedChrIndex].begin(),
-                               controlResults[convertedChrIndex].end(), bpIn);
-    if (itStart == controlResults[convertedChrIndex].end()) {
+    auto itStart = lower_bound(controlResults[(unsigned int) compressedMrefIndex].begin(),
+                               controlResults[(unsigned int) compressedMrefIndex].end(), bpIn);
+    if (itStart == controlResults[(unsigned int) compressedMrefIndex].end()) {
         return dummyMatchFalse;
     }
-    if (itStart != controlResults[convertedChrIndex].cbegin() &&
+    if (itStart != controlResults[(unsigned int) compressedMrefIndex].cbegin() &&
         !(itStart->distanceToBp(bpIn) < SvEvent::GERMLINE_OFFSET_THRESHOLD) &&
         prev(itStart)->distanceToBp(bpIn) < SvEvent::GERMLINE_OFFSET_THRESHOLD) {
         --itStart;
@@ -769,16 +774,16 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
         } else {
             break;
         }
-        if (it == controlResults[convertedChrIndex].begin()) {
+        if (it == controlResults[(unsigned int) compressedMrefIndex].begin()) {
             break;
         }
         --it;
     }
 
-    if (itStart != controlResults[convertedChrIndex].end()) {
+    if (itStart != controlResults[(unsigned int) compressedMrefIndex].end()) {
         it = next(itStart);
         while (true) {
-            if (it == controlResults[convertedChrIndex].end()) {
+            if (it == controlResults[(unsigned int) compressedMrefIndex].end()) {
                 break;
             }
             auto tmpDistance = it->distanceToBp(bpIn);

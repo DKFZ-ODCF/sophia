@@ -65,40 +65,45 @@ namespace sophia {
         primary { true } {}
 
 
-    SuppAlignment::SuppAlignment(ChrIndex chrIndexIn,
-                                 ChrSize posIn,
-                                 int mateSupportIn,
-                                 int expectedDiscordantsIn,
-                                 bool encounteredMIn,
-                                 bool invertedIn,
-                                 ChrSize extendedPosIn,
-                                 bool primaryIn,
-                                 bool lowMapqSourceIn,
-                                 bool nullMapqSourceIn,
-                                 int originIndexIn) : SuppAlignment() {
-        chrIndex = chrIndexIn;
-        pos = posIn;
-        extendedPos = extendedPosIn;
-        mateSupport = mateSupportIn;
-        expectedDiscordants = expectedDiscordantsIn;
-        encounteredM = encounteredMIn;
-        inverted = invertedIn;
-        fuzzy = extendedPosIn != posIn;
-        distant = true;
-        lowMapqSource = lowMapqSourceIn;
-        nullMapqSource = nullMapqSourceIn;
-        primary = primaryIn;
+    SuppAlignment
+    SuppAlignment::create(ChrIndex chrIndexIn,
+                          ChrSize posIn,
+                          int mateSupportIn,
+                          int expectedDiscordantsIn,
+                          bool encounteredMIn,
+                          bool invertedIn,
+                          ChrSize extendedPosIn,
+                          bool primaryIn,
+                          bool lowMapqSourceIn,
+                          bool nullMapqSourceIn,
+                          int originIndexIn) {
+        SuppAlignment result = SuppAlignment();
+
+        result.chrIndex = chrIndexIn;
+        result.pos = posIn;
+        result.extendedPos = extendedPosIn;
+        result.mateSupport = mateSupportIn;
+        result.expectedDiscordants = expectedDiscordantsIn;
+        result.encounteredM = encounteredMIn;
+        result.inverted = invertedIn;
+        result.fuzzy = extendedPosIn != posIn;
+        result.distant = true;
+        result.lowMapqSource = lowMapqSourceIn;
+        result.nullMapqSource = nullMapqSourceIn;
+        result.primary = primaryIn;
 
         if (originIndexIn != -1) {
-            if (primary) {
-                supportingIndices.push_back(originIndexIn);
+            if (result.primary) {
+                result.supportingIndices.push_back(originIndexIn);
             } else {
-                supportingIndicesSecondary.push_back(originIndexIn);
+                result.supportingIndicesSecondary.push_back(originIndexIn);
             }
         } else {
-            distinctReads = 0;
+            result.distinctReads = 0;
         }
-        strictFuzzy = fuzzy || (support + secondarySupport) < 3;
+        result.strictFuzzy = result.fuzzy || (result.support + result.secondarySupport) < 3;
+
+        return result;
     }
 
     /** Parse the supplementary alignment information from an SA:Z: tag according to the a

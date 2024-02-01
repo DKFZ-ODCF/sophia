@@ -807,22 +807,22 @@ namespace sophia {
             if (!mateInfo.saSupporter && mateInfo.evidenceLevel == 3 &&
                 mateInfo.matePower / (0.0 + leftDiscordantsTotal) >= 0.33 &&
                 (pos - mateInfo.readEndPos) < DEFAULT_READ_LENGTH / 2) {
-                supplementsPrimary.emplace_back(
+                supplementsPrimary.emplace_back(SuppAlignment::create(
                     mateInfo.mateChrIndex, mateInfo.mateStartPos,
                     mateInfo.matePower, leftDiscordantsTotal, true,
                     mateInfo.inversionSupport > mateInfo.straightSupport,
-                    mateInfo.mateEndPos, false, false, false, -1);
+                    mateInfo.mateEndPos, false, false, false, -1));
             }
         }
         for (const auto &mateInfo : poolRight) {
             if (!mateInfo.saSupporter && mateInfo.evidenceLevel == 3 &&
                 mateInfo.matePower / (0.0 + rightDiscordantsTotal) >= 0.33 &&
                 (mateInfo.readStartPos - pos) < DEFAULT_READ_LENGTH / 2) {
-                supplementsPrimary.emplace_back(
+                supplementsPrimary.emplace_back(SuppAlignment::create(
                     mateInfo.mateChrIndex, mateInfo.mateStartPos,
                     mateInfo.matePower, rightDiscordantsTotal, false,
                     mateInfo.inversionSupport > mateInfo.straightSupport,
-                    mateInfo.mateEndPos, false, false, false, -1);
+                    mateInfo.mateEndPos, false, false, false, -1));
             }
         }
         for (auto &sa : doubleSidedMatches) {

@@ -42,7 +42,7 @@ using namespace std;
     class SamSegmentMapper {
       public:
 
-        SamSegmentMapper(ChrSize DEFAULT_READ_LENGTHIn);
+        SamSegmentMapper(ChrSize defaultReadLengthIn);
 
         ~SamSegmentMapper() = default;
 

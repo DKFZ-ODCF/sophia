@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
 
         SuppAlignment::DEFAULT_READ_LENGTH = defaultReadLength;
         SuppAlignmentAnno::DEFAULT_READ_LENGTH = defaultReadLength;
-        MrefEntry::NUMPIDS = gzListIn.size();
+        MrefEntry::NUM_PIDS = gzListIn.size();
         MasterRefProcessor mRefProcessor { gzListIn, outputRoot, version, defaultReadLength };
 
         return 0;

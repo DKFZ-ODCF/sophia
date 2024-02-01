@@ -37,7 +37,7 @@ namespace sophia {
     class MrefEntry {
       public:
 
-        static unsigned int NUMPIDS;
+        static unsigned int NUM_PIDS;
 
         static ChrSize DEFAULT_READ_LENGTH;
 

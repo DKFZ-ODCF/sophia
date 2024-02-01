@@ -1873,17 +1873,6 @@ namespace sophia {
 
         return collapseRange(outputFields, "\t").append("\n");
     }
-    // vector<int> SvEvent::getKey() const {
-    //	if (!DEBUG_MODE && (suspicious != 0 || eventScore == 0)) {
-    //		return {};
-    //	}
-    //	auto keyScore = (suspicious == 0) ? eventScore : suspicious;
-    //	if (chrIndex1 < chrIndex2 || (chrIndex1 == chrIndex2 && pos1 < pos2)) {
-    //		return {chrIndex1,pos1,chrIndex2,pos2,keyScore};
-    //	} else {
-    //		return {chrIndex2,pos2,chrIndex1,pos1,keyScore};
-    //	}
-    // }
 
     string
     SvEvent::getKey() const {

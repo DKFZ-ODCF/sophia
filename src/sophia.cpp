@@ -22,6 +22,7 @@
 
 
 std::pair<double, double> getIsizeParameters(const std::string &ISIZEFILE);
+
 int main(int argc, char** argv) {
 
     using namespace sophia;
@@ -49,7 +50,7 @@ int main(int argc, char** argv) {
                 ("assembly name (classic_hg37, hg38, ...)"))
             ("mergedisizes",
                 po::value<std::string>(),
-                "insertsize distribution file for the merged bam.")
+                "insertsize distribution file for the merged bam. Line 1: median insert size, Line 3: standard deviation of the insert size")
             ("medianisize",
                 po::value<double>(),
                 "median insert size for the merged bam")
@@ -61,7 +62,7 @@ int main(int argc, char** argv) {
                 "Default read length for the technology used in sequencing 101, 151, etc.")
             ("clipsize",
                 po::value<int>(&clipSize)->default_value(clipSize),
-                "Minimum length of soft/hard clips in the alignment.")
+                "Minimum length of soft/hard clips in the alignment")
             ("basequality",
                 po::value<int>(&baseQuality)->default_value(baseQuality),
                 "Minimum median quality of split read overhangs")
@@ -73,7 +74,7 @@ int main(int argc, char** argv) {
                 "Maximum length of a low quality split read overhang for discarding")
             ("isizesigma",
                 po::value<int>(&isizeSigmaLevel)->default_value(isizeSigmaLevel),
-                "The number of sds a s's mate has to be away to be called as discordant")
+                "The number of SDs a s's mate has to be away to be called as discordant")
             ("bpsupport",
                 po::value<int>(&bpSupport)->default_value(bpSupport),
                 "Minimum number of reads supporting a discordant contig")
@@ -142,7 +143,9 @@ int main(int argc, char** argv) {
         if (inputVariables.count("mergedisizes")) {
             mergedIsizeFile = inputVariables["mergedisizes"].as<std::string>();
             auto isizeparams = getIsizeParameters(mergedIsizeFile);
-            Alignment::ISIZEMAX = min(4000.0, isizeparams.first + isizeSigmaLevel * isizeparams.second);
+            Alignment::ISIZEMAX =
+                min(4000.0,
+                    isizeparams.first + isizeSigmaLevel * isizeparams.second);
             SuppAlignment::ISIZEMAX = Alignment::ISIZEMAX;
         } else {
             if (inputVariables.count("medianisize") && inputVariables.count("stdisizepercentage")) {
@@ -155,8 +158,9 @@ int main(int argc, char** argv) {
             } else {
                 Alignment::ISIZEMAX = 2000.0;
                 SuppAlignment::ISIZEMAX = 2000.0;
-                cerr << "No insert size distribution file given, using a dummy default value of 2000 "
-                     << "as the min insert size of a distant event"
+                cerr << "No insert size distribution file given (mergedisizes). "
+                     << "Using a dummy default value of 2000, "
+                     << "because the min insert size of a distant event. "
                      << endl;
             }
         }

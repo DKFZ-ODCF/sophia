@@ -711,10 +711,18 @@ namespace sophia {
                     }
                 }
                 if (!foundMatch) {
-                    suppAlignmentsTmp.emplace_back(
-                        getMateChrIndex(), getMatePos(), 0, 0,
-                        chosenBp->bpEncounteredM, invertedMate, getMatePos() + 1,
-                        !supplementary, lowMapq, nullMapq, chosenBp->selfNodeIndex);
+                    suppAlignmentsTmp.emplace_back(SuppAlignment::create(
+                        getMateChrIndex(),
+                        getMatePos(),
+                        0,
+                        0,
+                        chosenBp->bpEncounteredM,
+                        invertedMate,
+                        getMatePos() + 1,
+                        !supplementary,
+                        lowMapq,
+                        nullMapq,
+                        chosenBp->selfNodeIndex));
                 }
             }
         }

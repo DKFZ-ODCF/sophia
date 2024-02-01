@@ -68,7 +68,7 @@ namespace sophia {
 
         static string PIDS_IN_MREF_STR;
 
-        static int HALFDEFAULT_READ_LENGTH;
+        static int HALF_DEFAULT_READ_LENGTH;
 
         static int GERMLINE_DB_LIMIT;
 

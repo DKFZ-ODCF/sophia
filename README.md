@@ -48,10 +48,10 @@ A call to `sophia` may look like this:
 ```bash
 samtools view -F 0x600 -f 0x001 /yourPositionSorted.bam \
   | sophia --assemblyname hg38 \
-           --medianisize 323.0 \
+           --medianisizes 323.0 \
            --stdisizepercentage 21.0 \
            --properpairpercentage 94.32 \
-           --DEFAULT_READ_LENGTH 101 \
+           --defaultreadlength 101 \
            --clipsize 10 \
            --basequality 23 \
            --basequalitylow 12 \
@@ -64,8 +64,34 @@ samtools view -F 0x600 -f 0x001 /yourPositionSorted.bam \
 A run on a typical Illumina X10 sample with 30x coverage takes about 5 GB of memory, 2 cores.
 In extreme cases (like with chromothripsis) the runtime can jump to 120 hours, but usually is much shorter.
 
-Note that currently only a very specific genome reference/assembly for is hg37 supported.
-Please have a look at the [Hg37ChrConverter.cpp](src/Hg37ChrConverter.cpp) file, in which the sets of allowed chromosome names for "classic_hg37" is hard-coded.
+| Parameter                | Description                                                                                                                                                                                      |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--assemblyname`         | The name of the assembly. See [Reference Genomes / Assemblies](#reference-genomes--assemblies) for details.                                                                                      |
+| `--mergedisizes`         | A file with just the median insert size in line 1 and just the standard deviation in line 3. See [Insert Size Distribution](#insert-size-distribution).                                          | 
+| `--medianisize`          | The median insert size of the library. See [Insert Size Distribution](#insert-size-distribution).                                                                                                |
+| `--stdisizepercentage`   | The standard deviation of the insert size of the library **in percent**. See [Insert Size Distribution](#insert-size-distribution).                                                              |
+| `--isizesigma`           | The sigma value for the insert size distribution. See [Insert Size Distribution](#insert-size-distribution).                                                                                     |
+| `--properpairpercentage` | Proper pair ratio as a percentage.                                                                                                                                                   |
+| `--defaultreadlength`    | Default read length for the technology used in sequencing 101, 151, etc.                                                                                                                                                                         |
+| `--clipsize`             | Minimum length of soft/hard clips in the alignment.                                                                                                                                                              |
+| `--basequality`          | The minimum base quality for a base to be considered high quality.                                                                                                                               |
+| `--basequalitylow`       | If 5 consecutive bases in a split read overhang have lower quality than this strict threshold, it will be low-quality clipped. |
+| `--lowqualclipsize`      | Maximum length of a low quality split read overhang for discarding.                                                                                                                                       |
+| `--bpsupport`            | Minimum number of reads supporting a discordant contig.                                                                                                                        |
+
+##### Insert Size Distribution
+
+The median insert size and its standard deviation are used for calculating the maximum insert size considered by the algorithm. 
+
+For `--mergedisizes`, the actual value is calculated by $`min(4000.0, mean + isizeSigmaLevel * sd`$).
+
+For `--medianisize`/`--stdisizepercentage`, the actual values is calculated by $`min(4000.0, median + isizeSigmaLevel * median * isizeStdPercentage * 0.01)`$.
+
+If `--mergedisizes` is provided, `--medianisize` and `--stdisizepercentage` are ignored.
+
+If none of these options are provided, instead a maximum insert size of 2000 is assumed.
+
+##### Outputs
 
 The output is a BED file, which means the start and end positions are 0-based, and left-inclusive, right-exclusive. The 8 columns are:
 
@@ -116,9 +142,9 @@ sophiaAnnotate \
   --clonalitylofreq $clonalityLoFreq \
   --clonalityhifreq $clonalityHiFreq \
   --germlineoffset $germlineFuzziness \
-  --DEFAULT_READ_LENGTHtumor $tumorDEFAULT_READ_LENGTH \
-  --DEFAULT_READ_LENGTHcontrol $controlDEFAULT_READ_LENGTH \
-  --GERMLINE_DB_LIMIT $GERMLINE_DB_LIMIT \
+  --defaultreadlengthtumor $tumordefaultreadlength \
+  --defaultreadlengthcontrol $controldefaulreadlength \
+  --germlinedblimit $germlinedblimit \
   > $outputFile
 ```
 
@@ -141,8 +167,8 @@ The file produced by `sophiaMref` is a BED file suffixed with with the following
 | 3      | 0-based end (exclusive). This is just start position + 1. | `\d+`                                                                                                             |
 | 4      | number of fileIndices given in column 10                 | `\d+`                                                                                                             |
 | 5      | number of fileIndicesWithArtifactsRatio                  | `\d+`                                                                                                             |
-| 6      | fileIndices.size() / NUMPIDS                             | `\d\.\d+`                                                                                                         |
-| 7      | fileIndicesWithArtifactsRatio / NUMPIDS                  | `\d\.\d+`                                                                                                         |
+| 6      | fileIndices.size() / NUM_PIDS                             | `\d\.\d+`                                                                                                         |
+| 7      | fileIndicesWithArtifactsRatio / NUM_PIDS                  | `\d\.\d+`                                                                                                         |
 | 8      | average artifacts ratio                                  | `NA` if there are no artifacts ratios; otherwise `\d\.\d+`                                                        |
 | 9      | suppAlignments                                           | `.` if there are no supplementary alignments; otherwise the same format as columns 6 and 7 of the `sophia` output |
 | 10     | fileIndices                                              | Comma-separated list of file indices (`\d+`). Maybe empty string.                                                 |
@@ -238,6 +264,8 @@ make -j 4 static=true boost_lib_dir=$boost_lib_dir all
 ```
 
 ### Development build
+
+> NOTE: Please adhere to the [Coding Conventions](CodingConventions.md) when developing in SOPHIA.
 
 The development build produces non-optimized binaries (`-O0`) with debug symbols:
 

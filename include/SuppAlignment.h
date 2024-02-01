@@ -45,7 +45,8 @@ namespace sophia {
         SuppAlignment();
 
       public:
-        SuppAlignment(ChrIndex chrIndexIn,
+        static SuppAlignment create(
+                      ChrIndex chrIndexIn,
                       ChrSize posIn,
                       int mateSupportIn,
                       int expectedDiscordantsIn,

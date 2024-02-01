@@ -43,13 +43,23 @@ namespace sophia {
 
     using ChrName = std::string;
 
+    // IMPORTANT
+    //
     // These two are only to make the code clearer, but are not type checked. There are no opaque
-    // or strongly type-checked type-"aliases" in C++17. A type-safe solution would use classes.
+    // or strongly type-checked type-"aliases" in C++. An ideal type-safe solution would use
+    // classes.
     //
     // By making them signed and unsigned, though, the compiler at least warns about conversions
     // between the two, and therefore hints at incorrect conversions.
-    using ChrIndex = signed long int;
-    using CompressedMrefIndex = unsigned long int;
+    //
+    // When developing, you should occasionally switch which is signed or unsigned, to find all
+    // places, where this matters (e.g. vector indices). Vectors are also usually not specific
+    // for the global chromosome space or the compressed mref space, which bears the potential
+    // for bugs.
+    //
+    // TODO Make these classes!
+    using ChrIndex = unsigned long int;
+    using CompressedMrefIndex = signed long int;
 
     using ChrSize = long unsigned int;
     using ChrPosition = long unsigned int;

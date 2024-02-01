@@ -40,7 +40,7 @@ namespace sophia {
       * This constructor has a side-effect. It reads from the filesIn and write breakpoint
       * information to
       *
-      *    outputRootName + "_" + NUMPIDS + "_mergedBpCounts.bed"
+      *    outputRootName + "_" + NUM_PIDS + "_mergedBpCounts.bed"
       *
       * @param filesIn            vector if input gzFile names.
       * @param outputRootName     base name/path for the output files
@@ -51,7 +51,7 @@ namespace sophia {
                                            const string &outputRootName,
                                            const string &version,
                                            const ChrSize defaultReadLengthIn)
-        : NUMPIDS { static_cast<int>(filesIn.size()) },
+        : NUM_PIDS { static_cast<int>(filesIn.size()) },
           DEFAULT_READ_LENGTH{ defaultReadLengthIn },
           mrefDb {} {
 
@@ -128,12 +128,12 @@ namespace sophia {
             chrono::seconds diff = chrono::duration_cast<chrono::seconds>(end - start);
             ++fileIndex;
             cerr << gzFile << "\t" << diff.count() << "\t" << newBreakpoints << "\t"
-                 << fileIndex << "\t" << 100 * (fileIndex + 0.0) / NUMPIDS << "%\n";
+                 << fileIndex << "\t" << 100 * (fileIndex + 0.0) / NUM_PIDS << "%\n";
         }
 
         // Finally, open the output file, and write the header and the breakpoint information.
         mergedBpsOutput = make_unique<ofstream>(
-            outputRootName + "_" + strtk::type_to_string<int>(NUMPIDS) +
+            outputRootName + "_" + strtk::type_to_string<int>(NUM_PIDS) +
             "_mergedBpCounts.bed");
         auto defuzzier = DeFuzzier {DEFAULT_READ_LENGTH * 3, true};
         CompressedMrefIndex compressedMrefChrIndex = chrConverter.nChromosomesCompressedMref() - 1;
@@ -182,11 +182,10 @@ namespace sophia {
         string sophiaLine{};
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        vector<vector<BreakpointReduced>>::size_type vectorSize =
-            chrConverter.nChromosomesCompressedMref();
+        CompressedMrefIndex vectorSize = chrConverter.nChromosomesCompressedMref();
 
         vector<vector<BreakpointReduced>> fileBps = vector<vector<BreakpointReduced>>
-            {vectorSize, vector<BreakpointReduced>{}};
+            { (unsigned int) vectorSize, vector<BreakpointReduced>{}};
         auto lineIndex = 0;
 
         while (error_terminating_getline(gzStream, sophiaLine)) {
@@ -205,10 +204,10 @@ namespace sophia {
 
                 // Ignore chromosomes not in the compressedMref set.
                 if (chrConverter.isCompressedMref(globalIndex)) {
-                    CompressedMrefIndex chrIndex =
+                    CompressedMrefIndex compressedMrefIndex =
                         chrConverter.indexToCompressedMrefIndex(globalIndex);
                     Breakpoint tmpBp = Breakpoint::parse(sophiaLine, true);
-                    fileBps[chrIndex].emplace_back(
+                    fileBps[(unsigned int) compressedMrefIndex].emplace_back(
                         tmpBp, lineIndex++,
                         (sophiaLine.back() != '.' && sophiaLine.back() != '#'));
                 }
