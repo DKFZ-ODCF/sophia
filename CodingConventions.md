@@ -12,3 +12,9 @@ The code still has severe legacy problems with these issues.
 7. Use the standard library, including the Standard Template Library. Prefer searching in the C++ standard library over reinventing the wheel.
 8. Use the boost library. It is already a dependency. Prefer search in boost over reinventing the wheel.
 9. Always try to leave the code in a better (more readable, understandable, maintainable, safer) state than you found it.
+10. C++ is hard to read, so don't make it harder than necessary. Code readability is **not optional**. 
+    * Use descriptive but concise names for variables, functions, classes, etc.
+    * Keep lines short.
+    * Prefer vertical lists (e.g. of function arguments) over horizontal lists).
+    * Avoid "what" and "how" comments. Prefer "why" comments.
+11. If you figure out something really hard and unintuitive, add a comment instead of letting the next programmer figure it out again.

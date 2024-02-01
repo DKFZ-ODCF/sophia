@@ -36,6 +36,12 @@ using namespace std;
         friend class Alignment;
 
       public:
+
+        /**
+         *
+         * @param selfNodeIndexIn     Index into an array of supporting alignments.
+         *                            See alignment::setChosenBp.
+         */
         ChosenBp(char bpTypeIn,
                  int bpSizeIn,
                  bool bpEncounteredMIn,

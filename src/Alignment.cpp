@@ -662,9 +662,12 @@ namespace sophia {
             }
         }
         chosenBp.reset();
-        chosenBp = make_unique<ChosenBp>(bpType, bpSize, bpEncounteredM,
-                                         overhangStartIndex, overhangLength,
-                                         alignmentIndex);
+        chosenBp = make_unique<ChosenBp>(bpType,
+                                         bpSize,
+                                         bpEncounteredM,
+                                         overhangStartIndex,
+                                         overhangLength,
+                                         alignmentIndex /* origin index */);
     }
 
     vector<SuppAlignment>
@@ -722,7 +725,7 @@ namespace sophia {
                         !supplementary,
                         lowMapq,
                         nullMapq,
-                        chosenBp->selfNodeIndex));
+                        chosenBp->selfNodeIndex  /* origin index */));
                 }
             }
         }

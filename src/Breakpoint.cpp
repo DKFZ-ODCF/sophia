@@ -808,10 +808,16 @@ namespace sophia {
                 mateInfo.matePower / (0.0 + leftDiscordantsTotal) >= 0.33 &&
                 (pos - mateInfo.readEndPos) < DEFAULT_READ_LENGTH / 2) {
                 supplementsPrimary.emplace_back(SuppAlignment::create(
-                    mateInfo.mateChrIndex, mateInfo.mateStartPos,
-                    mateInfo.matePower, leftDiscordantsTotal, true,
+                    mateInfo.mateChrIndex,
+                    mateInfo.mateStartPos,
+                    mateInfo.matePower,
+                    leftDiscordantsTotal, true,
                     mateInfo.inversionSupport > mateInfo.straightSupport,
-                    mateInfo.mateEndPos, false, false, false, -1));
+                    mateInfo.mateEndPos,
+                    false,
+                    false,
+                    false,
+                    -1 /* origin index */));
             }
         }
         for (const auto &mateInfo : poolRight) {
@@ -819,10 +825,16 @@ namespace sophia {
                 mateInfo.matePower / (0.0 + rightDiscordantsTotal) >= 0.33 &&
                 (mateInfo.readStartPos - pos) < DEFAULT_READ_LENGTH / 2) {
                 supplementsPrimary.emplace_back(SuppAlignment::create(
-                    mateInfo.mateChrIndex, mateInfo.mateStartPos,
-                    mateInfo.matePower, rightDiscordantsTotal, false,
+                    mateInfo.mateChrIndex,
+                    mateInfo.mateStartPos,
+                    mateInfo.matePower,
+                    rightDiscordantsTotal, false,
                     mateInfo.inversionSupport > mateInfo.straightSupport,
-                    mateInfo.mateEndPos, false, false, false, -1));
+                    mateInfo.mateEndPos,
+                    false,
+                    false,
+                    false,
+                    -1  /* origin index */));
             }
         }
         for (auto &sa : doubleSidedMatches) {
