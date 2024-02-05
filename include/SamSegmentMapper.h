@@ -50,9 +50,9 @@ using namespace std;
 
       private:
 
-        // Does not print anything by itself, but lets via via another call to
+        // Does not print anything by itself, but via another call to
         // Breakpoint::finalizeBreakpoint and then Breakpoint::printBreakpointReport it
-        // prints to stdout.
+        // indirectly prints to stdout.
         void printBps(ChrSize alignmentStart);
 
         void switchChromosome(const Alignment &alignment);

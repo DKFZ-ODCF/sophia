@@ -34,11 +34,17 @@ namespace sophia {
 
     class MrefMatch {
       public:
-        MrefMatch(short numHitsIn, short numConsevativeHitsIn, int offsetDistanceIn,
+        MrefMatch(short numHitsIn,
+                  short numConsevativeHitsIn,
+                  int offsetDistanceIn,
                   const vector<SuppAlignmentAnno> &suppMatchesIn);
+
         short getNumConsevativeHits() const { return numConsevativeHits; }
+
         short getNumHits() const { return numHits; }
+
         int getOffsetDistance() const { return offsetDistance; }
+
         const vector<SuppAlignmentAnno> &getSuppMatches() const {
             return suppMatches;
         }

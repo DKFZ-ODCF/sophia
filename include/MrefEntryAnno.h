@@ -102,7 +102,7 @@ class MrefEntryAnno {
 
     bool closeToSupp(const SuppAlignmentAnno &compIn, int fuzziness) const {
         if (compIn.isFuzzy()) {
-            fuzziness = 2.5 * DEFAULT_READ_LENGTH;
+            fuzziness = int(2.5 * DEFAULT_READ_LENGTH);   /* truncate */
             return ((long) pos - (long) fuzziness) <= ((long) compIn.getExtendedPos() + (long) fuzziness) &&
                    ((long) compIn.getPos() - (long) fuzziness) <= ((long) pos + (long) fuzziness);
         } else {
@@ -119,7 +119,6 @@ class MrefEntryAnno {
                 if (pos < compIn.getPos()) {
                     result = ChrSize(compIn.getPos() - pos);
                 } else {
-                    // TODO Why here getExtendedPos, and getPos() above?
                     result = ChrSize(pos - compIn.getExtendedPos());
                 }
             }

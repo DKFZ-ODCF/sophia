@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
         namespace po = boost::program_options;
         po::options_description desc("Allowed options for sophia");
         desc.add_options()
-            ("help", "printe help message")
+            ("help", "print help message")
             ("assemblyname",
                 po::value<std::string>(&assemblyName)->default_value(assemblyName),
                 ("assembly name (classic_hg37, hg38, ...)"))
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
         if (inputVariables.count("defaultreadlength")) {
             defaultReadLength = inputVariables["defaultreadlength"].as<unsigned int>();
         } else {
-            cerr << "Default read Length not given, exiting" << endl;
+            cerr << "Default read Length not given, exiting. Use --defaultreadlength." << endl;
             return 1;
         }
 

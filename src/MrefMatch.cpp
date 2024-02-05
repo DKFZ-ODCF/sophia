@@ -27,11 +27,14 @@
 
 namespace sophia {
 
-MrefMatch::MrefMatch(short numHitsIn, short numConsevativeHitsIn,
+MrefMatch::MrefMatch(short numHitsIn,
+                     short numConsevativeHitsIn,
                      int offsetDistanceIn,
                      const std::vector<SuppAlignmentAnno> &suppMatchesIn)
-    : numHits{numHitsIn}, numConsevativeHits{numConsevativeHitsIn},
-      offsetDistance{offsetDistanceIn}, suppMatches{suppMatchesIn} {}
+    : numHits{numHitsIn},
+      numConsevativeHits{numConsevativeHitsIn},
+      offsetDistance{offsetDistanceIn},
+      suppMatches{suppMatchesIn} {}
 
 }   // namespace sophia
 /* namespace sophia */

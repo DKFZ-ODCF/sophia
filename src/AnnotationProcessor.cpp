@@ -718,7 +718,9 @@ AnnotationProcessor::searchMrefHitsNew(const BreakpointReduced &bpIn,
             conservativeScore = tmpScore;
         }
     }
-    return MrefMatch{max(score, conservativeScore), conservativeScore, offset,
+    return MrefMatch{max(score, conservativeScore),
+                     conservativeScore,
+                     offset,
                      suppMatches};
 }
 

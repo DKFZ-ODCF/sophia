@@ -95,10 +95,10 @@ namespace sophia {
     void
     Alignment::continueConstruction() {
         mappingQualityCheck();  // May set the readType to 7!
-        for (auto startPos_cit = samLine.cbegin() + 1 + (signed long) samTabPositions[2];
-             startPos_cit != samLine.cbegin() + (signed long) samTabPositions[3];
+        for (auto startPos_cit = samLine.cbegin() + 1 + (signed int) samTabPositions[2];
+             startPos_cit != samLine.cbegin() + (signed int) samTabPositions[3];
              ++startPos_cit) {
-            startPos = startPos * 10 + (ChrSize) ChrSize(*startPos_cit - '0');
+            startPos = startPos * 10 + ChrSize(*startPos_cit - '0');
         }
         signed int readLength = (signed int) (samTabPositions[9] - samTabPositions[8] - 1);
         if (readLength < 0) {

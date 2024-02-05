@@ -155,7 +155,6 @@ namespace sophia {
                         if (pos < compIn.getPos()) {
                             result = ChrSize(compIn.getPos() - pos);
                         } else {
-                            // TODO Why here return the difference of getExtendePos(), but getPos() in the other branch?
                             result = ChrSize(pos - compIn.getExtendedPos());
                         }
                     }

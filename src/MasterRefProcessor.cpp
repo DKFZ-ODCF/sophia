@@ -155,7 +155,7 @@ namespace sophia {
 
             // Write the breakpoint information.
             std::string chromosome =
-                chrConverter.indexToChrNameCompressedMref(compressedMrefChrIndex);
+                chrConverter.compressedMrefIndexToChrName(compressedMrefChrIndex);
             --compressedMrefChrIndex;
             for (auto &bp : mrefDb.back()) {
                 if (bp.isValid()) {

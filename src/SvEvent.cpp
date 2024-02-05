@@ -490,7 +490,8 @@ namespace sophia {
 
     SvEvent::SvEvent(const BreakpointReduced &bp1In,
                      const SuppAlignmentAnno &sa1In,
-                     GermlineMatch germlineInfo2, MrefMatch hitsInMref2In,
+                     GermlineMatch germlineInfo2,
+                     MrefMatch hitsInMref2In,
                      const vector<pair<int, string>> &overhangDb,
                      const SuppAlignmentAnno &dummySaIn)
         : toRemove{false}, contaminationCandidate{0},
@@ -517,7 +518,8 @@ namespace sophia {
           span1{bp1In.getNormalSpans()},
           totalEvidence2{0},
           evidenceLevel1{0},
-          evidenceLevel2{0}, mrefHits1{bp1In.getMrefHits().getNumConsevativeHits()},
+          evidenceLevel2{0},
+          mrefHits1{bp1In.getMrefHits().getNumConsevativeHits()},
           mrefHits1Conservative{true},
           mrefHits2{hitsInMref2In.getNumConsevativeHits()},
           mrefHits2Conservative{true},
@@ -525,13 +527,16 @@ namespace sophia {
           germlineClonality1{bp1In.getGermlineInfo().getConservativeClonality()},
           germlineStatus1{bp1In.getGermlineInfo().getConservativeClonality() > 0.15},
           germlineClonality2{germlineInfo2.getClonality()},
-          germlineStatus2{germlineInfo2.getClonality() > 0.15}, selectedSa1{sa1In},
+          germlineStatus2{germlineInfo2.getClonality() > 0.15},
+          selectedSa1{sa1In},
           selectedSa2{dummySaIn},
           mateRatio1{sa1In.getExpectedDiscordants() > 0
                          ? sa1In.getMateSupport() /
                                (0.0 + sa1In.getExpectedDiscordants())
                          : 1.0},
-          mateRatio2{1.0}, suspicious{0}, semiSuspicious{sa1In.isSemiSuspicious()} {
+          mateRatio2{1.0},
+          suspicious{0},
+          semiSuspicious{sa1In.isSemiSuspicious()} {
         auto truePos2 = pos2;
         if (chrIndex1 == chrIndex2) {
             if (abs((long) pos1 - (long) pos2) > abs((long) pos1 - (long) sa1In.getExtendedPos())) {

@@ -32,25 +32,29 @@ namespace sophia {
     class Hg37ChrConverter: public ChrConverter {
       protected:
 
+        static std::vector<ChrIndex> buildCompressedMrefIndexToIndex(
+            const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex);
+
         /** The constructor does additional checks of the dimensions of the input vectors. */
-        Hg37ChrConverter(const std::vector<std::string>& indexToChr,
+        Hg37ChrConverter(const std::vector<std::string>& indexToChrName,
                          const std::vector<std::string>& indexToChrCompressedMref,
                          const std::vector<ChrSize>& chrSizesCompressedMref,
-                         const std::vector<ChrIndex>& compressedMrefToIndex);
+                         const std::vector<CompressedMrefIndex>& indexToCompressedMrefIndex);
 
         /** Mapping indices to chromosome names. */
-        const std::vector<std::string> indexToChr;
+        const std::vector<std::string> _indexToChrName;
 
         /** Mapping indices to chromosome names for compressed mref indices. */
-        const std::vector<std::string> indexToChrCompressedMref;
+        const std::vector<std::string> _compressedMrefIndexToChrName;
 
         /** Chromosome sizes in base pairs, only for compressed mref chromosomes. */
-        const std::vector<ChrSize> chrSizesCompressedMref;
+        const std::vector<ChrSize> _chrSizesCompressedMref;
 
         /** Mapping compressed mref indices names to indices. */
-        const std::vector<ChrIndex> compressedMrefToIndex;
+        const std::vector<CompressedMrefIndex> _indexToCompressedMrefIndex;
 
-        static const ChrIndex phixChrIndex;
+        /* Mapping of compressed mref indices to indices. */
+        const std::vector<ChrIndex> _compressedMrefIndexToIndex;
 
       public:
 
@@ -68,7 +72,7 @@ namespace sophia {
         std::string indexToChrName(ChrIndex index) const;
 
         /** Map an index position to a chromosome name for compressed mref files. */
-        std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
+        std::string compressedMrefIndexToChrName(CompressedMrefIndex index) const;
 
         /** chr1-chr22, GL00+ */
         bool isAutosome(ChrIndex index) const;
@@ -118,7 +122,7 @@ namespace sophia {
         bool isInBlockedRegion(ChrIndex chrIndex, ChrSize position) const;
 
         /* This is parsing code. It takes a position in a character stream, and translates the
-           following character(s) into index positions (see ChrConverter::indexToChr). It is
+           following character(s) into index positions (see ChrConverter::indexToChrName). It is
            slightly modified from the original implementation by Umut Toprak.
 
            If the first position is a digit, read up to the next stopChar.

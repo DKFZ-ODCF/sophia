@@ -139,7 +139,7 @@ namespace sophia {
 
         void mappingQualityCheck();
 
-        /** The `Alignment` isEventCandidate` is true, if the last CIGAR code indicates a match,
+        /** The `Alignment::isEventCandidate` is true, if the last CIGAR code indicates a match,
          *  or if the CIGAR indicates a soft-clip, hard-clip, insertion, or deletion.
          */
         bool isEventCandidate() const;

@@ -199,13 +199,13 @@ namespace sophia {
     }
 
     /** Map an compressed mref index to a chromosome name. */
-    ChrName GenericChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
+    ChrName GenericChrConverter::compressedMrefIndexToChrName(CompressedMrefIndex index) const {
         return chrInfoTable.getChrInfos()[(unsigned long) compressedMrefIndexToIndex(index)].getName();
     }
 
 
     /** Parse chromosome index. It takes a position in a character stream, and translates the
-        following character(s) into index positions (using ChrConverter::indexToChr).
+        following character(s) into index positions (using ChrConverter::indexToChrName).
         If the name cannot be parsed, throws a domain_error exception.
 
         This method parses up to the first occurrence of the `stopChar1`. Then within the identified

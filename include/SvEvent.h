@@ -92,8 +92,10 @@ namespace sophia {
                 const vector<pair<int, string>> &overhangDb,
                 const SuppAlignmentAnno &dummySaIn);
 
-        SvEvent(const BreakpointReduced &bp1In, const SuppAlignmentAnno &sa1In,
-                GermlineMatch germlineInfo2, MrefMatch hitsInMref2In,
+        SvEvent(const BreakpointReduced &bp1In,
+                const SuppAlignmentAnno &sa1In,
+                GermlineMatch germlineInfo2,
+                MrefMatch hitsInMref2In,
                 const vector<pair<int, string>> &overhangDb,
                 const SuppAlignmentAnno &dummySaIn);
 

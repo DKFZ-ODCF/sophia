@@ -65,7 +65,6 @@ namespace sophia {
     template <typename T>
     inline void
     Breakpoint::cleanUpVector(vector<T> &objectPool) {
-        // cerr << "cleaning up" << endl;
         while (!objectPool.empty() && objectPool.back().isToRemove()) {
             objectPool.pop_back();
         }
@@ -77,7 +76,6 @@ namespace sophia {
                 objectPool.pop_back();
             }
         }
-        // cerr << "done" << endl;
     }
 
     void

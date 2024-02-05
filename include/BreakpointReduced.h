@@ -61,12 +61,7 @@ namespace sophia {
             return pos < rhs.getPos();
         }
 
-        /** This seems to be a function used for sorting positions, that assumes that the ordering
-          * of chromosomes produces a total order, i.e., e.g., that all positions on chr1 are
-          * "smaller" than all positions on chr2 (if chr1 has a smaller index than chr2).
-          *
-          * I doubt there is a biological meaning in the ordering of the chromosomes in the
-          * classic Hg37ChrConverter. */
+        /** This is used for sorting breakpoints. No biological meaning. */
         bool fullSmaller(const BreakpointReduced &rhs) const {
             if (chrIndex < rhs.getChrIndex()) {
                 return true;
@@ -91,7 +86,8 @@ namespace sophia {
             if (chrIndex == compIn.getChrIndex()) {
                 return abs((int) pos - (int) compIn.getPos());
             } else {
-                // Ups. -1 is used in < comparisons. Check usages, before refactoring this.
+                // This seems to be a special value. It is not explicitly used in comparisons.
+                // Check usages, before refactoring this.
                 return -1;
             }
         }
@@ -224,12 +220,20 @@ namespace sophia {
         int lineIndex;
         ChrIndex chrIndex;
         ChrSize pos;
-        int normalSpans, lowQualSpansSoft, lowQualSpansHard, unpairedBreaksSoft,
-            unpairedBreaksHard, breaksShortIndel, lowQualBreaksSoft,
-            lowQualBreaksHard, repetitiveOverhangBreaks;
-        int pairedBreaksSoft, pairedBreaksHard;
+        int normalSpans,
+            lowQualSpansSoft,
+            lowQualSpansHard,
+            unpairedBreaksSoft,
+            unpairedBreaksHard,
+            breaksShortIndel,
+            lowQualBreaksSoft,
+            lowQualBreaksHard,
+            repetitiveOverhangBreaks;
+        int pairedBreaksSoft,
+            pairedBreaksHard;
         int mateSupport;
-        int leftCoverage, rightCoverage;
+        int leftCoverage,
+            rightCoverage;
         MrefMatch mrefHits;
         GermlineMatch germlineInfo;
         vector<SuppAlignmentAnno> suppAlignments;

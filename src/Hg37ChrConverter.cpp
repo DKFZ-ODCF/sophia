@@ -29,7 +29,7 @@ namespace sophia {
 
     namespace hg37 {
 
-        static const std::vector<ChrName> indexToChr {
+        static const std::vector<ChrName> indexToChrName {
             "0",          "1",          "2",          "3",          "4",
             "5",          "6",          "7",          "8",          "9",
             "10",         "11",         "12",         "13",         "14",
@@ -248,8 +248,8 @@ namespace sophia {
         // and -2 has the disadvantage that it cannot be represented as an unsigned integer.
         static const ChrIndex NA = INVALID;
 
-
-        static const std::vector<ChrName> indexToChrCompressedMref {
+        /* 85 compressed mref chromosomes */
+        static const std::vector<ChrName> compressedMrefIndexToChrName {
             "1",          "2",          "3",          "4",          "5",
             "6",          "7",          "8",          "9",          "10",
             "11",         "12",         "13",         "14",         "15",
@@ -268,6 +268,7 @@ namespace sophia {
             "GL000242.1", "GL000243.1", "GL000244.1", "GL000245.1", "GL000246.1",
             "GL000247.1", "GL000248.1", "GL000249.1", "hs37d5",     "NC_007605"};
 
+        /* 85 compressed mref chromosomes */
         static const std::vector<ChrSize> chrSizesCompressedMref {
             249250622, 243199374, 198022431, 191154277, 180915261, 171115068,
             159138664, 146364023, 141213432, 135534748, 135006517, 133851896,
@@ -285,7 +286,7 @@ namespace sophia {
             36652,     38155,     36423,     39787,     38503,     35477944,
             171824};
 
-        static const std::vector<ChrIndex> compressedMrefToIndex {
+        static const std::vector<CompressedMrefIndex> indexToCompressedMrefIndex {
             NA, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
             18, 19, 20, 21, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
             NA, NA, 22, 23, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
@@ -344,34 +345,47 @@ namespace sophia {
 
     const std::string Hg37ChrConverter::assemblyName = "hg37";
 
-    Hg37ChrConverter::Hg37ChrConverter(const std::vector<ChrName> &indexToChr,
-                                       const std::vector<ChrName> &indexToChrCompressedMref,
+    std::vector<ChrIndex> Hg37ChrConverter::buildCompressedMrefIndexToIndex(
+        const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex) {
+
+        std::vector<ChrIndex> result(indexToCompressedMrefIndex.size(), hg37::NA);
+        for (ChrIndex i = 0; i < indexToCompressedMrefIndex.size(); ++i) {
+            if (indexToCompressedMrefIndex[(unsigned int) i] != hg37::NA) {
+                result[(unsigned int) indexToCompressedMrefIndex[(unsigned int) i]] = i;
+            }
+        }
+        return result;
+    }
+
+    Hg37ChrConverter::Hg37ChrConverter(const std::vector<ChrName> &indexToChrName,
+                                       const std::vector<ChrName> &compressedMrefIndexToChrName,
                                        const std::vector<ChrSize> &chrSizesCompressedMref,
-                                       const std::vector<ChrIndex> &compressedMrefToIndex) :
-                    indexToChr {indexToChr},
-                    indexToChrCompressedMref {indexToChrCompressedMref},
-                    chrSizesCompressedMref {chrSizesCompressedMref},
-                    compressedMrefToIndex {compressedMrefToIndex} {
-            if (indexToChr.size() != compressedMrefToIndex.size())
+                                       const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex) :
+                    _indexToChrName {indexToChrName},
+                    _compressedMrefIndexToChrName {compressedMrefIndexToChrName},
+                    _chrSizesCompressedMref {chrSizesCompressedMref},
+                    _indexToCompressedMrefIndex {indexToCompressedMrefIndex},
+                    _compressedMrefIndexToIndex {buildCompressedMrefIndexToIndex(indexToCompressedMrefIndex)}{
+            if (indexToChrName.size() != indexToCompressedMrefIndex.size())
                 throw_with_trace(std::invalid_argument(
-                    "indexToChr and compressedMrefToIndex must have the same size"));
-            if (indexToChrCompressedMref.size() != chrSizesCompressedMref.size())
+                    "indexToChrName and indexToCompressedMrefIndex must have the same size"));
+            if (compressedMrefIndexToChrName.size() != chrSizesCompressedMref.size())
                 throw_with_trace(std::invalid_argument(
-                    "indexToChrCompressedMref and chrSizesCompressedMref must have the same size"));
+                    "compressedMrefIndexToChrName and chrSizesCompressedMref must have the same size"));
         }
 
     Hg37ChrConverter::Hg37ChrConverter()
-        : Hg37ChrConverter(hg37::indexToChr,
-                           hg37::indexToChrCompressedMref,
+        : Hg37ChrConverter(hg37::indexToChrName,
+                           hg37::compressedMrefIndexToChrName,
                            hg37::chrSizesCompressedMref,
-                           hg37::compressedMrefToIndex) {}
+                           hg37::indexToCompressedMrefIndex) {}
 
     ChrIndex Hg37ChrConverter::nChromosomes() const {
-        return ChrIndex(indexToChr.size());
+        return ChrIndex(_indexToChrName.size());
     }
 
     CompressedMrefIndex Hg37ChrConverter::nChromosomesCompressedMref() const {
-        return CompressedMrefIndex(indexToChrCompressedMref.size());
+        return CompressedMrefIndex(_indexToCompressedMrefIndex.size());
     }
 
     /** Map an index position to a chromosome name. */
@@ -380,7 +394,7 @@ namespace sophia {
             throw_with_trace(std::runtime_error("Invalid chromosome index: " +
                              std::to_string(index)));
         }
-        return indexToChr[(unsigned long) index];
+        return _indexToChrName[(unsigned long) index];
     }
 
     /** chr1-chr22, ... */
@@ -434,40 +448,38 @@ namespace sophia {
         return false;
     }
 
+    /* Compressed Master Ref chromosomes are 1-22, X, Y, GL* (unassigned), hs37d4 (decoys), and
+     * NC_007605 (virus). Excluded are MT and phix. */
     bool Hg37ChrConverter::isCompressedMref(ChrIndex index) const {
-        return index != hg37::ZERO &&
-               index != hg37::INVALID &&
-               index != hg37::NA &&
-               index <= 1000;  // 1000 == 'NC_007605' (i.e. excluding MT and phiX)
+        return _indexToCompressedMrefIndex.at(index) != hg37::NA;
     }
 
-    /** Map an index position to a compressed mref index position. */
+    /** Map an compressed mref index to a chromosome name. */
     ChrName
-    Hg37ChrConverter::indexToChrNameCompressedMref(CompressedMrefIndex index) const {
-        return indexToChrCompressedMref[(unsigned int) index];
+    Hg37ChrConverter::compressedMrefIndexToChrName(CompressedMrefIndex index) const {
+        return _compressedMrefIndexToChrName.at((unsigned int) index);
     }
 
     /** Map an index from the global index-space to the compressed mref index-space. */
     CompressedMrefIndex
     Hg37ChrConverter::indexToCompressedMrefIndex(ChrIndex index) const {
-        return CompressedMrefIndex(index);
+        CompressedMrefIndex result = _indexToCompressedMrefIndex.at((unsigned int) index);
+        if (result == hg37::NA) {
+            throw_with_trace(std::invalid_argument("ChrIndex mapped to NA CompressedMrefIndex: " +
+                                                   std::to_string(index)));
+        }
+        return result;
     }
 
-    /** Map the compressed mref index to the uncompressed mref index. For this implementation
-      * this test is really very crude. But the implementation is battle tested and works, so
-      * no big deal here. */
     ChrIndex
     Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
-        if (index >= CompressedMrefIndex(compressedMrefToIndex.size()))
-            throw_with_trace(std::invalid_argument("Index must be < " +
-                                                   std::to_string(compressedMrefToIndex.size())));
-        return compressedMrefToIndex[(unsigned int) index];
+        return _compressedMrefIndexToIndex.at((unsigned int) index);
     }
 
     /** Map compressed mref index to chromosome size. */
     ChrSize
     Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
-        return chrSizesCompressedMref[(unsigned int) index];
+        return _chrSizesCompressedMref[(unsigned int) index];
     }
 
     ChrIndex
@@ -488,7 +500,7 @@ namespace sophia {
     }
 
     /* This is parsing code. It takes a position in a character stream, and translates the
-       following character(s) into index positions (see ChrConverter::indexToChr). It is slightly
+       following character(s) into index positions (see ChrConverter::indexToChrName). It is slightly
        modified from the original implementation by Umut Toprak.
 
        If the first position is a digit, read up to the next stopChar.
