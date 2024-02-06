@@ -402,7 +402,7 @@ namespace sophia {
                 result[(unsigned int) compressedMrefIndex] = globalIndex;
             }
         }
-        // ... but this post-condition checks that no invalid values are produced.
+        // ... but this post-condition checks that no invalid values remain.
         for (auto it = result.cbegin(); it < result.cend(); ++it) {
                 assertValid(*it);
         }

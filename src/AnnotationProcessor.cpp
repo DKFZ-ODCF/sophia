@@ -70,7 +70,7 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
     tumorGzHandle->push(boost::iostreams::gzip_decompressor());
     tumorGzHandle->push(*tumorInputHandle);
     string line;
-    auto lineIndex = 0;
+    int lineIndex = 0;
     const ChrConverter& chrConverter = GlobalAppConfig::getInstance().getChrConverter();
     while (error_terminating_getline(*tumorGzHandle, line)) {
         if (line.front() == '#') {
@@ -86,7 +86,7 @@ AnnotationProcessor::AnnotationProcessor(const string &tumorResultsIn,
         }
         auto hasOverhang = line.back() != '.' && line.back() != '#';
         tumorResults[(unsigned int) compressedMrefChrIndex].
-            emplace_back(tmpBp, lineIndex, hasOverhang);
+            emplace_back(BreakpointReduced(tmpBp, lineIndex, hasOverhang));
         if (hasOverhang) {
             string overhang{};
             for (auto it = line.rbegin(); it != line.rend(); ++it) {

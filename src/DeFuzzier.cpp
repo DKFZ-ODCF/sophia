@@ -114,7 +114,7 @@ namespace sophia {
                 });
             selectedSa = processedSas[(size_t) *bestElement];
         } else {
-            auto bestElement = max_element(processedSas.begin(), processedSas.end(), //
+            auto bestElement = max_element(processedSas.begin(), processedSas.end(),
                     [&](SuppAlignmentAnno* a, SuppAlignmentAnno* b) {return a->getMateSupport() < b->getMateSupport();});
             selectedSa = *bestElement;
             selectedSa->extendSuppAlignment(consensusSa->getPos(), consensusSa->getExtendedPos());
@@ -143,8 +143,8 @@ namespace sophia {
                 it->setAsInvalid();
             }
         }
-        for (auto &bp : bps) {
-            if (bp.getValidityScore() == -1 || bp.getPos() == std::numeric_limits<ChrSize>::max()) {
+        for (MrefEntry &bp : bps) {
+            if (bp.getValidityScore() == -1 || !bp.isValid()) {
                 bp.setAsInvalid();
             }
         }
