@@ -6,7 +6,7 @@
 #include <iterator>
 #include <algorithm>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/unordered/unordered_set.hpp>
+#include <boost/unordered/unordered_map.hpp>
 
 namespace sophia {
 
@@ -32,6 +32,19 @@ namespace sophia {
     const ChrCategory& ChrCategory::DECOY = ChrCategory::categories.at("DECOY");
     const ChrCategory& ChrCategory::TECHNICAL = ChrCategory::categories.at("TECHNICAL");
 
+
+    const std::vector<ChrCategory> ChrCategory::sorted_categories = {
+        ChrCategory::AUTOSOME,
+        ChrCategory::GONOSOME,
+        ChrCategory::EXTRACHROMOSOMAL,
+        ChrCategory::UNASSIGNED,
+        ChrCategory::ALT,
+        ChrCategory::HLA,
+        ChrCategory::VIRUS,
+        ChrCategory::DECOY,
+        ChrCategory::TECHNICAL
+    };
+
     ChrCategory::ChrCategory(const std::string &in, size_type index)
         : category_name { in },
           category_index { index } {}
@@ -41,7 +54,7 @@ namespace sophia {
     const ChrCategory& ChrCategory::from_string(const std::string &in) {
         std::string normalizedIn = boost::algorithm::to_upper_copy(in);
         if (categories.find(normalizedIn) == categories.end()) {
-            throw_with_trace(std::runtime_error("Unknown chromosome category: '" + in + "'"));
+            throw_with_trace(std::invalid_argument("Unknown chromosome category: '" + in + "'"));
         }
         return categories.at(normalizedIn);
     }
@@ -54,15 +67,8 @@ namespace sophia {
         return categories.size();
     }
 
-    std::vector<ChrCategory> ChrCategory::getCategories() {
-        std::vector<ChrCategory> result;
-        result.reserve(numCategories());
-        std::transform(
-            categories.begin(),
-            categories.end(),
-            std::back_inserter(result),
-            [](const std::pair<std::string, ChrCategory>& kv) { return kv.second; });
-        return result;
+    const std::vector<ChrCategory>& ChrCategory::getCategories() {
+        return sorted_categories;
     }
 
     bool ChrCategory::operator==(const ChrCategory &other) const {
