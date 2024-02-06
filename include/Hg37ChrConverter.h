@@ -66,7 +66,7 @@ namespace sophia {
 
         // The following static methods are used for checks during construction, but also
         // to implement the public interface.
-        
+
         /** chr1-chr22, GL00+ */
         inline static bool _isAutosome(ChrIndex index);
 

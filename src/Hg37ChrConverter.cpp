@@ -403,8 +403,8 @@ namespace sophia {
             }
         }
         // ... but this post-condition checks that no invalid values are produced.
-        for (ChrIndex globalIndex = 0; globalIndex < result.size(); ++globalIndex) {
-            assertValid(globalIndex);
+        for (auto it = result.cbegin(); it < result.cend(); ++it) {
+                assertValid(*it);
         }
         return result;
     }
