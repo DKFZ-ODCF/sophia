@@ -47,14 +47,14 @@ class MrefEntryAnno {
     MrefEntryAnno(const string &mrefEntryIn);
 
     template <typename T> bool operator<(const T &rhs) const {
-        return (int) pos < (int) rhs.getPos();
+        return static_cast<int>(pos) < static_cast<int>(rhs.getPos());
     }
 
     template <typename T> int distanceTo(const T &rhs) const {
-        return abs((int) pos - (int) rhs.getPos());
+        return abs(static_cast<int>(pos) - static_cast<int>(rhs.getPos()));
     }
     template <typename T> int distanceToBp(const T &compIn) const {
-        return abs((int) pos - (int) compIn.getPos());
+        return abs(static_cast<int>(pos) - static_cast<int>(compIn.getPos()));
     }
 
     bool operator==(const MrefEntryAnno &rhs) const {
@@ -100,30 +100,30 @@ class MrefEntryAnno {
         return res;
     }
 
-    bool closeToSupp(const SuppAlignmentAnno &compIn, int fuzziness) const {
+    bool closeToSupp(const SuppAlignmentAnno &compIn, ChrDistance fuzziness) const {
         if (compIn.isFuzzy()) {
             fuzziness = int(2.5 * DEFAULT_READ_LENGTH);   /* truncate */
-            return ((long) pos - (long) fuzziness) <= ((long) compIn.getExtendedPos() + (long) fuzziness) &&
-                   ((long) compIn.getPos() - (long) fuzziness) <= ((long) pos + (long) fuzziness);
+            return (static_cast<long>(pos) - fuzziness) <= (static_cast<long>(compIn.getExtendedPos()) + fuzziness) &&
+                   (static_cast<long>(compIn.getPos()) - fuzziness) <= (static_cast<long>(pos) + fuzziness);
         } else {
-            return abs((long) pos - (long) compIn.getPos()) <= (long) fuzziness;
+            return ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos()))) <= fuzziness;
         }
     }
 
-    ChrSize distanceToSupp(const SuppAlignmentAnno &compIn) const {
-        ChrSize result;
+    ChrDistance distanceToSupp(const SuppAlignmentAnno &compIn) const {
+        ChrDistance result;
         if (compIn.isFuzzy()) {
             if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
                 result = 0;
             } else {
                 if (pos < compIn.getPos()) {
-                    result = ChrSize(compIn.getPos() - pos);
+                    result = ChrDistance(compIn.getPos() - pos);
                 } else {
-                    result = ChrSize(pos - compIn.getExtendedPos());
+                    result = ChrDistance(pos - compIn.getExtendedPos());
                 }
             }
         } else {
-            result = ChrSize(abs((long) pos - (long) compIn.getPos()));
+            result = ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos())));
         }
         return result;
     }

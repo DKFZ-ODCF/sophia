@@ -96,10 +96,10 @@ namespace sophia {
     SamSegmentMapper::printBps(ChrSize alignmentStart) {
         for (auto &bp : breakpointsCurrent) {
             if (!bp.second.isCovFinalized() && ((bp.first) + 1 < alignmentStart)) {
-                auto posDiff = bp.first - minPos;
+                unsigned long posDiff = static_cast<unsigned long>(bp.first - minPos);
                 if (bp.first != minPos) {
                     bp.second.setLeftCoverage(
-                        coverageProfiles[bp.first - minPos - 1].getCoverage());
+                        coverageProfiles[static_cast<unsigned long>(bp.first - minPos - 1)].getCoverage());
                 } else {
                     bp.second.setLeftCoverage(0);
                 }
@@ -195,8 +195,8 @@ namespace sophia {
                     coverageProfiles.emplace_back();
                     ++maxPos;
                 }
-                coverageProfiles[i - minPos].incrementCoverage();
-                coverageProfiles[i - minPos].incrementNormalSpans();
+                coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementCoverage();
+                coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementNormalSpans();
             }
             if (PROPER_PAIR_COMPENSATION_MODE) {
                 discordantAlignmentCandidatesPool.emplace_back(
@@ -214,8 +214,8 @@ namespace sophia {
                     coverageProfiles.emplace_back();
                     ++maxPos;
                 }
-                coverageProfiles[i - minPos].incrementCoverage();
-                coverageProfiles[i - minPos].incrementNormalSpans();
+                coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementCoverage();
+                coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementNormalSpans();
             }
             break;
         case 4:
@@ -224,8 +224,8 @@ namespace sophia {
                     coverageProfiles.emplace_back();
                     ++maxPos;
                 }
-                coverageProfiles[i - minPos].incrementCoverage();
-                coverageProfiles[i - minPos].incrementNormalSpans();
+                coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementCoverage();
+                coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementNormalSpans();
             }
             if (!chrConverter.isTechnical(alignment.getMateChrIndex())
                 && !chrConverter.isInBlockedRegion(alignment.getMateChrIndex(),
@@ -270,7 +270,7 @@ namespace sophia {
                         coverageProfiles.emplace_back();
                         ++maxPos;
                     }
-                    coverageProfiles[i - minPos].incrementLowQualSpansHard();
+                    coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementLowQualSpansHard();
                 }
             }
             break;
@@ -280,7 +280,7 @@ namespace sophia {
                     coverageProfiles.emplace_back();
                     ++maxPos;
                 }
-                coverageProfiles[i - minPos].incrementLowQualSpansSoft();
+                coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementLowQualSpansSoft();
             }
             if (!alignment.isSupplementary() &&
                 !chrConverter.isTechnical(alignment.getMateChrIndex()) &&
@@ -313,17 +313,17 @@ namespace sophia {
                 switch (alignment.getReadBreakpointTypes()[j]) {
                 case 'S':
                     if (bpPos == alignment.getStartPos()) {
-                        coverageProfiles[bpPos - minPos].decrementNormalSpans();
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].decrementNormalSpans();
                     }
-                    coverageProfiles[bpPos - minPos].incrementNormalBpsSoft();
+                    coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementNormalBpsSoft();
                     break;
                 case 'I':
-                    coverageProfiles[bpPos - minPos].incrementNormalBpsShortIndel();
+                    coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementNormalBpsShortIndel();
                     break;
                 case 'D':
-                    coverageProfiles[bpPos - minPos].incrementNormalBpsShortIndel();
+                    coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementNormalBpsShortIndel();
                     for (signed int k = 0; k != alignment.getReadBreakpointsSizes()[j]; ++k) {
-                        coverageProfiles[bpPos - minPos + (unsigned int) k].decrementNormalSpans();
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos + k)].decrementNormalSpans();
                     }
                     break;
                 default:
@@ -340,12 +340,12 @@ namespace sophia {
                 }
                 switch (alignment.getReadBreakpointTypes()[j]) {
                 case 'I':
-                    coverageProfiles[bpPos - minPos].incrementNormalBpsShortIndel();
+                    coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementNormalBpsShortIndel();
                     break;
                 case 'D':
-                    coverageProfiles[bpPos - minPos].incrementNormalBpsShortIndel();
+                    coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementNormalBpsShortIndel();
                     for (signed int k = 0; k != alignment.getReadBreakpointsSizes()[j]; ++k) {
-                        coverageProfiles[bpPos - minPos + (unsigned int) k].decrementNormalSpans();
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos + k)].decrementNormalSpans();
                     }
                     break;
                 default:
@@ -362,7 +362,7 @@ namespace sophia {
                         ++maxPos;
                     }
                     if (alignment.getReadBreakpointTypes()[j] == 'H') {
-                        coverageProfiles[bpPos - minPos].incrementNormalBpsHard();
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementNormalBpsHard();
                     }
                 }
             } else {
@@ -375,25 +375,25 @@ namespace sophia {
                     switch (alignment.getReadBreakpointTypes()[j]) {
                     case 'S':
                         if (bpPos == alignment.getStartPos()) {
-                            coverageProfiles[bpPos - minPos]
+                            coverageProfiles[static_cast<unsigned long>(bpPos - minPos)]
                                 .decrementLowQualSpansHard();
                         }
-                        coverageProfiles[bpPos - minPos].incrementLowQualBpsHard();
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementLowQualBpsHard();
                         break;
                     case 'H':
                         if (bpPos == alignment.getStartPos()) {
-                            coverageProfiles[bpPos - minPos]
+                            coverageProfiles[static_cast<unsigned long>(bpPos - minPos)]
                                 .decrementLowQualSpansHard();
                         }
-                        coverageProfiles[bpPos - minPos].incrementLowQualBpsHard();
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementLowQualBpsHard();
                         break;
                     case 'I':
-                        coverageProfiles[bpPos - minPos].incrementLowQualBpsHard();
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementLowQualBpsHard();
                         break;
                     case 'D':
-                        coverageProfiles[bpPos - minPos].incrementLowQualBpsHard();
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementLowQualBpsHard();
                         for (signed int k = 0; k != alignment.getReadBreakpointsSizes()[j]; ++k) {
-                            coverageProfiles[bpPos - minPos + (unsigned int) k]
+                            coverageProfiles[static_cast<unsigned long>(bpPos - minPos + k)]
                                 .decrementLowQualSpansHard();
                         }
                         break;
@@ -414,18 +414,18 @@ namespace sophia {
                 case 'S':
                 case 'H':
                     if (bpPos == alignment.getStartPos()) {
-                        coverageProfiles[bpPos - minPos]
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos)]
                             .decrementLowQualSpansSoft();
                     }
-                    coverageProfiles[bpPos - minPos].incrementLowQualBpsSoft();
+                    coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementLowQualBpsSoft();
                     break;
                 case 'I':
-                    coverageProfiles[bpPos - minPos].incrementLowQualBpsSoft();
+                    coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementLowQualBpsSoft();
                     break;
                 case 'D':
-                    coverageProfiles[bpPos - minPos].incrementLowQualBpsSoft();
+                    coverageProfiles[static_cast<unsigned long>(bpPos - minPos)].incrementLowQualBpsSoft();
                     for (signed int k = 0; k != alignment.getReadBreakpointsSizes()[j]; ++k) {
-                        coverageProfiles[bpPos - minPos + (unsigned int) k]
+                        coverageProfiles[static_cast<unsigned long>(bpPos - minPos + k)]
                             .decrementLowQualSpansSoft();
                     }
                     break;
@@ -445,7 +445,7 @@ namespace sophia {
         case 1:
             for (auto i = 0u; i < alignment->getReadBreakpoints().size(); ++i) {
                 if (alignment->getReadBreakpointTypes()[i] == 'S') {
-                    unsigned int bpLoc = alignment->getReadBreakpoints()[i];
+                    ChrSize bpLoc = alignment->getReadBreakpoints()[i];
                     auto it = breakpointsCurrent.find(bpLoc);
                     if (it == breakpointsCurrent.end()) {
                         auto newIt = breakpointsCurrent.emplace(

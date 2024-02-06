@@ -392,14 +392,14 @@ namespace sophia {
         const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex) {
 
         // This is now the only place, where invalid values are assigned, ...
-        std::vector<ChrIndex> result {indexToCompressedMrefIndex.size(), hg37::INVALID};
-        for (ChrIndex globalIndex = 0; globalIndex < result.size(); ++globalIndex) {
+        std::vector<ChrIndex> result {static_cast<unsigned int>(indexToCompressedMrefIndex.size()), hg37::INVALID};
+        for (ChrIndex globalIndex = 0; globalIndex < ChrIndex(result.size()); ++globalIndex) {
 
             CompressedMrefIndex compressedMrefIndex =
-                indexToCompressedMrefIndex[(unsigned int) globalIndex];
+                indexToCompressedMrefIndex[static_cast<unsigned int>(globalIndex)];
 
             if (isValid(compressedMrefIndex)) {
-                result[(unsigned int) compressedMrefIndex] = globalIndex;
+                result[static_cast<unsigned int>(compressedMrefIndex)] = globalIndex;
             }
         }
         // ... but this post-condition checks that no invalid values remain.
@@ -443,7 +443,7 @@ namespace sophia {
     /** Map an index position to a chromosome name. */
     ChrName Hg37ChrConverter::indexToChrName(ChrIndex index) const {
         assertValid(index);
-        return _indexToChrName[(unsigned long) index];
+        return _indexToChrName[static_cast<unsigned int>(index)];
     }
 
     /** chr1-chr22, ... */
@@ -539,14 +539,14 @@ namespace sophia {
     ChrName
     Hg37ChrConverter::compressedMrefIndexToChrName(CompressedMrefIndex index) const {
         assertValid(index);
-        return _compressedMrefIndexToChrName.at((unsigned int) index);
+        return _compressedMrefIndexToChrName.at(static_cast<unsigned int>(index));
     }
 
     /** Map an index from the global index-space to the compressed mref index-space. */
     CompressedMrefIndex
     Hg37ChrConverter::indexToCompressedMrefIndex(ChrIndex index) const {
         assertValid(index);
-        CompressedMrefIndex result = _indexToCompressedMrefIndex.at((unsigned int) index);
+        CompressedMrefIndex result = _indexToCompressedMrefIndex.at(static_cast<unsigned int>(index));
         assertValid(result);
         return result;
     }
@@ -554,14 +554,14 @@ namespace sophia {
     ChrIndex
     Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
         assertValid(index);
-        return _compressedMrefIndexToIndex.at((unsigned int) index);
+        return _compressedMrefIndexToIndex.at(static_cast<unsigned int>(index));
     }
 
     /** Map compressed mref index to chromosome size. */
     ChrSize
     Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
         assertValid(index);
-        return _chrSizesCompressedMref[(unsigned int) index];
+        return _chrSizesCompressedMref[static_cast<unsigned int>(index)];
     }
 
     ChrIndex

@@ -58,13 +58,13 @@ namespace sophia {
     // for bugs.
     //
     // TODO Make these classes!
-    using ChrIndex = unsigned long int;
-    using CompressedMrefIndex = signed long int;
+    using ChrIndex = unsigned int;
+    using CompressedMrefIndex = signed int;
 
-    using ChrSize = unsigned long int;
-    using ChrPosition = unsigned long int;
-    using ChrDistance = unsigned long int;
-    using ChrPositionDifference = long signed int;
+    using ChrSize = signed int;
+    using ChrPosition = signed int;
+    using ChrDistance = signed int;
+    using ChrPositionDifference = signed int;
 
     std::string get_trace(const boost::exception &e);
 

@@ -431,12 +431,12 @@ namespace sophia {
         const auto pointerToShortSeq = &shortAlignment->getSamLine();
         if (!longAlignment->isOverhangEncounteredM() &&
             !shortAlignment->isOverhangEncounteredM()) {
-            auto lenDiff = longAlignment->getOverhangLength() - shortS;
-            for (int i = shortS - 1; i >= 0; --i) {
-                cLong = (*pointerToLongSeq)[longStart + (size_t) i + lenDiff];
+            ChrDistance lenDiff = longAlignment->getOverhangLength() - shortS;
+            for (ChrSize i = shortS - 1; i >= 0; --i) {
+                cLong = (*pointerToLongSeq)[static_cast<unsigned int>(longStart + i + lenDiff)];
                 if (cLong == 'N')
                     continue;
-                cShort = (*pointerToShortSeq)[shortStart + (size_t) i];
+                cShort = (*pointerToShortSeq)[static_cast<unsigned int>(shortStart + i)];
                 if (cShort == 'N')
                     continue;
                 if (cLong != cShort) {
@@ -449,10 +449,10 @@ namespace sophia {
         } else if (longAlignment->isOverhangEncounteredM() &&
                    shortAlignment->isOverhangEncounteredM()) {
             for (ChrSize i = 0; i < shortS; ++i) {
-                cLong = (*pointerToLongSeq)[longStart + (size_t) i];
+                cLong = (*pointerToLongSeq)[static_cast<unsigned int>(longStart + i)];
                 if (cLong == 'N')
                     continue;
-                cShort = (*pointerToShortSeq)[shortStart + (size_t) i];
+                cShort = (*pointerToShortSeq)[static_cast<unsigned int>(shortStart + i)];
                 if (cShort == 'N')
                     continue;
                 if (cLong != cShort) {
@@ -470,9 +470,9 @@ namespace sophia {
     Breakpoint::detectDoubleSupportSupps() {
         vector<SuppAlignment> saHardTmpLowQual;
         {
-            auto i = 0u;
+            auto i = 0u;  // this is used further down in the code ...
             for (; i < supportingHardAlignments.size(); ++i) {
-                supportingHardAlignments[i]->setChosenBp(pos, i);
+                supportingHardAlignments[i]->setChosenBp(pos, static_cast<int>(i));
             }
             for (auto hardAlignment : supportingHardAlignments) {
                 for (const auto &sa : hardAlignment->generateSuppAlignments(chrIndex, pos)) {
@@ -522,7 +522,7 @@ namespace sophia {
             }
             supportingHardAlignments.clear();
             for (auto j = 0u; j < supportingHardLowMapqAlignments.size(); ++j) {
-                supportingHardLowMapqAlignments[j]->setChosenBp(pos, i + j);
+                supportingHardLowMapqAlignments[j]->setChosenBp(pos, static_cast<int>(i + j));
             }
 
             for (auto hardAlignment : supportingHardLowMapqAlignments) {
@@ -932,11 +932,11 @@ namespace sophia {
                 } else {
                     ++discordantAlignmentsPool[lastIndex].straightSupport;
                 }
-                if (abs((long) pos - (long) discordantAlignmentsPool[i].readStartPos) <=
-                    abs((long) pos - (long) discordantAlignmentsPool[i].readEndPos)) {
+                if (abs(static_cast<long>(pos) - static_cast<long>(discordantAlignmentsPool[i].readStartPos)) <=
+                    abs(static_cast<long>(pos) - static_cast<long>(discordantAlignmentsPool[i].readEndPos))) {
                     // left side
-                    if (abs((long) pos - (long) discordantAlignmentsPool[lastIndex].readEndPos) >
-                        abs((long) pos - (long) discordantAlignmentsPool[i].readEndPos)) {
+                    if (abs(static_cast<long>(pos) - static_cast<long>(discordantAlignmentsPool[lastIndex].readEndPos)) >
+                        abs(static_cast<long>(pos) - static_cast<long>(discordantAlignmentsPool[i].readEndPos))) {
                         discordantAlignmentsPool[lastIndex].readStartPos =
                             discordantAlignmentsPool[i].readStartPos;
                         discordantAlignmentsPool[lastIndex].readEndPos =
@@ -944,8 +944,8 @@ namespace sophia {
                     }
                 } else {
                     // right side
-                    if (abs((long) pos - (long) discordantAlignmentsPool[lastIndex].readStartPos) >
-                        abs((long) pos - (long) discordantAlignmentsPool[i].readStartPos)) {
+                    if (abs(static_cast<long>(pos) - static_cast<long>(discordantAlignmentsPool[lastIndex].readStartPos)) >
+                        abs(static_cast<long>(pos) - static_cast<long>(discordantAlignmentsPool[i].readStartPos))) {
                         discordantAlignmentsPool[lastIndex].readStartPos =
                             discordantAlignmentsPool[i].readStartPos;
                         discordantAlignmentsPool[lastIndex].readEndPos =

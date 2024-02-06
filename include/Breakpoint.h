@@ -130,36 +130,36 @@ namespace sophia {
             return (pos < rhs.getPos());
         }
 
-        bool closeToSupp(const SuppAlignment &compIn, ChrSize fuzziness) const {
+        bool closeToSupp(const SuppAlignment &compIn, ChrDistance fuzziness) const {
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
-                    fuzziness = ChrSize(2.5 * DEFAULT_READ_LENGTH);  // Truncates to lower integer.
-                    return (pos - fuzziness) <=
-                               (compIn.getExtendedPos() + fuzziness) &&
-                           (compIn.getPos() - fuzziness) <= (pos + fuzziness);
+                    fuzziness = ChrDistance(2.5 * DEFAULT_READ_LENGTH);  // Truncates to lower integer.
+                    return (ChrDistance(pos) - fuzziness) <=
+                               (ChrDistance(compIn.getExtendedPos()) + fuzziness) &&
+                           (ChrDistance(compIn.getPos()) - fuzziness) <= (ChrDistance(pos) + fuzziness);
                 } else {
-                    return (unsigned long) abs((long) pos - (long) compIn.getPos()) <= fuzziness;
+                    return ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos()))) <= fuzziness;
                 }
             } else {
                 return false;
             }
         }
 
-        ChrSize distanceToSupp(const SuppAlignmentAnno &compIn) const {
-            ChrSize result;
+        ChrDistance distanceToSupp(const SuppAlignmentAnno &compIn) const {
+            ChrDistance result;
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
                     if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
                         result = 0;
                     } else {
                         if (pos < compIn.getPos()) {
-                            result = ChrSize(compIn.getPos() - pos);
+                            result = ChrDistance(compIn.getPos() - pos);
                         } else {
-                            result = ChrSize(pos - compIn.getExtendedPos());
+                            result = ChrDistance(pos - compIn.getExtendedPos());
                         }
                     }
                 } else {
-                    result = ChrSize(abs((long) pos - (long) compIn.getPos()));
+                    result = ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos())));
                 }
             } else {
                 result = 1000000;

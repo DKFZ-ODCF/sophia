@@ -77,7 +77,7 @@ namespace sophia {
                     // Match the version in the gzFile name. Note that we traverse the gzFile name
                     // in reverse order (from end), and therefore the matching algorithm is
                     // formulated in reverse order.
-                    if (*rit != version[(unsigned long) posOnVersion]) {
+                    if (*rit != version[static_cast<unsigned long>(posOnVersion)]) {
                         // No match, means continue searching.
                         posOnVersion = version.size() - 1;
                     } else {
@@ -185,7 +185,7 @@ namespace sophia {
         CompressedMrefIndex vectorSize = chrConverter.nChromosomesCompressedMref();
 
         vector<vector<BreakpointReduced>> fileBps = vector<vector<BreakpointReduced>>
-            { (unsigned int) vectorSize, vector<BreakpointReduced>{}};
+            { static_cast<unsigned int>(vectorSize), vector<BreakpointReduced>{}};
         auto lineIndex = 0;
 
         while (error_terminating_getline(gzStream, sophiaLine)) {
@@ -207,7 +207,7 @@ namespace sophia {
                     CompressedMrefIndex compressedMrefIndex =
                         chrConverter.indexToCompressedMrefIndex(globalIndex);
                     Breakpoint tmpBp = Breakpoint::parse(sophiaLine, true);
-                    fileBps[(unsigned int) compressedMrefIndex].emplace_back(
+                    fileBps[static_cast<unsigned int>(compressedMrefIndex)].emplace_back(
                         tmpBp, lineIndex++,
                         (sophiaLine.back() != '.' && sophiaLine.back() != '#'));
                 }
@@ -234,10 +234,10 @@ namespace sophia {
                                   short fileIndex) {
         MrefEntry tmpMrefEntry{};
         tmpMrefEntry.addEntry(bp, fileIndex);
-        auto validityInit = mrefDb[(unsigned long) chrIndex][tmpMrefEntry.getPos()].getValidityScore();
-        mrefDb[(unsigned long) chrIndex][tmpMrefEntry.getPos()].mergeMrefEntries(tmpMrefEntry);
+        auto validityInit = mrefDb[static_cast<unsigned int>(chrIndex)][static_cast<unsigned long>(tmpMrefEntry.getPos())].getValidityScore();
+        mrefDb[static_cast<unsigned int>(chrIndex)][static_cast<unsigned long>(tmpMrefEntry.getPos())].mergeMrefEntries(tmpMrefEntry);
         auto validityFinal =
-            mrefDb[(unsigned long) chrIndex][tmpMrefEntry.getPos()].getValidityScore();
+            mrefDb[static_cast<unsigned int>(chrIndex)][static_cast<unsigned long>(tmpMrefEntry.getPos())].getValidityScore();
         return validityFinal > validityInit;
     }
 

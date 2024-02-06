@@ -71,7 +71,7 @@ namespace sophia {
         advance(it, increment);
         while (it != bps.begin() && it != bps.end()) {
             auto res = it->searchFuzzySa(*consensusSa);
-            if (!res && ChrSize(abs((long) startingIt->getPos() - (long) it->getPos())) > MAX_DISTANCE) {
+            if (!res && ChrSize(abs(static_cast<long>(startingIt->getPos()) - static_cast<long>(it->getPos()))) > MAX_DISTANCE) {
                 break;
             } else {
                 if (res) {
@@ -183,7 +183,7 @@ namespace sophia {
         while (it != bps.begin() && it != bps.end()) {
             if (it->isValid()) {
                 auto res = it->searchFuzzySa(*consensusSa);
-                if (!res && abs((int) startingIt->getPos() - (int) it->getPos()) > (int) MAX_DISTANCE) {
+                if (!res && abs(static_cast<int>(startingIt->getPos()) - static_cast<int>(it->getPos())) > static_cast<int>(MAX_DISTANCE)) {
                     break;
                 } else {
                     if (res) {
@@ -229,7 +229,7 @@ namespace sophia {
                 [&](unsigned int a, unsigned int b) {
                     return processedSas[a]->getSupportingIndices().size() < processedSas[b]->getSupportingIndices().size();
                 });
-            selectedSa = processedSas[(unsigned long) *bestElement];
+            selectedSa = processedSas[static_cast<unsigned long>(*bestElement)];
         } else {
             auto bestElement = max_element(processedSas.begin(), processedSas.end(), //
                     [&](SuppAlignmentAnno* a, SuppAlignmentAnno* b) {return a->getSupportingIndices().size() < b->getSupportingIndices().size();});

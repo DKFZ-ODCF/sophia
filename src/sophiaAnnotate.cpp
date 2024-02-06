@@ -38,8 +38,8 @@ int main(int argc, char** argv) {
     int germlineOffset { 5 };
     int germlineDbLimit { 5 };
     int pidsInMref { 0 };
-    unsigned int defaultReadLengthTumor { 0 };
-    unsigned int defaultReadLengthControl { 0 };
+    ChrSize defaultReadLengthTumor { 0 };
+    ChrSize defaultReadLengthControl { 0 };
 
     try {
         ios_base::sync_with_stdio(false);
@@ -62,10 +62,10 @@ int main(int argc, char** argv) {
                 po::value<string>(&assemblyName)->default_value(assemblyName),
                 "assembly name (classic_hg37, hg38, ...)")
             ("defaultreadlengthtumor",
-                po::value<unsigned int>(&defaultReadLengthTumor),
+                po::value<ChrSize>(&defaultReadLengthTumor),
                 "Default read length for the technology used in sequencing 101,151 etc., tumor")
             ("defaultreadlengthcontrol",
-                po::value<unsigned int>(&defaultReadLengthControl),
+                po::value<ChrSize>(&defaultReadLengthControl),
                 "Default read length for the technology used in sequencing 101,151 etc., tumor")
             ("pidsinmref",
                 po::value<int>(&pidsInMref)->default_value(pidsInMref),
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
         CompressedMrefIndex vectorSize =
             GlobalAppConfig::getInstance().getChrConverter().nChromosomesCompressedMref();
 
-        vector<vector<MrefEntryAnno>> mref { (unsigned int) vectorSize, vector<MrefEntryAnno> { } };
+        vector<vector<MrefEntryAnno>> mref { static_cast<unsigned int>(vectorSize), vector<MrefEntryAnno> { } };
         if (!inputVariables.count("mref")) {
             cerr << "No mref file given, exiting" << endl;
             return 1;
@@ -138,11 +138,17 @@ int main(int argc, char** argv) {
         }
 
         if (inputVariables.count("defaultreadlengthtumor")) {
-            defaultReadLengthTumor = inputVariables["defaultreadlengthtumor"].as<unsigned int>();
+            defaultReadLengthTumor = inputVariables["defaultreadlengthtumor"].as<ChrSize>();
         } else {
-            cerr << "Default read Length not given, exiting" << endl;
+            cerr << "Default read length not given, exiting" << endl;
             return 1;
         }
+        if (defaultReadLengthTumor < 1) {
+            cerr << "Default read length tumor " << std::to_string(defaultReadLengthTumor)
+                 << " is invalid." << endl;
+            return 1;
+        }
+
 
         if (inputVariables.count("artifactlofreq")) {
             artifactlofreq = inputVariables["artifactlofreq"].as<int>();
@@ -205,7 +211,7 @@ int main(int argc, char** argv) {
                 continue;
             } else {
                 chrIndex = chrConverter.indexToCompressedMrefIndex(globalIndex);
-                mref[(unsigned int) chrIndex].emplace_back(line);
+                mref[static_cast<unsigned int>(chrIndex)].emplace_back(line);
             }
         }
         SvEvent::ARTIFACT_FREQ_LOW_THRESHOLD = (artifactlofreq + 0.0) / 100;
@@ -237,11 +243,17 @@ int main(int argc, char** argv) {
         if (inputVariables.count("controlresults")) {
             string controlResults { inputVariables["controlresults"].as<string>() };
             if (inputVariables.count("defaultreadlengthcontrol")) {
-                defaultReadLengthControl = inputVariables["defaultreadlengthtumor"].as<unsigned int>();
+                defaultReadLengthControl = inputVariables["defaultreadlengthtumor"].as<ChrSize>();
             } else {
-                cerr << "Default read Length not given, exiting" << endl;
+                cerr << "Default read length control not given, exiting" << endl;
                 return 1;
             }
+            if (defaultReadLengthControl < 1) {
+                cerr << "Default read length control " << std::to_string(defaultReadLengthControl)
+                     << " is invalid." << endl;
+                return 1;
+            }
+
             auto lowQualControl = 0;
             auto pathogenInControl = false;
             {

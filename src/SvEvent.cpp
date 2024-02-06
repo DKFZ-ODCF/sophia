@@ -539,7 +539,7 @@ namespace sophia {
           semiSuspicious{sa1In.isSemiSuspicious()} {
         auto truePos2 = pos2;
         if (chrIndex1 == chrIndex2) {
-            if (abs((long) pos1 - (long) pos2) > abs((long) pos1 - (long) sa1In.getExtendedPos())) {
+            if (abs(static_cast<long>(pos1) - static_cast<long>(pos2)) > abs(static_cast<long>(pos1) - static_cast<long>(sa1In.getExtendedPos()))) {
                 truePos2 = sa1In.getExtendedPos();
             }
         }
@@ -555,9 +555,9 @@ namespace sophia {
         if (distant && selectedSa1.isFuzzy() &&
             bp1In.getChrIndex() == selectedSa1.getChrIndex() &&
             selectedSa1.isStrictFuzzyCandidate()) {
-            auto fuzDiff = (long) selectedSa1.getExtendedPos() - (long) selectedSa1.getPos();
-            if (max(0l, (long) pos1 - fuzDiff) <= (long) selectedSa1.getExtendedPos() &&
-                (long) selectedSa1.getPos() <= ((long) pos1 + fuzDiff)) {
+            auto fuzDiff = static_cast<long>(selectedSa1.getExtendedPos()) - static_cast<long>(selectedSa1.getPos());
+            if (max(0l, static_cast<long>(pos1) - fuzDiff) <= static_cast<long>(selectedSa1.getExtendedPos()) &&
+                static_cast<long>(selectedSa1.getPos()) <= (static_cast<long>(pos1) + fuzDiff)) {
                 distant = false;
             } else if (eventSize < 5000) {
                 distant = false;
@@ -944,7 +944,7 @@ namespace sophia {
                 if (bp1.getChrIndex() == bp2.getChrIndex()) {
                     if (selectedSa1.isStrictFuzzy() ||
                         selectedSa2.isStrictFuzzy()) {
-                        if (abs((long) bp1.getPos() - (long) bp2.getPos()) < 5000l) {
+                        if (abs(static_cast<long>(bp1.getPos()) - static_cast<long>(bp2.getPos())) < 5000l) {
                             return 14;
                         }
                     }
@@ -970,7 +970,7 @@ namespace sophia {
             }
         }
         if (bp1.getChrIndex() != bp2.getChrIndex() ||
-            abs((long) bp1.getPos() - (long) bp2.getPos()) > 150l) {
+            abs(static_cast<long>(bp1.getPos()) - static_cast<long>(bp2.getPos())) > 150l) {
             auto eventTotal1 = bp1.getPairedBreaksSoft() +
                                bp1.getPairedBreaksHard() +
                                bp1.getUnpairedBreaksSoft();
@@ -1106,10 +1106,10 @@ namespace sophia {
             if (selectedSa1.isFuzzy() || (selectedSa1.getSupport() +
                                           selectedSa1.getSecondarySupport()) < 3) {
                 if (bp1.getChrIndex() == bp2.getChrIndex()) {
-                    if (abs((long) bp1.getPos() - (long) bp2.getPos()) < 5000l) {
+                    if (abs(static_cast<long>(bp1.getPos()) - static_cast<long>(bp2.getPos())) < 5000l) {
                         return 26;
                     }
-                    if (inverted && abs((long) bp1.getPos() - (long) bp2.getPos()) < 10000l) {
+                    if (inverted && abs(static_cast<long>(bp1.getPos()) - static_cast<long>(bp2.getPos())) < 10000l) {
                         return 27;
                     }
                 }
@@ -1746,8 +1746,8 @@ namespace sophia {
 
         auto overhangLengthMax = 0;
         auto overhangLength = 0;
-        for (auto cit = overhangDb[(unsigned int) overhangIndex].second.cbegin();
-             cit != overhangDb[(unsigned int) overhangIndex].second.cend(); ++cit) {
+        for (auto cit = overhangDb[static_cast<unsigned int>(overhangIndex)].second.cbegin();
+             cit != overhangDb[static_cast<unsigned int>(overhangIndex)].second.cend(); ++cit) {
             switch (*cit) {
             case '(':
                 overhangLengthMax = max(overhangLengthMax, overhangLength);
@@ -1872,9 +1872,9 @@ namespace sophia {
         outputFields.emplace_back(inputScore == 2 ? selectedSa2.print() : "_");
 
         outputFields.emplace_back(
-            overhang1Index != -1 ? overhangDb[(unsigned int) overhang1Index].second : ".");
+            overhang1Index != -1 ? overhangDb[static_cast<unsigned int>(overhang1Index)].second : ".");
         outputFields.emplace_back(
-            overhang2Index != -1 ? overhangDb[(unsigned int) overhang2Index].second : ".");
+            overhang2Index != -1 ? overhangDb[static_cast<unsigned int>(overhang2Index)].second : ".");
 
         return collapseRange(outputFields, "\t").append("\n");
     }

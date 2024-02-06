@@ -18,11 +18,11 @@ namespace sophia {
                 return false;
             } else {
                 if (!sa.isFuzzy()) {
-                    return (long) sa.getPos() >= ((long) mateStartPos - (long) sa.getMatchFuzziness()) &&
-                           (long) sa.getPos() <= ((long) mateEndPos + (long) sa.getMatchFuzziness());
+                    return static_cast<long>(sa.getPos()) >= (static_cast<long>(mateStartPos) - static_cast<long>(sa.getMatchFuzziness())) &&
+                           static_cast<long>(sa.getPos()) <= (static_cast<long>(mateEndPos) + static_cast<long>(sa.getMatchFuzziness()));
                 } else {
-                    return ((long) mateStartPos - (long) sa.getMatchFuzziness()) <= (long) sa.getExtendedPos() &&
-                           (long) sa.getPos() <= ((long) mateEndPos + (long) sa.getMatchFuzziness());
+                    return (static_cast<long>(mateStartPos) - static_cast<long>(sa.getMatchFuzziness())) <= static_cast<long>(sa.getExtendedPos()) &&
+                           static_cast<long>(sa.getPos()) <= (static_cast<long>(mateEndPos) + static_cast<long>(sa.getMatchFuzziness()));
                 }
             }
         }

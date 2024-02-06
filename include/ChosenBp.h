@@ -45,8 +45,8 @@ using namespace std;
         ChosenBp(char bpTypeIn,
                  int bpSizeIn,
                  bool bpEncounteredMIn,
-                 int overhangStartIndexIn,
-                 int overhangLengthIn,
+                 ChrSize overhangStartIndexIn,
+                 ChrSize overhangLengthIn,
                  int selfNodeIndexIn)
             : bpType{bpTypeIn},
               bpSize{bpSizeIn},
@@ -69,7 +69,7 @@ using namespace std;
 
         bool bpEncounteredM;
 
-        int overhangStartIndex, overhangLength;
+        ChrSize overhangStartIndex, overhangLength;
 
         vector<SuppAlignment> supplementaryAlignments;
 

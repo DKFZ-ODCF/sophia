@@ -193,7 +193,7 @@ namespace sophia {
 
         // Update `mapq` field.
         for (auto it = fieldBegins[MAPQ]; it != fieldEnds[MAPQ]; ++it) {
-            result.mapq = 10 * result.mapq + (int) (*it - '0');
+            result.mapq = 10 * result.mapq + static_cast<int>(*it - '0');
         }
 
         // Update `inverted` field
@@ -279,9 +279,9 @@ namespace sophia {
             }
             result.extendedPos = result.pos;
 
-            result.distant = (bpChrIndex != result.chrIndex || (abs((long) bpPos - (long) result.pos) > ISIZEMAX));
+            result.distant = (bpChrIndex != result.chrIndex || (abs(static_cast<long>(bpPos) - static_cast<long>(result.pos)) > ISIZEMAX));
             if (bpChrIndex == result.chrIndex) {
-                result.matchFuzziness = min((ChrSize) abs((long) bpPos - (long) result.pos), result.matchFuzziness);
+                result.matchFuzziness = min((ChrSize) abs(static_cast<long>(bpPos) - static_cast<long>(result.pos)), result.matchFuzziness);
             }
         }
 
@@ -354,9 +354,9 @@ namespace sophia {
                     break;
                 } else if (saIn.at(index) != '|') {
                     if (!result.fuzzy) {
-                        result.pos = 10 * result.pos + (unsigned int) (saIn.at(index) - '0');
+                        result.pos = 10 * result.pos + static_cast<int>(saIn.at(index) - '0');
                     } else {
-                        result.extendedPos = 10 * result.extendedPos + (unsigned int) (saIn.at(index) - '0');
+                        result.extendedPos = 10 * result.extendedPos + static_cast<int>(saIn.at(index) - '0');
                     }
                 }
             }
@@ -494,10 +494,10 @@ namespace sophia {
         if (inverted == rhs.isInverted() && chrIndex == rhs.getChrIndex() && encounteredM == rhs.isEncounteredM()) {
             if (strictFuzzy || rhs.isStrictFuzzy()) {
                 fuzziness = 2.5 * DEFAULT_READ_LENGTH;
-                return ((long) rhs.getPos() - (long) fuzziness) <= ((long) extendedPos + (long) fuzziness) &&
-                            ((long) pos - (long) fuzziness) <= ((long) rhs.getExtendedPos() + (long) fuzziness);
+                return (static_cast<long>(rhs.getPos()) - fuzziness) <= (static_cast<long>(extendedPos) + fuzziness) &&
+                            (static_cast<long>(pos) - fuzziness) <= (static_cast<long>(rhs.getExtendedPos()) + fuzziness);
             } else {
-                return abs((long) pos - (long) rhs.getPos()) <= (long) fuzziness;
+                return abs(static_cast<long>(pos) - static_cast<long>(rhs.getPos())) <= fuzziness;
             }
         } else {
             return false;
@@ -511,10 +511,10 @@ namespace sophia {
         }
         if (chrIndex == rhs.getChrIndex() && encounteredM == rhs.isEncounteredM()) {
             if (strictFuzzy || rhs.isStrictFuzzy()) {
-                return ((long) rhs.getPos() - (long) fuzziness) <= ((long) extendedPos + (long) fuzziness) &&
-                            ((long) pos - (long) fuzziness) <= ((long) rhs.getExtendedPos() + (long) fuzziness);
+                return (static_cast<long>(rhs.getPos()) - fuzziness) <= (static_cast<long>(extendedPos) + fuzziness) &&
+                            (static_cast<long>(pos) - fuzziness) <= (static_cast<long>(rhs.getExtendedPos()) + fuzziness);
             } else {
-                return abs((long) pos - (long) rhs.getPos()) <= (long) fuzziness;
+                return abs(static_cast<long>(pos) - static_cast<long>(rhs.getPos())) <= fuzziness;
             }
         } else {
             return false;

@@ -84,7 +84,7 @@ namespace sophia {
 
         template <typename T> int distanceToBp(const T &compIn) const {
             if (chrIndex == compIn.getChrIndex()) {
-                return abs((int) pos - (int) compIn.getPos());
+                return abs(static_cast<int>(pos) - static_cast<int>(compIn.getPos()));
             } else {
                 // This seems to be a special value. It is not explicitly used in comparisons.
                 // Check usages, before refactoring this.
@@ -148,36 +148,36 @@ namespace sophia {
             return res;
         }
 
-        bool closeToSupp(const SuppAlignmentAnno &compIn, ChrSize fuzziness) const {
+        bool closeToSupp(const SuppAlignmentAnno &compIn, ChrDistance fuzziness) const {
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
-                    fuzziness = ChrSize(2.5 * DEFAULT_READ_LENGTH);  // truncate
-                    return ((long) pos - (long) fuzziness) <= (long) (compIn.getExtendedPos() + fuzziness) &&
-                           ((long) compIn.getPos() - (long) fuzziness) <= (long) (pos + fuzziness);
+                    fuzziness = ChrDistance(2.5 * DEFAULT_READ_LENGTH);  // truncate
+                    return (ChrDistance(pos) - fuzziness) <= (ChrDistance(compIn.getExtendedPos()) + fuzziness) &&
+                           (ChrDistance(compIn.getPos()) - fuzziness) <= (ChrDistance(pos) + fuzziness);
                 } else {
-                    return abs((long) pos - (long) compIn.getPos()) <= (long) fuzziness;
+                    return abs(ChrDistance(pos) - ChrDistance(compIn.getPos())) <= fuzziness;
                 }
             } else {
                 return false;
             }
         }
 
-        ChrSize distanceToSupp(const SuppAlignmentAnno &compIn) const {
-            ChrSize result;
+        ChrDistance distanceToSupp(const SuppAlignmentAnno &compIn) const {
+            ChrDistance result;
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
                     if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
                         result = 0;
                     } else {
                         if (pos < compIn.getPos()) {
-                            result = ChrSize(compIn.getPos() - pos);
+                            result = ChrDistance(compIn.getPos() - pos);
                         } else {
                             // TODO Why here getExtendenPos(), but getPos() above?
-                            result = ChrSize(pos - compIn.getExtendedPos());
+                            result = ChrDistance(pos - compIn.getExtendedPos());
                         }
                     }
                 } else {
-                    result = ChrSize(abs((long) pos - (long) compIn.getPos()));
+                    result = ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos())));
                 }
             } else {
                 result = 1000000;
