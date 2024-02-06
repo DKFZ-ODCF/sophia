@@ -809,7 +809,8 @@ namespace sophia {
                     mateInfo.mateChrIndex,
                     mateInfo.mateStartPos,
                     mateInfo.matePower,
-                    leftDiscordantsTotal, true,
+                    leftDiscordantsTotal,
+                    true,
                     mateInfo.inversionSupport > mateInfo.straightSupport,
                     mateInfo.mateEndPos,
                     false,
@@ -826,7 +827,8 @@ namespace sophia {
                     mateInfo.mateChrIndex,
                     mateInfo.mateStartPos,
                     mateInfo.matePower,
-                    rightDiscordantsTotal, false,
+                    rightDiscordantsTotal,
+                    false,
                     mateInfo.inversionSupport > mateInfo.straightSupport,
                     mateInfo.mateEndPos,
                     false,
@@ -912,10 +914,10 @@ namespace sophia {
         unsigned int lastIndex = 0;
         for (size_t i = 1; i < discordantAlignmentsPool.size(); ++i) {
             if (discordantAlignmentsPool[lastIndex].mateChrIndex !=
-                    discordantAlignmentsPool[i].mateChrIndex ||   //
-                discordantAlignmentsPool[i].mateStartPos -
-                        discordantAlignmentsPool[lastIndex].mateEndPos >
-                    3.5 * DEFAULT_READ_LENGTH) {
+                    discordantAlignmentsPool[i].mateChrIndex ||
+                        discordantAlignmentsPool[i].mateStartPos -
+                                discordantAlignmentsPool[lastIndex].mateEndPos >
+                                    3.5 * DEFAULT_READ_LENGTH) {
                 lastIndex = i;
             } else {
                 discordantAlignmentsPool[lastIndex].mateEndPos =
@@ -1323,8 +1325,7 @@ namespace sophia {
             //
             if (bpIn[supportStart] != '.') {
                 string saStr{};
-                for (auto i = supportStart; i < supportEnd;
-                     ++i) {
+                for (auto i = supportStart; i < supportEnd; ++i) {
                     if (bpIn[i] == ';') {
                         result.doubleSidedMatches.emplace_back(SuppAlignment::parseSaSupport(saStr));
                         saStr.clear();

@@ -129,11 +129,11 @@ AnnotationProcessor::AnnotationProcessor(
         const string &controlResultsIn,
         ChrSize defaultReadLengthTumorIn,
         ChrSize defaultReadLengthControlIn,
-        int GERMLINE_DB_LIMIT,
+        int germlineDbLimit,
         int lowQualControlIn,
         bool pathogenInControlIn)
     : NO_CONTROL_MODE{false},
-      GERMLINE_DB_LIMIT{GERMLINE_DB_LIMIT},
+      GERMLINE_DB_LIMIT{germlineDbLimit},
       contaminationObserved{false},
       massiveInvFilteringLevel{0},
       filteredResults{} {
@@ -273,14 +273,14 @@ AnnotationProcessor::AnnotationProcessor(
             continue;
         };
         Breakpoint tmpBp = Breakpoint::parse(line, true);
-        CompressedMrefIndex compressedMrefChrIndex;
         if (!chrConverter.isCompressedMref(tmpBp.getChrIndex())) {
             continue;
-        } else {
-            compressedMrefChrIndex = chrConverter.indexToCompressedMrefIndex(tmpBp.getChrIndex());
         }
+        CompressedMrefIndex compressedMrefChrIndex =
+            chrConverter.indexToCompressedMrefIndex(tmpBp.getChrIndex());
         auto hasOverhang = line.back() != '.' && line.back() != '#';
-        tumorResults[(unsigned int) compressedMrefChrIndex].emplace_back(tmpBp, lineIndex, hasOverhang);
+        tumorResults[(unsigned int) compressedMrefChrIndex].
+            emplace_back(tmpBp, lineIndex, hasOverhang);
         if (line.back() != '.' && line.back() != '#') {
             string overhang{};
             for (auto it = line.rbegin(); it != line.rend(); ++it) {
@@ -353,12 +353,10 @@ AnnotationProcessor::searchSa(CompressedMrefIndex compressedMrefIndex,
         }
         return;
     }
-    CompressedMrefIndex saChrIndex;
     if (!chrConverter.isCompressedMref(sa.getChrIndex())) {
         return;
-    } else {
-        saChrIndex = chrConverter.indexToCompressedMrefIndex(sa.getChrIndex());
     }
+    CompressedMrefIndex saChrIndex = chrConverter.indexToCompressedMrefIndex(sa.getChrIndex());
     unsigned int fuzziness = 3 * SuppAlignmentAnno::DEFAULT_READ_LENGTH;
     vector<pair<int, vector<BreakpointReduced>::iterator>> dbHits{};
 
@@ -738,13 +736,12 @@ AnnotationProcessor::searchGermlineHitsNew(const BreakpointReduced &bpIn,
         return dummyMatchTrue;
     }
 
-    CompressedMrefIndex compressedMrefIndex;
     if (!chrConverter.isCompressedMref(bpIn.getChrIndex())) {
         return dummyMatchFalse;
-    } else {
-        compressedMrefIndex = GlobalAppConfig::getInstance().getChrConverter().
-            indexToCompressedMrefIndex(bpIn.getChrIndex());
     }
+
+    CompressedMrefIndex compressedMrefIndex = GlobalAppConfig::getInstance().getChrConverter().
+            indexToCompressedMrefIndex(bpIn.getChrIndex());
 
     if (controlResults[(unsigned int) compressedMrefIndex].empty()) {
         return dummyMatchFalse;

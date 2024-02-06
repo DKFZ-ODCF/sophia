@@ -61,9 +61,9 @@ namespace sophia {
     using ChrIndex = unsigned long int;
     using CompressedMrefIndex = signed long int;
 
-    using ChrSize = long unsigned int;
-    using ChrPosition = long unsigned int;
-    using ChrDistance = long unsigned int;
+    using ChrSize = unsigned long int;
+    using ChrPosition = unsigned long int;
+    using ChrDistance = unsigned long int;
     using ChrPositionDifference = long signed int;
 
     std::string get_trace(const boost::exception &e);

@@ -56,6 +56,14 @@ namespace sophia {
         /* Mapping of compressed mref indices to indices. */
         const std::vector<ChrIndex> _compressedMrefIndexToIndex;
 
+        inline static bool isValid(ChrIndex index);
+
+        inline static void assertValid(ChrIndex index);
+
+        inline static bool isValid(CompressedMrefIndex index);
+
+        inline static void assertValid(CompressedMrefIndex index);
+
       public:
 
         static const std::string assemblyName;

@@ -223,13 +223,13 @@ namespace sophia {
 
     void
     Alignment::mappingQualityCheck() {
-        if (samTabPositions[4] - samTabPositions[3] - 1) {
-            throw_with_trace(std::logic_error("Inconsistent values in samTabPositions"));
-        }
         int mapq = boost::lexical_cast<int>(
             samLine.substr(samTabPositions[3] + 1,
                            (unsigned int) samTabPositions[4] - samTabPositions[3] - 1));
-        if (mapq != 0) {
+        if (mapq == 0) {
+            nullMapq = true;
+            // readType = 0; lowMapq = true; see constructor
+        } else {
             nullMapq = false;
 
             if (mapq < 13) {
@@ -535,8 +535,6 @@ namespace sophia {
                      1 + (long) samTabPositions[9] +
                      ((long) cigarChunk.startPosOnRead - (long) cigarChunk.indelAdjustment) +
                      (long) cigarChunk.length);
-                     // This worked without the cast before. All types are chosen to unspecific as
-                     // signed int, although unsigned int would be more logical.
             fullMedianQuality(startCit, endCit, overhangPerBaseQuality);
         } else {
             string::const_reverse_iterator startCrit{
@@ -737,11 +735,11 @@ namespace sophia {
         string res{};
         res.reserve((unsigned long) chosenBp->overhangLength + 9);
         if (chosenBp->bpEncounteredM) {
-            res.append("|").append(samLine.substr((long unsigned) chosenBp->overhangStartIndex,
-                                                  (long unsigned) chosenBp->overhangLength));
+            res.append("|").append(samLine.substr((unsigned long) chosenBp->overhangStartIndex,
+                                                  (unsigned long) chosenBp->overhangLength));
         } else {
-            res.append(samLine.substr((long unsigned) chosenBp->overhangStartIndex,
-                                      (long unsigned) chosenBp->overhangLength))
+            res.append(samLine.substr((unsigned long) chosenBp->overhangStartIndex,
+                                      (unsigned long) chosenBp->overhangLength))
                 .append("|");
         }
         res.append("(")
@@ -755,7 +753,7 @@ namespace sophia {
         auto fullSizesTotal = 0.0;
         auto maskedIntervalsTotal = 0.0;
         vector<int> overhang;
-        for (long unsigned i = 0; i < (long unsigned) chosenBp->overhangLength; ++i) {
+        for (unsigned long i = 0; i < (unsigned long) chosenBp->overhangLength; ++i) {
             switch (samLine[(unsigned long) (chosenBp->overhangStartIndex) + i]) {
             case 'A':
                 overhang.push_back(0);
