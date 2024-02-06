@@ -64,6 +64,36 @@ namespace sophia {
 
         inline static void assertValid(CompressedMrefIndex index);
 
+        // The following static methods are used for checks during construction, but also
+        // to implement the public interface.
+        
+        /** chr1-chr22, GL00+ */
+        inline static bool _isAutosome(ChrIndex index);
+
+        /** chrX, Y, ... */
+        inline static bool _isGonosome(ChrIndex index);
+
+        /** phix index. */
+        inline static bool _isTechnical(ChrIndex index);
+
+        /** NC_007605. */
+        inline static bool _isVirus(ChrIndex index);
+
+        /** Mitochondrial chromosome index. */
+        inline static bool _isExtrachromosomal(ChrIndex index);
+
+        /** Decoy sequence index. */
+        inline static bool _isDecoy(ChrIndex index);
+
+        /** GL00.+ */
+        inline static bool _isUnassigned(ChrIndex index);
+
+        /** none */
+        inline static bool _isALT(ChrIndex index);
+
+        /** none */
+        inline static bool _isHLA(ChrIndex index);
+
       public:
 
         static const std::string assemblyName;

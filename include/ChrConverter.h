@@ -51,7 +51,8 @@ namespace sophia {
         /** Number of chromosomes. */
         virtual ChrIndex nChromosomes() const = 0;
 
-        /** Map an index position to a chromosome name. */
+        /** Map an index position to a chromosome name. Throws illegal_argument error, if the
+            the index is not valid. */
         virtual ChrName indexToChrName(ChrIndex index) const = 0;
 
         /** Map a chromosome name to an index position. */

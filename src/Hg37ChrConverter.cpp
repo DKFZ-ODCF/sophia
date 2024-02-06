@@ -353,7 +353,17 @@ namespace sophia {
     const std::string Hg37ChrConverter::assemblyName = "hg37";
 
     bool Hg37ChrConverter::isValid(ChrIndex index) {
-        return index != hg37::INVALID && index != hg37::ZERO;
+        return index != hg37::INVALID && index != hg37::ZERO && (
+            _isAutosome(index) ||
+            _isGonosome(index) ||
+            _isTechnical(index) ||
+            _isVirus(index) ||
+            _isExtrachromosomal(index) ||
+            _isDecoy(index) ||
+            _isUnassigned(index) /* ||
+            _isHLA(index) ||
+            _isALT(index) */
+        );
     }
 
     void Hg37ChrConverter::assertValid(ChrIndex index) {
@@ -437,74 +447,105 @@ namespace sophia {
     }
 
     /** chr1-chr22, ... */
-    bool Hg37ChrConverter::isAutosome(ChrIndex index) const {
+    bool Hg37ChrConverter::_isAutosome(ChrIndex index) {
         assertValid(index);
         return index <= hg37::maxAutosomeIndex;
     }
+    bool Hg37ChrConverter::isAutosome(ChrIndex index) const {
+        return _isAutosome(index);
+    }
 
     /** chrX, chrY */
-    bool Hg37ChrConverter::isGonosome(ChrIndex index) const {
+    bool Hg37ChrConverter::_isGonosome(ChrIndex index) {
         assertValid(index);
         return index == hg37::xIndex ||
                index == hg37::yIndex;
     }
+    bool Hg37ChrConverter::isGonosome(ChrIndex index) const {
+        return _isGonosome(index);
+    }
 
 
     /** phix index. */
-    bool Hg37ChrConverter::isTechnical(ChrIndex index) const {
+    bool Hg37ChrConverter::_isTechnical(ChrIndex index) {
         assertValid(index);
         return index == hg37::phixIndex;
     }
+    bool Hg37ChrConverter::isTechnical(ChrIndex index) const {
+        return _isTechnical(index);
+    }
 
     /** NC_007605. */
-    bool Hg37ChrConverter::isVirus(ChrIndex index) const {
+    bool Hg37ChrConverter::_isVirus(ChrIndex index) {
         assertValid(index);
         return index == hg37::virusIndex;
     }
+    bool Hg37ChrConverter::isVirus(ChrIndex index) const {
+        return _isVirus(index);
+    }
 
     /** Mitochondrial chromosome index. */
-    bool Hg37ChrConverter::isExtrachromosomal(ChrIndex index) const {
+    bool Hg37ChrConverter::_isExtrachromosomal(ChrIndex index) {
         assertValid(index);
         return index == hg37::mtIndex;
     }
+    bool Hg37ChrConverter::isExtrachromosomal(ChrIndex index) const {
+        return _isExtrachromosomal(index);
+    }
 
     /** Decoy sequence index. */
-    bool Hg37ChrConverter::isDecoy(ChrIndex index) const {
+    bool Hg37ChrConverter::_isDecoy(ChrIndex index) {
         assertValid(index);
         return index == hg37::decoyIndex;
     }
+    bool Hg37ChrConverter::isDecoy(ChrIndex index) const {
+        return _isDecoy(index);
+    }
 
-    bool Hg37ChrConverter::isUnassigned(ChrIndex index) const {
+    bool Hg37ChrConverter::_isUnassigned(ChrIndex index) {
         assertValid(index);
         return index >= hg37::minUnassignedIndex &&
                index <= hg37::maxUnassignedIndex;
     }
+    bool Hg37ChrConverter::isUnassigned(ChrIndex index) const {
+        return _isUnassigned(index);
+    }
 
+    bool Hg37ChrConverter::_isALT(ChrIndex index [[gnu::unused]]) {
+        assertValid(index);
+        return false;
+    }
     bool Hg37ChrConverter::isALT(ChrIndex index [[gnu::unused]]) const {
-        assertValid(index);
-        return false;
+        return _isALT(index);
     }
 
-    bool Hg37ChrConverter::isHLA(ChrIndex index [[gnu::unused]]) const {
+    bool Hg37ChrConverter::_isHLA(ChrIndex index [[gnu::unused]]) {
         assertValid(index);
         return false;
     }
+    bool Hg37ChrConverter::isHLA(ChrIndex index [[gnu::unused]]) const {
+        return _isHLA(index);
+    }
+
 
     /* Compressed Master Ref chromosomes are 1-22, X, Y, GL* (unassigned), hs37d4 (decoys), and
      * NC_007605 (virus). Excluded are MT and phix. */
     bool Hg37ChrConverter::isCompressedMref(ChrIndex index) const {
+        assertValid(index);
         return isValid(_indexToCompressedMrefIndex.at(index));
     }
 
     /** Map an compressed mref index to a chromosome name. */
     ChrName
     Hg37ChrConverter::compressedMrefIndexToChrName(CompressedMrefIndex index) const {
+        assertValid(index);
         return _compressedMrefIndexToChrName.at((unsigned int) index);
     }
 
     /** Map an index from the global index-space to the compressed mref index-space. */
     CompressedMrefIndex
     Hg37ChrConverter::indexToCompressedMrefIndex(ChrIndex index) const {
+        assertValid(index);
         CompressedMrefIndex result = _indexToCompressedMrefIndex.at((unsigned int) index);
         assertValid(result);
         return result;
