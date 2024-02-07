@@ -52,7 +52,7 @@ namespace sophia {
 
       private:
         // Note that all methods and fields are private.
-        // The MasterRefProcessor is does all the work during construction time.
+        // The MasterRefProcessor does all the work during construction time.
 
         unsigned long long processFile(const string &gzPath, short fileIndex);
         bool processBp(BreakpointReduced &bp, ChrIndex chrIndex, short fileIndex);

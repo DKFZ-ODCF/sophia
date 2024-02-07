@@ -57,9 +57,7 @@ namespace sophia {
 
         // Initialize the mrefDb with default values. Only for compressed Mref indices.
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        for (CompressedMrefIndex i = 0;
-             i < chrConverter.nChromosomesCompressedMref();
-             ++i) {
+        for (CompressedMrefIndex i = 0; i < chrConverter.nChromosomesCompressedMref(); ++i) {
             // NOTE: This will allocate a lot of memory as the total size of the vectors is the
             //       genome size (3.7GB for hg19).
             mrefDb.emplace_back(chrConverter.chrSizeCompressedMref(i) + 1, MrefEntry{});
@@ -234,10 +232,14 @@ namespace sophia {
                                   short fileIndex) {
         MrefEntry tmpMrefEntry{};
         tmpMrefEntry.addEntry(bp, fileIndex);
-        auto validityInit = mrefDb[static_cast<unsigned int>(chrIndex)][static_cast<unsigned long>(tmpMrefEntry.getPos())].getValidityScore();
-        mrefDb[static_cast<unsigned int>(chrIndex)][static_cast<unsigned long>(tmpMrefEntry.getPos())].mergeMrefEntries(tmpMrefEntry);
-        auto validityFinal =
-            mrefDb[static_cast<unsigned int>(chrIndex)][static_cast<unsigned long>(tmpMrefEntry.getPos())].getValidityScore();
+
+        unsigned long pos = static_cast<unsigned long>(tmpMrefEntry.getPos());
+        unsigned int idx = static_cast<unsigned int>(chrIndex);
+
+        auto validityInit = mrefDb[idx][pos].getValidityScore();
+        mrefDb[idx][pos].mergeMrefEntries(tmpMrefEntry);
+        auto validityFinal = mrefDb[idx][pos].getValidityScore();
+
         return validityFinal > validityInit;
     }
 
