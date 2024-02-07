@@ -389,23 +389,36 @@ namespace sophia {
     }
 
     std::vector<ChrIndex> Hg37ChrConverter::buildCompressedMrefIndexToIndex(
+        unsigned int nCompressed,
         const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex) {
 
         // This is now the only place, where invalid values are assigned, ...
-        std::vector<ChrIndex> result {static_cast<unsigned int>(indexToCompressedMrefIndex.size()), hg37::INVALID};
-        for (ChrIndex globalIndex = 0; globalIndex < ChrIndex(result.size()); ++globalIndex) {
+        std::vector<ChrIndex> result {nCompressed, hg37::INVALID};
+        for (ChrIndex globalIndex = 0;
+             globalIndex < ChrIndex(indexToCompressedMrefIndex.size());
+             ++globalIndex) {
 
             CompressedMrefIndex compressedMrefIndex =
                 indexToCompressedMrefIndex[static_cast<unsigned int>(globalIndex)];
 
             if (isValid(compressedMrefIndex)) {
-                result[static_cast<unsigned int>(compressedMrefIndex)] = globalIndex;
+                unsigned int cIdx = static_cast<unsigned int>(compressedMrefIndex);
+                if (isValid(result[cIdx])) {
+                    throw_with_trace(std::runtime_error(
+                        "Compressed mref index " + std::to_string(compressedMrefIndex) +
+                        " is already assigned to " +
+                        std::to_string(result[cIdx]) +
+                        " and cannot be assigned to " + std::to_string(globalIndex)));
+                }
+                result[cIdx] = globalIndex;
             }
         }
-        // ... but this post-condition checks that no invalid values remain.
-        for (auto it = result.cbegin(); it < result.cend(); ++it) {
-                assertValid(*it);
+
+        // ... but before we continue, we ensure there are no gaps.
+        for (auto it = result.cbegin(); it != result.cend(); ++it) {
+            assertValid(*it);
         }
+
         return result;
     }
 
@@ -417,7 +430,9 @@ namespace sophia {
                     _compressedMrefIndexToChrName {compressedMrefIndexToChrName},
                     _chrSizesCompressedMref {chrSizesCompressedMref},
                     _indexToCompressedMrefIndex {indexToCompressedMrefIndex},
-                    _compressedMrefIndexToIndex {buildCompressedMrefIndexToIndex(indexToCompressedMrefIndex)}{
+                    _compressedMrefIndexToIndex {buildCompressedMrefIndexToIndex(
+                        compressedMrefIndexToChrName.size(),
+                        indexToCompressedMrefIndex)}{
             if (indexToChrName.size() != indexToCompressedMrefIndex.size())
                 throw_with_trace(std::invalid_argument(
                     "indexToChrName and indexToCompressedMrefIndex must have the same size"));
@@ -437,7 +452,7 @@ namespace sophia {
     }
 
     CompressedMrefIndex Hg37ChrConverter::nChromosomesCompressedMref() const {
-        return CompressedMrefIndex(_indexToCompressedMrefIndex.size());
+        return CompressedMrefIndex(_compressedMrefIndexToChrName.size());
     }
 
     /** Map an index position to a chromosome name. */

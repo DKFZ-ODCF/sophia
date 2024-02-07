@@ -33,6 +33,7 @@ namespace sophia {
       protected:
 
         static std::vector<ChrIndex> buildCompressedMrefIndexToIndex(
+            unsigned int nChromosomes,
             const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex);
 
         /** The constructor does additional checks of the dimensions of the input vectors. */
@@ -56,13 +57,13 @@ namespace sophia {
         /* Mapping of compressed mref indices to indices. */
         const std::vector<ChrIndex> _compressedMrefIndexToIndex;
 
-        inline static bool isValid(ChrIndex index);
+        static bool isValid(ChrIndex index);
 
-        inline static void assertValid(ChrIndex index);
+        static void assertValid(ChrIndex index);
 
-        inline static bool isValid(CompressedMrefIndex index);
+        static bool isValid(CompressedMrefIndex index);
 
-        inline static void assertValid(CompressedMrefIndex index);
+        static void assertValid(CompressedMrefIndex index);
 
         // The following static methods are used for checks during construction, but also
         // to implement the public interface.
