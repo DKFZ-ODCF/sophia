@@ -37,6 +37,13 @@ namespace sophia {
 
     using namespace std;
 
+    /**
+     * @brief The SuppAlignmentAnno class
+     * This is similar to SuppAlignment.
+     *
+     * Note that this class is under size constraints, as it will be instantiated via MrefEntry
+     * once for each genome position in MasterRefEntry.
+     **/
     class SuppAlignmentAnno {
 
       public:

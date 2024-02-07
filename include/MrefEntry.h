@@ -34,8 +34,16 @@ namespace sophia {
 
     using namespace std;
 
+    /**
+     * @brief MrefEntry class is a container for the mref entries
+     * It contains the position, the file indices, the artifact ratios and the support alignments.
+     * This class should be memory optimized, as it will be instantiated in the billions, once
+     * for every chromosome position by the MasterRefProcessor.
+     */
     class MrefEntry {
       public:
+
+        using ValidityScore = signed char;
 
         static unsigned int NUM_PIDS;
 
@@ -62,7 +70,7 @@ namespace sophia {
 
         const vector<unsigned short> &getFileIndices() const { return fileIndices; }
 
-        short getValidityScore() const { return validity; }
+        ValidityScore getValidityScore() const { return validity; }
 
         void removeMarkedFuzzies() {
             suppAlignments.erase(remove_if(suppAlignments.begin(),
@@ -110,7 +118,7 @@ namespace sophia {
 
         void finalizeFileIndices();
 
-        short validity;   // -1 nothing, 0 only sa, 1 sa and support
+        ValidityScore validity;   // -1 nothing, 0 only sa, 1 sa and support
 
         ChrSize pos;
 

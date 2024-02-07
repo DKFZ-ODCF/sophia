@@ -60,6 +60,10 @@ namespace sophia {
         const int NUM_PIDS;
         const ChrSize DEFAULT_READ_LENGTH;
         unique_ptr<ofstream> mergedBpsOutput;
+
+        /** This will be a huge data structure, that contains one MrefEntry per position in the
+         *  master reference chromosomes.
+         **/
         vector<vector<MrefEntry>> mrefDb;
     };
 
