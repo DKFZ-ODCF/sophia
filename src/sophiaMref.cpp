@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 	}
 	std::ifstream gzInFilesHandle { gzInFilesList };
 	std::vector<std::string> gzListIn;
-	for (std::string line; error_terminating_getline(gzInFilesHandle, line);) {
+	for (std::string line; sophia::error_terminating_getline(gzInFilesHandle, line);) {
 		gzListIn.push_back(line);
 	}
 	std::string version { };

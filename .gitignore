@@ -1,6 +1,9 @@
 .idea/
 *.iml
 *.o
-Release_sophia/sophia
-Release_sophiaAnnotate/sophiaAnnotate
+sophia
+sophiaAnnotate
+sophiaMref
+testRunner
+boost/
 include/strtk.hpp
