@@ -47,8 +47,7 @@ A call to `sophia` may look like this:
 
 ```bash
 samtools view -F 0x600 -f 0x001 /yourPositionSorted.bam \
-  | sophia --assemblyname hg38 \
-           --medianisizes 323.0 \
+  | sophia --medianisizes 323.0 \
            --stdisizepercentage 21.0 \
            --properpairpercentage 94.32 \
            --defaultreadlength 101 \
@@ -66,7 +65,6 @@ In extreme cases (like with chromothripsis) the runtime can jump to 120 hours, b
 
 | Parameter                | Description                                                                                                                                                                                      |
 |--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--assemblyname`         | The name of the assembly. See [Reference Genomes / Assemblies](#reference-genomes--assemblies) for details.                                                                                      |
 | `--mergedisizes`         | A file with just the median insert size in line 1 and just the standard deviation in line 3. See [Insert Size Distribution](#insert-size-distribution).                                          | 
 | `--medianisize`          | The median insert size of the library. See [Insert Size Distribution](#insert-size-distribution).                                                                                                |
 | `--stdisizepercentage`   | The standard deviation of the insert size of the library **in percent**. See [Insert Size Distribution](#insert-size-distribution).                                                              |
