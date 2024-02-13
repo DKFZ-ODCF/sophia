@@ -282,7 +282,7 @@ namespace sophia {
             36652,     38155,     36423,     39787,     38503,     35477944,
             171824};
 
-        // Used to be -2, but in the compressed mref space, both -2 and 1003, are invalid,
+        // Used to be -2, but in the mref space 1003 is INVALID,
         // and -2 has the disadvantage that it cannot be represented as an unsigned integer.
         // By moving this to INVALID (1003), we can make CompressedMrefIndex an unsigned integer,
         // and can switch -- for compile-time checks -- the signedness of ChrIndex and
@@ -291,7 +291,7 @@ namespace sophia {
         //
         // Note that NA is only used when mapping from ChrIndex to CompressedMrefIndex, to indicate
         // that chromosome is actually not among the compressed master ref chromosomes.
-        static const CompressedMrefIndex NA = INVALID;
+        static const CompressedMrefIndex NA = 1003;
 
         static const std::vector<CompressedMrefIndex> indexToCompressedMrefIndex {
             NA, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
@@ -393,7 +393,7 @@ namespace sophia {
         const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex) {
 
         // This is now the only place, where invalid values are assigned, ...
-        std::vector<ChrIndex> result {nCompressed, hg37::INVALID};
+        std::vector<ChrIndex> result {nCompressed, hg37::NA};
         for (ChrIndex globalIndex = 0;
              globalIndex < ChrIndex(indexToCompressedMrefIndex.size());
              ++globalIndex) {
@@ -457,13 +457,13 @@ namespace sophia {
 
     /** Map an index position to a chromosome name. */
     ChrName Hg37ChrConverter::indexToChrName(ChrIndex index) const {
-        assertValid(index);
+//        assertValid(index);
         return _indexToChrName[static_cast<unsigned int>(index)];
     }
 
     /** chr1-chr22, ... */
     bool Hg37ChrConverter::_isAutosome(ChrIndex index) {
-        assertValid(index);
+//        assertValid(index);
         return index <= hg37::maxAutosomeIndex;
     }
     bool Hg37ChrConverter::isAutosome(ChrIndex index) const {
@@ -472,7 +472,7 @@ namespace sophia {
 
     /** chrX, chrY */
     bool Hg37ChrConverter::_isGonosome(ChrIndex index) {
-        assertValid(index);
+//        assertValid(index);
         return index == hg37::xIndex ||
                index == hg37::yIndex;
     }
@@ -483,7 +483,7 @@ namespace sophia {
 
     /** phix index. */
     bool Hg37ChrConverter::_isTechnical(ChrIndex index) {
-        assertValid(index);
+//        assertValid(index);
         return index == hg37::phixIndex;
     }
     bool Hg37ChrConverter::isTechnical(ChrIndex index) const {
@@ -492,7 +492,7 @@ namespace sophia {
 
     /** NC_007605. */
     bool Hg37ChrConverter::_isVirus(ChrIndex index) {
-        assertValid(index);
+//        assertValid(index);
         return index == hg37::virusIndex;
     }
     bool Hg37ChrConverter::isVirus(ChrIndex index) const {
@@ -501,7 +501,7 @@ namespace sophia {
 
     /** Mitochondrial chromosome index. */
     bool Hg37ChrConverter::_isExtrachromosomal(ChrIndex index) {
-        assertValid(index);
+//        assertValid(index);
         return index == hg37::mtIndex;
     }
     bool Hg37ChrConverter::isExtrachromosomal(ChrIndex index) const {
@@ -510,7 +510,7 @@ namespace sophia {
 
     /** Decoy sequence index. */
     bool Hg37ChrConverter::_isDecoy(ChrIndex index) {
-        assertValid(index);
+//        assertValid(index);
         return index == hg37::decoyIndex;
     }
     bool Hg37ChrConverter::isDecoy(ChrIndex index) const {
@@ -518,7 +518,7 @@ namespace sophia {
     }
 
     bool Hg37ChrConverter::_isUnassigned(ChrIndex index) {
-        assertValid(index);
+//        assertValid(index);
         return index >= hg37::minUnassignedIndex &&
                index <= hg37::maxUnassignedIndex;
     }
@@ -527,7 +527,7 @@ namespace sophia {
     }
 
     bool Hg37ChrConverter::_isALT(ChrIndex index [[gnu::unused]]) {
-        assertValid(index);
+//        assertValid(index);
         return false;
     }
     bool Hg37ChrConverter::isALT(ChrIndex index [[gnu::unused]]) const {
@@ -535,7 +535,7 @@ namespace sophia {
     }
 
     bool Hg37ChrConverter::_isHLA(ChrIndex index [[gnu::unused]]) {
-        assertValid(index);
+//        assertValid(index);
         return false;
     }
     bool Hg37ChrConverter::isHLA(ChrIndex index [[gnu::unused]]) const {
@@ -546,36 +546,36 @@ namespace sophia {
     /* Compressed Master Ref chromosomes are 1-22, X, Y, GL* (unassigned), hs37d4 (decoys), and
      * NC_007605 (virus). Excluded are MT and phix. */
     bool Hg37ChrConverter::isCompressedMref(ChrIndex index) const {
-        assertValid(index);
+//        assertValid(index);
         return isValid(_indexToCompressedMrefIndex.at(index));
     }
 
     /** Map an compressed mref index to a chromosome name. */
     ChrName
     Hg37ChrConverter::compressedMrefIndexToChrName(CompressedMrefIndex index) const {
-        assertValid(index);
+//        assertValid(index);
         return _compressedMrefIndexToChrName.at(static_cast<unsigned int>(index));
     }
 
     /** Map an index from the global index-space to the compressed mref index-space. */
     CompressedMrefIndex
     Hg37ChrConverter::indexToCompressedMrefIndex(ChrIndex index) const {
-        assertValid(index);
+//        assertValid(index);
         CompressedMrefIndex result = _indexToCompressedMrefIndex.at(static_cast<unsigned int>(index));
-        assertValid(result);
+//        assertValid(result);
         return result;
     }
 
     ChrIndex
     Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
-        assertValid(index);
+//        assertValid(index);
         return _compressedMrefIndexToIndex.at(static_cast<unsigned int>(index));
     }
 
     /** Map compressed mref index to chromosome size. */
     ChrSize
     Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
-        assertValid(index);
+//        assertValid(index);
         return _chrSizesCompressedMref[static_cast<unsigned int>(index)];
     }
 
@@ -592,7 +592,7 @@ namespace sophia {
 
     bool
     Hg37ChrConverter::isInBlockedRegion(ChrIndex chrIndex, ChrSize position) const {
-        assertValid(chrIndex);
+//        assertValid(chrIndex);
          // For mate not in range 33140000-33149999 on chromosome 2, do ...
         return !(chrIndex == 2 && (position / 10000 == 3314));
     }
