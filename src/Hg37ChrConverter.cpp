@@ -388,7 +388,7 @@ namespace sophia {
     #endif
     }
 
-    std::vector<ChrIndex> Hg37ChrConverter::buildCompressedMrefIndexToIndex(
+    std::vector<ChrIndex> Hg37ChrConverter::_buildCompressedMrefIndexToIndex(
         CompressedMrefIndex nCompressed,
         const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex) {
 
@@ -431,7 +431,7 @@ namespace sophia {
                     _compressedMrefIndexToChrName {compressedMrefIndexToChrName},
                     _chrSizesCompressedMref {chrSizesCompressedMref},
                     _indexToCompressedMrefIndex {indexToCompressedMrefIndex},
-                    _compressedMrefIndexToIndex {buildCompressedMrefIndexToIndex(
+                    _compressedMrefIndexToIndex {_buildCompressedMrefIndexToIndex(
                         compressedMrefIndexToChrName.size(),
                         indexToCompressedMrefIndex)}{
             if (indexToChrName.size() != indexToCompressedMrefIndex.size())

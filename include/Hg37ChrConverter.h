@@ -32,10 +32,6 @@ namespace sophia {
     class Hg37ChrConverter: public ChrConverter {
       protected:
 
-        static std::vector<ChrIndex> buildCompressedMrefIndexToIndex(
-            CompressedMrefIndex nChromosomes,
-            const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex);
-
         /** The constructor does additional checks of the dimensions of the input vectors. */
         Hg37ChrConverter(const std::vector<std::string>& indexToChrName,
                          const std::vector<std::string>& indexToChrCompressedMref,
@@ -98,6 +94,10 @@ namespace sophia {
       public:
 
         static const std::string assemblyName;
+
+        static std::vector<ChrIndex> _buildCompressedMrefIndexToIndex(
+            CompressedMrefIndex nChromosomes,
+            const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex);
 
         Hg37ChrConverter();
 
