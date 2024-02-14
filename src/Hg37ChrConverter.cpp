@@ -389,11 +389,11 @@ namespace sophia {
     }
 
     std::vector<ChrIndex> Hg37ChrConverter::buildCompressedMrefIndexToIndex(
-        unsigned int nCompressed,
+        CompressedMrefIndex nCompressed,
         const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex) {
 
         // This is now the only place, where invalid values are assigned, ...
-        std::vector<ChrIndex> result {nCompressed, hg37::NA};
+        std::vector<ChrIndex> result (static_cast<unsigned int>(nCompressed), hg37::NA);
         for (ChrIndex globalIndex = 0;
              globalIndex < ChrIndex(indexToCompressedMrefIndex.size());
              ++globalIndex) {
@@ -414,7 +414,8 @@ namespace sophia {
             }
         }
 
-        // ... but before we continue, we ensure there are no gaps.
+        // ... but before we continue, we ensure there are no gaps. There must be an index
+        // in the global index space for all compressed mref indices/chromosomes.
         for (auto it = result.cbegin(); it != result.cend(); ++it) {
             assertValid(*it);
         }

@@ -33,7 +33,7 @@ namespace sophia {
       protected:
 
         static std::vector<ChrIndex> buildCompressedMrefIndexToIndex(
-            unsigned int nChromosomes,
+            CompressedMrefIndex nChromosomes,
             const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex);
 
         /** The constructor does additional checks of the dimensions of the input vectors. */
