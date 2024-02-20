@@ -59,7 +59,7 @@ namespace sophia {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         for (CompressedMrefIndex i = 0; i < chrConverter.nChromosomesCompressedMref(); ++i) {
             // NOTE: This will allocate a lot of memory as the total size of the vectors is the
-            //       genome size (3.7GB for hg19).
+            //       genome size (3.7 giga-bases for hg19).
             mrefDb.emplace_back(chrConverter.chrSizeCompressedMref(i) + 1, MrefEntry{});
         }
 
