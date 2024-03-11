@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
         SuppAlignmentAnno::DEFAULT_READ_LENGTH = defaultReadLength;
         MrefEntry::NUM_PIDS = gzListIn.size();
 
-        cerr << "Running sophiaMref ..." << endl;
+        cerr << "Running sophiaMref on " << MrefEntry::NUM_PIDS << " PIDs ..." << endl;
         MasterRefProcessor mRefProcessor { gzListIn, outputRoot, version, defaultReadLength };
 
         return 0;

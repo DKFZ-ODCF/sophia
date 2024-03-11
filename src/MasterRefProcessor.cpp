@@ -55,11 +55,27 @@ namespace sophia {
           DEFAULT_READ_LENGTH{ defaultReadLengthIn },
           mrefDb {} {
 
-        // Initialize the mrefDb with default values. Only for compressed Mref indices.
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+
+        // Preallocate the full memory in one go. Otherwise, the vector will be repeatedly
+        // copied and reallocated, which is slow. Also the finally reserved size will be
+        // larger than necessary.
+        // NOTE: This will allocate a lot of memory as the total size of the vectors is the
+        //       genome size (3.7 giga-bases for hg19).
+        std::vector<std::vector<sophia::MrefEntry>>::size_type totalSize = 0;
         for (CompressedMrefIndex i = 0; i < chrConverter.nChromosomesCompressedMref(); ++i) {
-            // NOTE: This will allocate a lot of memory as the total size of the vectors is the
-            //       genome size (3.7 giga-bases for hg19).
+            totalSize += static_cast<std::vector<std::vector<sophia::MrefEntry>>::size_type>(
+                chrConverter.chrSizeCompressedMref(i) + 1);
+        }
+        cerr << "Allocating " << (totalSize / 1024 / 1024) << " MB for mrefDb ..." << endl;
+        mrefDb.reserve(totalSize);
+
+        // Initialize the mrefDb with default values.
+        for (CompressedMrefIndex i = 0; i < chrConverter.nChromosomesCompressedMref(); ++i) {
+            // It is unclear, why here +1 is added to the chromosomes sizes, in particular, as
+            // the original chromosome size data already had sized incremented by 1 summing up
+            // to total genome size here of N*2 additional positions, with N being the number of
+            // compressed master-ref chromosomes. This is just kept for all changes :|
             mrefDb.emplace_back(chrConverter.chrSizeCompressedMref(i) + 1, MrefEntry{});
         }
 
@@ -119,7 +135,6 @@ namespace sophia {
         for (const auto &gzFile : filesIn) {
             chrono::time_point<chrono::steady_clock> start =
                 chrono::steady_clock::now();
-
             // newBreakpoints contains only information for chromosomes from the compressedMref set.
             auto newBreakpoints = processFile(gzFile, fileIndex);
             chrono::time_point<chrono::steady_clock> end = chrono::steady_clock::now();
