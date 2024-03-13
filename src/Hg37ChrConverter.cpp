@@ -302,6 +302,7 @@ namespace sophia {
         // that chromosome is actually not among the compressed master ref chromosomes.
         static const CompressedMrefIndex NA = 1003;
 
+        // This used to be `indexConverter`.
         static const std::vector<CompressedMrefIndex> indexToCompressedMrefIndex {
             NA, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
             18, 19, 20, 21, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,
@@ -369,7 +370,7 @@ namespace sophia {
             _isVirus(index) ||
             _isExtrachromosomal(index) ||
             _isDecoy(index) ||
-            _isUnassigned(index) /* ||
+            _isUnassigned(index) /* ||  // There are no HLA and ALT contigs in hg37. The ranges are empty.
             _isHLA(index) ||
             _isALT(index) */
         );
@@ -543,7 +544,7 @@ namespace sophia {
 
 
     /* Compressed Master Ref chromosomes are 1-22, X, Y, GL* (unassigned), hs37d4 (decoys), and
-     * NC_007605 (virus). Excluded are MT and phix. */
+     * NC_007605 (virus). Excluded are MT and phix. Used to be index <= 1000 (virus). */
     bool Hg37ChrConverter::isCompressedMref(ChrIndex index) const {
 //        assertValid(index);
         return isValid(_indexToCompressedMrefIndex.at(index));
@@ -615,10 +616,10 @@ namespace sophia {
          * p -> 1002
 
        NOTE: Most of the matches are eager matches, which means the algorithm does not check for
-             whether the end iterator or the stopChar is actually reached! The actual stopChar is
-             not actually checked in these cases.
+             whether the end iterator or the stopChar is actually reached or whether it follows
+             any expected pattern! The actual stopChar is not actually checked in these cases.
 
-       All identifiers not matching any of these rules, with throw an exception (domain_error).
+       All identifiers not matching any of these rules will throw an exception (domain_error).
 
        IMPORTANT: The hg37 parser here ignores the stopCharExt, but instead remains with the legacy
                   behavior.

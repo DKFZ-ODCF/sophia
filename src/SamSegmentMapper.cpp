@@ -50,6 +50,8 @@ namespace sophia {
         while (true) {
             auto alignment = make_shared<Alignment>();
 
+            // Used to be `alignment->getChrIndex() > 1000`, i.e. excluding MT and phiX and INVALID.
+            // This is the same as `!chrConverter.isCompressedMref(alignment->getChrIndex())`.
             if (!chrConverter.isCompressedMref(alignment->getChrIndex())) {
                 continue;
             }

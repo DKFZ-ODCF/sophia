@@ -105,6 +105,7 @@ namespace sophia {
         }
     }
 
+    // TODO Check for hard-coded cutoffs. Centralize these in GlobalAppConfig.
     bool
     Breakpoint::finalizeBreakpoint(
         const deque<MateInfo> &discordantAlignmentsPool,
@@ -1193,7 +1194,7 @@ namespace sophia {
                            overhangsStart = columnSeparatorPos[6] + 1;
 //                           overhangsEnd = columnSeparatorPos[7],
 
-        // Column 1: chrIndex. 
+        // Column 1: chrIndex.
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         try {
             result.chrIndex = chrConverter.parseChrAndReturnIndex(bpIn.cbegin(), bpIn.cend(), '\t');
@@ -1212,71 +1213,76 @@ namespace sophia {
 
         // Column 3: end position (not parsed)
 
-        // Now parse column 4, which contain a list of counts for different categories in the order
-        //
-        // 0: pairedBreaksSoft
-        // 1: pairedBreaksHard
-        // 2: mateSupport
-        // 3: unpairedBreaksSoft
-        // 4: unpairedBreaksHard
-        // 5: breaksShortIndel
-        // 6: normalSpans
-        // 7: lowQualSpansSoft
-        // 8: lowQualSpansHard
-        // 9: lowQualBreaksSoft
-        // 10: lowQualBreaksHard
-        // 11: repetitiveOverhangBreaks
-        auto mode = 0;
+        // Now parse column 4, which contain a list of counts for different categories in the order:
+        enum Mode {
+            pairedBreaksSoft = 0,
+            pairedBreaksHard = 1,
+            mateSupport = 2,
+            unpairedBreaksSoft = 3,
+            unpairedBreaksHard = 4,
+            breaksShortIndel = 5,
+            normalSpans = 6,
+            lowQualSpansSoft = 7,
+            lowQualSpansHard = 8,
+            lowQualBreaksSoft = 9,
+            lowQualBreaksHard = 10,
+            repetitiveOverhangBreaks = 11
+        };
+        auto next = [](Mode& mode) {
+            return static_cast<Mode>(static_cast<int>(mode) + 1);
+        };
+
+        Mode mode = Mode::pairedBreaksSoft;
         for (auto i = typeCountsStart; i < typeCountsEnd; ++i) {
             if (bpIn[i] == ',') {
-                ++mode;
+                mode = next(mode);
             } else {
                 switch (mode) {
-                case 0:
+                case Mode::pairedBreaksSoft:
                     result.pairedBreaksSoft =
                         10 * result.pairedBreaksSoft + (bpIn[i] - '0');
                     break;
-                case 1:
+                case Mode::pairedBreaksHard:
                     result.pairedBreaksHard =
                         10 * result.pairedBreaksHard + (bpIn[i] - '0');
                     break;
-                case 2:
+                case Mode::mateSupport:
                     result.mateSupport =
                         10 * result.mateSupport + (bpIn[i] - '0');
                     break;
-                case 3:
+                case Mode::unpairedBreaksSoft:
                     result.unpairedBreaksSoft =
                         10 * result.unpairedBreaksSoft + (bpIn[i] - '0');
                     break;
-                case 4:
+                case Mode::unpairedBreaksHard:
                     result.unpairedBreaksHard =
                         10 * result.unpairedBreaksHard + (bpIn[i] - '0');
                     break;
-                case 5:
+                case Mode::breaksShortIndel:
                     result.breaksShortIndel =
                         10 * result.breaksShortIndel + (bpIn[i] - '0');
                     break;
-                case 6:
+                case Mode::normalSpans:
                     result.normalSpans =
                         10 * result.normalSpans + (bpIn[i] - '0');
                     break;
-                case 7:
+                case Mode::lowQualSpansSoft:
                     result.lowQualSpansSoft =
                         10 * result.lowQualSpansSoft + (bpIn[i] - '0');
                     break;
-                case 8:
+                case Mode::lowQualSpansHard:
                     result.lowQualSpansHard =
                         10 * result.lowQualSpansHard + (bpIn[i] - '0');
                     break;
-                case 9:
+                case Mode::lowQualBreaksSoft:
                     result.lowQualBreaksSoft =
                         10 * result.lowQualBreaksSoft + (bpIn[i] - '0');
                     break;
-                case 10:
+                case Mode::lowQualBreaksHard:
                     result.lowQualBreaksHard =
                         10 * result.lowQualBreaksHard + (bpIn[i] - '0');
                     break;
-                case 11:
+                case Mode::repetitiveOverhangBreaks:
                     result.repetitiveOverhangBreaks =
                         10 * result.repetitiveOverhangBreaks + (bpIn[i] - '0');
                     break;
@@ -1287,12 +1293,12 @@ namespace sophia {
         }
 
         // Parse column 5, which contains the left and right coverage.
-        mode = 0;
+        unsigned int side = 0;
         for (auto i = leftRightCovStart; i < leftRightCovEnd; ++i) {
             if (bpIn[i] == ',') {
-                ++mode;
+                ++side;
             } else {
-                switch (mode) {
+                switch (side) {
                 case 0:
                     result.leftCoverage =
                         10 * result.leftCoverage + (bpIn[i] - '0');
@@ -1322,7 +1328,6 @@ namespace sophia {
         if (bpIn[supportStart] == '#') {
             result.missingInfoBp = true;
         } else {
-            //
             if (bpIn[supportStart] != '.') {
                 string saStr{};
                 for (auto i = supportStart; i < supportEnd; ++i) {

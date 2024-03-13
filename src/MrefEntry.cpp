@@ -68,10 +68,21 @@ namespace sophia {
 
         if (breakTotal < 200) {
             const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-            for (auto saPtr : tmpBreakpoint.getSupplementsPtr()) {
+            for (SuppAlignmentAnno *saPtr : tmpBreakpoint.getSupplementsPtr()) {
+                // Original code from bitbucket repository
+                // if (saPtr->isSuspicious()
+                //     || saPtr->isToRemove()
+                //     || (saPtr->getChrIndex() != 1001     // i.e. !mitochondrial
+                //         && ChrConverter::indexConverter[saPtr->getChrIndex()] < 0))  // i.e. !compressedMref
+                // `indexConverter` is now `indexToCompressedMrefIndex` and a mapping from ChrIndex to
+                // CompressedMrefIndex, that contained `-2` values (now `NA` constant) for chromosomes that were not
+                // in the compressed mref set.
+                // Note that the mitochondrial chromosome itself is *not* among the compressed mrefs. So the
+                // condition is somewhat redundant.
                 if (saPtr->isSuspicious()
                     || saPtr->isToRemove()
-                    || chrConverter.isCompressedMref(saPtr->getChrIndex())
+                    || (!chrConverter.isExtrachromosomal(saPtr->getChrIndex())
+                        && !chrConverter.isCompressedMref(saPtr->getChrIndex()))
                     ) {
                     continue;
                 }

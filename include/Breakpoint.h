@@ -33,6 +33,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cmath>
+
 
 namespace sophia {
 
@@ -133,12 +135,13 @@ namespace sophia {
         bool closeToSupp(const SuppAlignment &compIn, ChrDistance fuzziness) const {
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
-                    fuzziness = ChrDistance(2.5 * DEFAULT_READ_LENGTH);  // Truncates to lower integer.
-                    return (ChrDistance(pos) - fuzziness) <=
-                               (ChrDistance(compIn.getExtendedPos()) + fuzziness) &&
-                           (ChrDistance(compIn.getPos()) - fuzziness) <= (ChrDistance(pos) + fuzziness);
+                    fuzziness = ChrDistance(trunc(2.5 * static_cast<int>(DEFAULT_READ_LENGTH)));
+                    return (ChrDistance(static_cast<int>(pos)) - fuzziness) <=
+                               (ChrDistance(static_cast<int>(compIn.getExtendedPos())) + fuzziness) &&
+                           (ChrDistance(static_cast<int>(compIn.getPos())) - fuzziness) <=
+                                (ChrDistance(static_cast<int>(pos)) + fuzziness);
                 } else {
-                    return ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos()))) <= fuzziness;
+                    return ChrDistance(abs(static_cast<int>(pos) - static_cast<int>(compIn.getPos()))) <= fuzziness;
                 }
             } else {
                 return false;
@@ -150,7 +153,7 @@ namespace sophia {
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
                     if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
-                        result = 0;
+                        result = ChrDistance(0);
                     } else {
                         if (pos < compIn.getPos()) {
                             result = ChrDistance(compIn.getPos() - pos);

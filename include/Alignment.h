@@ -207,7 +207,7 @@ namespace sophia {
 
         vector<char> readBreakpointTypes;
 
-        vector<ChrSize> readBreakpointSizes;
+        vector<signed int> readBreakpointSizes;
 
         vector<double> readBreakpointComplexityMaskRatios;
 
