@@ -18,6 +18,7 @@ namespace sophia {
         EXPECT_EQ(Breakpoint::parse(test2, true).getChrIndex(),
                   GlobalAppConfig::getInstance().getChrConverter().chrNameToIndex("chr22"));
 
+        // TODO Add tests to *write/print* the breakpoint in the correct way.
     }
 
 } // namespace sophia

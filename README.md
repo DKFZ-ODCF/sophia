@@ -192,6 +192,7 @@ If you built SOPHIA with dynamic libraries, the some libraries are runtime requi
   * Boost 1.82.0
   * libbacktrace 20220708
   * gtest 1.14.0
+  * gmock 1.14.0
   * rapidcsv 8.0.0
   * strtk 0.6.0
 
