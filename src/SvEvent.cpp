@@ -167,6 +167,8 @@ namespace sophia {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
                               !selectedSa2.isProperPairErrorProne() &&
+                              // Used to be indexConverter[chrIndex] < 23, with no check for whether
+                              // the values was valid (i.e. != -2).
                               chrConverter.isAutosome(chrIndex1) &&
                               chrConverter.isAutosome(chrIndex2);
         auto splitSupportThreshold1 =
@@ -376,6 +378,8 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
+                              // Used to be indexConverter[chrIndex] < 23, with no check for whether
+                              // the values was valid (i.e. != -2).
                               chrConverter.isAutosome(chrIndex1) &&
                               chrConverter.isAutosome(chrIndex2);
         auto splitSupportThreshold =
@@ -591,6 +595,8 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
+                              // Used to be indexConverter[chrIndex] < 23, with no check for whether
+                              // the values was valid (i.e. != -2).
                               chrConverter.isAutosome(chrIndex1) &&
                               chrConverter.isAutosome(chrIndex2);
         auto splitSupportThreshold =
@@ -1142,7 +1148,7 @@ namespace sophia {
             }
         }
         if (mrefHits1 > BP_FREQ_THRESHOLD) {
-            if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
+            if (!chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
                 mrefHits2 > BP_FREQ_THRESHOLD) {
                 return 431;
             }
@@ -1152,7 +1158,7 @@ namespace sophia {
             }
         }
         if (mrefHits2 > BP_FREQ_THRESHOLD) {
-            if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
+            if (chrConverter.isDecoy(chrIndex1) || !chrConverter.isDecoy(chrIndex2) ||
                 mrefHits1 > BP_FREQ_THRESHOLD) {
                 return 432;
             }
@@ -1183,11 +1189,13 @@ namespace sophia {
             return 29;
         }
         if (mrefHits1 > GERMLINE_DB_LIMIT &&
-            !(chrConverter.isDecoy(bp1.getChrIndex()) || chrConverter.isVirus(bp1.getChrIndex()))) {
+            !(chrConverter.isDecoy(bp1.getChrIndex()) ||
+              chrConverter.isVirus(bp1.getChrIndex()))) {
             return 301;
         }
-        if (mrefHits2 > GERMLINE_DB_LIMIT && !(chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
-                                             chrConverter.isVirus(selectedSa1.getChrIndex()))) {
+        if (mrefHits2 > GERMLINE_DB_LIMIT &&
+            !(chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
+              chrConverter.isVirus(selectedSa1.getChrIndex()))) {
             return 302;
         }
         if (!distant) {
@@ -1253,7 +1261,7 @@ namespace sophia {
             }
         }
         if (mrefHits1 > BP_FREQ_THRESHOLD) {
-            if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
+            if (!chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
                 mrefHits2 > BP_FREQ_THRESHOLD) {
                 return 471;
             }
@@ -1263,7 +1271,7 @@ namespace sophia {
             }
         }
         if (mrefHits2 > BP_FREQ_THRESHOLD) {
-            if (chrConverter.isDecoy(chrIndex2) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
+            if (chrConverter.isDecoy(chrIndex2) || !chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
                 mrefHits1 > BP_FREQ_THRESHOLD) {
                 return 472;
             }
