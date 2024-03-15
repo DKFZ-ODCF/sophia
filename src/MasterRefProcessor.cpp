@@ -210,8 +210,7 @@ namespace sophia {
                     globalIndex = chrConverter.parseChrAndReturnIndex(
                         sophiaLine.cbegin(), sophiaLine.cend(), '\t');
                 } catch (const DomainError &e) {
-                    e <<
-                        error_info_string("file = " + gzPath + ", line = " + sophiaLine);
+                    e << error_info_string("file = " + gzPath + ", line = " + sophiaLine);
                     throw e;
                 }
 
@@ -221,7 +220,8 @@ namespace sophia {
                         chrConverter.indexToCompressedMrefIndex(globalIndex);
                     Breakpoint tmpBp = Breakpoint::parse(sophiaLine, true);
                     fileBps[static_cast<unsigned int>(compressedMrefIndex)].emplace_back(
-                        tmpBp, lineIndex++,
+                        tmpBp,
+                        lineIndex++,
                         (sophiaLine.back() != '.' && sophiaLine.back() != '#'));
                 }
             }

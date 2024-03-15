@@ -116,17 +116,19 @@ namespace sophia {
             unpairedBreaksSoft + unpairedBreaksHard + breaksShortIndel;
         auto artifactTotal =
             lowQualBreaksSoft + lowQualSpansSoft + lowQualSpansHard;
+        int branch = 0;
         if ((eventTotal + artifactTotal > 50) &&
             (artifactTotal / (0.0 + eventTotal + artifactTotal)) > 0.85) {
+            branch = 1;
             ++bpindex;
             missingInfoBp = true;
-        } else if (static_cast<int>(supportingSoftAlignments.size()) ==
-                       MAX_PERMISSIBLE_SOFTCLIPS &&
-                   eventTotal + normalSpans + artifactTotal >
-                       MAX_PERMISSIBLE_HARDCLIPS * 20) {
+        } else if (static_cast<int>(supportingSoftAlignments.size()) == MAX_PERMISSIBLE_SOFTCLIPS &&
+                   eventTotal + normalSpans + artifactTotal >  MAX_PERMISSIBLE_HARDCLIPS * 20) {
+            branch = 2;
             ++bpindex;
             missingInfoBp = true;
         } else {
+            branch = 3;
             fillMatePool(discordantAlignmentsPool, discordantLowQualAlignmentsPool,
                          discordantAlignmentCandidatesPool);
             if (eventTotal < BP_SUPPORT_THRESHOLD &&
@@ -149,6 +151,13 @@ namespace sophia {
         if (eventTotal + mateSupport + artifactTotal < BP_SUPPORT_THRESHOLD ||
             (eventTotal + artifactTotal < BP_SUPPORT_THRESHOLD &&
              doubleSidedMatches.empty() && supplementsPrimary.empty())) {
+            if (chrIndex == 999 && pos == 19404) {
+                cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
+                     << "OverhangStr: " << overhangStr << endl
+                     << "MissingInfoBp: " << missingInfoBp << endl
+                     << "Branch: " << branch << endl
+                     << "Short circuited 1!" << endl;
+            }
             return false;
         }
         if (missingInfoBp ||
@@ -165,8 +174,22 @@ namespace sophia {
                 pairedBreaksSoft + unpairedBreaksSoft + pairedBreaksHard;
             auto covCriterion = (eventTotal2 + artifactTotal2) > 10;
             if (!(covCriterion && eventTotal2Strict + artifactTotal2Relaxed > 0)) {
+                if (chrIndex == 999 && pos == 19404) {
+                    cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
+                         << "OverhangStr: " << overhangStr << endl
+                         << "MissingInfoBp: " << missingInfoBp << endl
+                         << "Branch: " << branch << endl
+                         << "Short circuited 2!" << endl;
+                }
                 return false;
             }
+        }
+        if (chrIndex == 999 && pos == 19404) {
+            cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
+                 << "OverhangStr: " << overhangStr << endl
+                 << "MissingInfoBp: " << missingInfoBp << endl
+                 << "Branch: " << branch << endl
+                 << "Printed!" << endl;
         }
         printBreakpointReport(overhangStr);
         return true;
@@ -177,9 +200,12 @@ namespace sophia {
         string res{};
         res.reserve(350);
         res.append(GlobalAppConfig::getInstance().getChrConverter().
-            indexToChrName(chrIndex)).append("\t");
-        res.append(strtk::type_to_string<int>(pos)).append("\t");
-        res.append(strtk::type_to_string<int>(pos + 1)).append("\t");
+            indexToChrName(chrIndex)).
+            append("\t");
+        res.append(strtk::type_to_string<int>(pos)).
+            append("\t");
+        res.append(strtk::type_to_string<int>(pos + 1)).
+            append("\t");
 
         res.append(strtk::type_to_string<int>(pairedBreaksSoft)).append(",");
         res.append(strtk::type_to_string<int>(pairedBreaksHard)).append(",");
@@ -194,11 +220,12 @@ namespace sophia {
         res.append(strtk::type_to_string<int>(lowQualSpansHard)).append(",");
         res.append(strtk::type_to_string<int>(lowQualBreaksSoft)).append(",");
         res.append(strtk::type_to_string<int>(lowQualBreaksHard)).append(",");
-        res.append(strtk::type_to_string<int>(repetitiveOverhangBreaks))
-            .append("\t");
+        res.append(strtk::type_to_string<int>(repetitiveOverhangBreaks)).
+            append("\t");
 
         res.append(strtk::type_to_string<int>(leftCoverage)).append(",");
-        res.append(strtk::type_to_string<int>(rightCoverage)).append("\t");
+        res.append(strtk::type_to_string<int>(rightCoverage)).
+            append("\t");
 
         if (missingInfoBp) {
             res.append("#\t#\t#\n");
@@ -233,6 +260,10 @@ namespace sophia {
     Breakpoint::finalizeOverhangs() {
         ++bpindex;
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+        if (chrIndex == 999 && pos == 19404) {
+            cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
+                 << "supportingSoftAlignments.size()" << supportingSoftAlignments.size() << endl;
+        }
         for (size_t i = 0u; i < supportingSoftAlignments.size(); ++i) {
             supportingSoftAlignments[i]->setChosenBp(pos, i);
             if (supportingSoftAlignments[i]->assessOutlierMateDistance()) {
@@ -276,7 +307,7 @@ namespace sophia {
                 }
             }
         }
-        vector<SuppAlignment> supplementsPrimaryTmp{};
+        vector<SuppAlignment> supplementsPrimaryTmp {};
         sort(supportingSoftAlignments.begin(), supportingSoftAlignments.end(),
              [](const shared_ptr<Alignment> &a, const shared_ptr<Alignment> &b) {
                  return a->getOverhangLength() < b->getOverhangLength();
@@ -299,8 +330,7 @@ namespace sophia {
                     !tmpSas.empty() &&
                     all_of(cbegin(tmpSas), cend(tmpSas),
                            [](const SuppAlignment &sa) { return sa.isDistant(); });
-                if (allDistant || supportingSoftAlignments.back()
-                                          ->overhangComplexityMaskRatio() <= 0.5) {
+                if (allDistant || supportingSoftAlignments.back()->overhangComplexityMaskRatio() <= 0.5) {
                     if (supportingSoftAlignments.back()->getOverhangLength() >= 20) {
                         supportingSoftAlignments.back()->addSupplementaryAlignments(tmpSas);
                         supportingSoftParentAlignments.push_back(supportingSoftAlignments.back());
@@ -339,14 +369,14 @@ namespace sophia {
             }
             supportingSoftAlignments.pop_back();
         }
+
         string consensusOverhangsTmp {};
         consensusOverhangsTmp.reserve(250);
         {
             auto i = 1;
             auto indexStr = strtk::type_to_string<int>(bpindex);
             for (const auto &overhangParent : supportingSoftParentAlignments) {
-                if (static_cast<int>(overhangParent->getChildrenNodes().size()) >=
-                    BP_SUPPORT_THRESHOLD) {
+                if (static_cast<int>(overhangParent->getChildrenNodes().size()) >= BP_SUPPORT_THRESHOLD) {
                     consensusOverhangsTmp.append(">")
                         .append(indexStr)
                         .append("_")
@@ -390,6 +420,10 @@ namespace sophia {
             if (!consensusOverhangsTmp.empty()) {
                 consensusOverhangsTmp.pop_back();
             } else {
+                if (chrIndex == 999 && pos == 19404) {
+                    cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
+                         << "consensusOverhangsTmp is empty" << endl;
+                }
                 return string();
             }
         }

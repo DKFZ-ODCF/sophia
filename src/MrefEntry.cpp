@@ -233,7 +233,10 @@ namespace sophia {
     }
 
     bool MrefEntry::saMatcher(SuppAlignmentAnno* saPtr) {
-        if (saPtr->isToRemove() || saPtr->isSuspicious() || (saPtr->getExpectedDiscordants() > 0 && !(saPtr->getMateSupport() / (saPtr->getExpectedDiscordants() + 0.0) > 0.1))) {
+        if (saPtr->isToRemove()
+               || saPtr->isSuspicious()
+               || (saPtr->getExpectedDiscordants() > 0
+                   && !(saPtr->getMateSupport() / (saPtr->getExpectedDiscordants() + 0.0) > 0.1))) {
             return true;
         }
         for (auto &sa : suppAlignments) {

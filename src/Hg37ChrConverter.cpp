@@ -547,7 +547,7 @@ namespace sophia {
      * NC_007605 (virus). Excluded are MT and phix. Used to be index <= 1000 (virus). */
     bool Hg37ChrConverter::isCompressedMref(ChrIndex index) const {
 //        assertValid(index);
-        return isValid(_indexToCompressedMrefIndex.at(index));
+        return isValid(_indexToCompressedMrefIndex.at(static_cast<unsigned int>(index)));
     }
 
     /** Map an compressed mref index to a chromosome name. */
