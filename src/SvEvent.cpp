@@ -171,9 +171,13 @@ namespace sophia {
                               // the values was valid (i.e. != -2). Note that the index check is
                               // on the CompressedIndexChr range. 23 is the Y chromosome, while 22
                               // is the X chromosome in this range. Therefore, here we need to check
-                              // for autosomes or X chromosome.
-                              (chrConverter.isAutosome(chrIndex1) || chrConverter.isX(chrIndex1))  &&
-                              (chrConverter.isAutosome(chrIndex2) || chrConverter.isX(chrIndex2));
+                              // for !isCompressedMref, autosomes or X chromosome.
+                              (!chrConverter.isCompressedMref(chrIndex1) ||
+                                chrConverter.isAutosome(chrIndex1) ||
+                                chrConverter.isX(chrIndex1))  &&
+                              (!chrConverter.isCompressedMref(chrIndex2) ||
+                                chrConverter.isAutosome(chrIndex2) ||
+                                chrConverter.isX(chrIndex2));
         auto splitSupportThreshold1 =
             (strictNonDecoy && !selectedSa1.isSemiSuspicious() &&
              (mateRatio1 >= 0.6))
@@ -383,8 +387,12 @@ namespace sophia {
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
                               // Used to be indexConverter[chrIndex] < 23, with no check for whether
                               // the values was valid (i.e. != -2).
-                              (chrConverter.isAutosome(chrIndex1) || chrConverter.isX(chrIndex1))  &&
-                              (chrConverter.isAutosome(chrIndex2) || chrConverter.isX(chrIndex2));
+                              (!chrConverter.isCompressedMref(chrIndex1) ||
+                                chrConverter.isAutosome(chrIndex1) ||
+                                chrConverter.isX(chrIndex1))  &&
+                              (!chrConverter.isCompressedMref(chrIndex2) ||
+                                chrConverter.isAutosome(chrIndex2) ||
+                                chrConverter.isX(chrIndex2));
         auto splitSupportThreshold =
             (strictNonDecoy && !selectedSa2.isSemiSuspicious() &&
              (mateRatio1 >= 0.66))
@@ -600,8 +608,12 @@ namespace sophia {
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
                               // Used to be indexConverter[chrIndex] < 23, with no check for whether
                               // the values was valid (i.e. != -2).
-                              (chrConverter.isAutosome(chrIndex1) || chrConverter.isX(chrIndex1))  &&
-                              (chrConverter.isAutosome(chrIndex2) || chrConverter.isX(chrIndex2));
+                              (!chrConverter.isCompressedMref(chrIndex1) ||
+                                chrConverter.isAutosome(chrIndex1) ||
+                                chrConverter.isX(chrIndex1))  &&
+                              (!chrConverter.isCompressedMref(chrIndex2) ||
+                                chrConverter.isAutosome(chrIndex2) ||
+                                chrConverter.isX(chrIndex2));
         auto splitSupportThreshold =
             (strictNonDecoy && (mateRatio1 >= 0.66) ? 0 : 2);
 
