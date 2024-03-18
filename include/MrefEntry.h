@@ -32,65 +32,102 @@
 
 namespace sophia {
 
-using namespace std;
+    /**
+     * @brief MrefEntry class is a container for the mref entries
+     * It contains the position, the file indices, the artifact ratios and the support alignments.
+     * This class should be memory optimized, as it will be instantiated in the billions, once
+     * for every chromosome position by the MasterRefProcessor.
+     */
+    class MrefEntry {
+      public:
 
-class MrefEntry {
-  public:
-    static int NUMPIDS;
-    static int DEFAULTREADLENGTH;
-    static boost::format doubleFormatter;
-    MrefEntry();
-    void addEntry(Breakpoint &tmpBreakpoint, int fileIndex);
-    void addEntry(BreakpointReduced &tmpBreakpoint, int fileIndex);
-    void mergeMrefEntries(MrefEntry &entry2);
+        using ValidityScore = signed char;
 
-    int getPos() const { return pos; }
+        static unsigned int NUM_PIDS;
 
-    const vector<float> &getArtifactRatios() const { return artifactRatios; }
+        static ChrSize DEFAULT_READ_LENGTH;
 
-    const vector<short> &getFileIndices() const { return fileIndices; }
+        static boost::format doubleFormatter;
 
-    short getValidityScore() const { return validity; }
-    void removeMarkedFuzzies() {
-        suppAlignments.erase(remove_if(suppAlignments.begin(),
-                                       suppAlignments.end(),
-                                       [](const SuppAlignmentAnno &sa) {
-                                           return sa.isToRemove();
-                                       }),
-                             suppAlignments.end());
-    }
-    string printBpInfo(const string &chromosome);
-    string printArtifactRatios(const string &chromosome);
-    SuppAlignmentAnno *searchFuzzySa(const SuppAlignmentAnno &fuzzySa);
-    vector<SuppAlignmentAnno *> getSupplementsPtr() {
-        vector<SuppAlignmentAnno *> res{};
-        for (auto &sa : suppAlignments) {
-            res.push_back(&sa);
+        MrefEntry();
+
+        void addEntry(Breakpoint &tmpBreakpoint, int fileIndex);
+
+        void addEntry(BreakpointReduced &tmpBreakpoint, int fileIndex);
+
+        void mergeMrefEntries(MrefEntry &entry2);
+
+        ChrSize getPos() const {
+            if (!isValid()) {
+                throw_with_trace(std::logic_error("MrefEntry is invalid"));
+            }
+            return pos;
         }
-        return res;
-    }
-    const vector<short> &getFileIndicesWithArtifactRatios() const {
-        return fileIndicesWithArtifactRatios;
-    }
-    const vector<SuppAlignmentAnno> &getSuppAlignments() const {
-        return suppAlignments;
-    }
 
-    void setAsInvalid() {
-        pos = -1;
-        validity = -1;
-    }
+        const std::vector<float> &getArtifactRatios() const { return artifactRatios; }
 
-  private:
-    bool saMatcher(SuppAlignmentAnno *saPtr);
-    void finalizeFileIndices();
-    short validity;   //-1 nothing, 0 only sa, 1 sa and support
-    int pos;
-    vector<short> fileIndices;
-    vector<short> fileIndicesWithArtifactRatios;
-    vector<float> artifactRatios;
-    vector<SuppAlignmentAnno> suppAlignments;
-};
+        const std::vector<unsigned short> &getFileIndices() const { return fileIndices; }
+
+        ValidityScore getValidityScore() const { return validity; }
+
+        void removeMarkedFuzzies() {
+            suppAlignments.erase(remove_if(suppAlignments.begin(),
+                                           suppAlignments.end(),
+                                           [](const SuppAlignmentAnno &sa) {
+                                               return sa.isToRemove();
+                                           }),
+                                 suppAlignments.end());
+        }
+
+        std::string printBpInfo(const std::string &chromosome);
+
+        std::string printArtifactRatios(const std::string &chromosome);
+
+        SuppAlignmentAnno *searchFuzzySa(const SuppAlignmentAnno &fuzzySa);
+
+        std::vector<SuppAlignmentAnno *> getSupplementsPtr() {
+            std::vector<SuppAlignmentAnno *> res{};
+            for (auto &sa : suppAlignments) {
+                res.push_back(&sa);
+            }
+            return res;
+        }
+
+        const std::vector<unsigned short> &getFileIndicesWithArtifactRatios() const {
+            return fileIndicesWithArtifactRatios;
+        }
+
+        const std::vector<SuppAlignmentAnno> &getSuppAlignments() const {
+            return suppAlignments;
+        }
+
+        void setAsInvalid() {
+            pos = std::numeric_limits<ChrSize>::max();
+            validity = -1;
+        }
+
+        bool isValid() const {
+            return pos != std::numeric_limits<ChrSize>::max();
+        }
+
+      private:
+
+        bool saMatcher(SuppAlignmentAnno *saPtr);
+
+        void finalizeFileIndices();
+
+        ValidityScore validity;   // -1 nothing, 0 only sa, 1 sa and support
+
+        ChrSize pos;
+
+        std::vector<unsigned short> fileIndices;
+
+        std::vector<unsigned short> fileIndicesWithArtifactRatios;
+
+        std::vector<float> artifactRatios;
+
+        std::vector<SuppAlignmentAnno> suppAlignments;
+    };
 
 } /* namespace sophia */
 

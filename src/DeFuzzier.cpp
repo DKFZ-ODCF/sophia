@@ -25,209 +25,233 @@
 
 namespace sophia {
     
-    using namespace std;
+    DeFuzzier::DeFuzzier(ChrSize maxDistanceIn, bool mrefModeIn)
+        : MAX_DISTANCE { maxDistanceIn },
+          MREF_MODE { mrefModeIn } {}
 
-DeFuzzier::DeFuzzier(int maxDistanceIn, bool mrefModeIn) :
-				MAXDISTANCE { maxDistanceIn },
-				MREFMODE { mrefModeIn } {
-}
+    void DeFuzzier::deFuzzyDb(std::vector<BreakpointReduced>& bps) const {
+        for (auto it = bps.begin(); it != bps.end(); ++it) {
+            for (auto &sa : it->getSupplementsPtr()) {
+                if (sa->isFuzzy()) {
+                    auto saTmp = sa;
+                    processFuzzySa(bps, it, saTmp);
+                }
+            }
+            it->removeMarkedFuzzies();
+        }
+        for (auto &bp : bps) {
+            bp.removeMarkedFuzzies();
+        }
+    }
 
-void DeFuzzier::deFuzzyDb(vector<BreakpointReduced>& bps) const {
-	for (auto it = bps.begin(); it != bps.end(); ++it) {
-		for (auto &sa : it->getSupplementsPtr()) {
-			if (sa->isFuzzy()) {
-				auto saTmp = sa;
-				processFuzzySa(bps, it, saTmp);
-			}
-		}
-		it->removeMarkedFuzzies();
-	}
-	for (auto &bp : bps) {
-		bp.removeMarkedFuzzies();
-	}
-}
+    void DeFuzzier::processFuzzySa(std::vector<BreakpointReduced>& bps,
+                                   std::vector<BreakpointReduced>::iterator startingIt,
+                                   SuppAlignmentAnno* startingSa) const {
+        auto consensusSa = startingSa;
+        std::vector<SuppAlignmentAnno*> processedSas { startingSa };
+        if (!startingSa->isEncounteredM()) {
+            dbSweep(bps, startingIt, 1, consensusSa, processedSas);
+            dbSweep(bps, startingIt, -1, consensusSa, processedSas);
+        } else {
+            dbSweep(bps, startingIt, -1, consensusSa, processedSas);
+            dbSweep(bps, startingIt, 1, consensusSa, processedSas);
+        }
+        selectBestSa(processedSas, consensusSa);
+    }
 
-void DeFuzzier::processFuzzySa(vector<BreakpointReduced>& bps, vector<BreakpointReduced>::iterator startingIt, SuppAlignmentAnno* startingSa) const {
-	auto consensusSa = startingSa;
-	vector<SuppAlignmentAnno*> processedSas { startingSa };
-	if (!startingSa->isEncounteredM()) {
-		dbSweep(bps, startingIt, 1, consensusSa, processedSas);
-		dbSweep(bps, startingIt, -1, consensusSa, processedSas);
-	} else {
-		dbSweep(bps, startingIt, -1, consensusSa, processedSas);
-		dbSweep(bps, startingIt, 1, consensusSa, processedSas);
-	}
-	selectBestSa(processedSas, consensusSa);
-}
+    void DeFuzzier::dbSweep(std::vector<BreakpointReduced>& bps,
+                            std::vector<BreakpointReduced>::iterator startingIt,
+                            int increment,
+                            SuppAlignmentAnno* consensusSa,
+                            std::vector<SuppAlignmentAnno*>& processedSas) const {
+        auto it = startingIt;
+        if (it == bps.begin() || it == bps.end()) {
+            return;
+        }
+        advance(it, increment);
+        while (it != bps.begin() && it != bps.end()) {
+            auto res = it->searchFuzzySa(*consensusSa);
+            if (!res && ChrSize(abs(static_cast<long>(startingIt->getPos()) - static_cast<long>(it->getPos()))) > MAX_DISTANCE) {
+                break;
+            } else {
+                if (res) {
+                    processedSas.push_back(res);
+                    if (res->isFuzzy()) {
+                        consensusSa->extendSuppAlignment(std::min(res->getPos(), consensusSa->getPos()),
+                                                         std::max(res->getExtendedPos(), consensusSa->getExtendedPos()));
+                    }
+                }
+            }
+            advance(it, increment);
+        }
+    }
 
-void DeFuzzier::dbSweep(vector<BreakpointReduced>& bps, vector<BreakpointReduced>::iterator startingIt, int increment, SuppAlignmentAnno* consensusSa, vector<SuppAlignmentAnno*>& processedSas) const {
-	auto it = startingIt;
-	if (it == bps.begin() || it == bps.end()) {
-		return;
-	}
-	advance(it, increment);
-	while (it != bps.begin() && it != bps.end()) {
-		auto res = it->searchFuzzySa(*consensusSa);
-		if (!res && abs(startingIt->getPos() - it->getPos()) > MAXDISTANCE) {
-			break;
-		} else {
-			if (res) {
-				processedSas.push_back(res);
-				if (res->isFuzzy()) {
-					consensusSa->extendSuppAlignment(min(res->getPos(), consensusSa->getPos()), max(res->getExtendedPos(), consensusSa->getExtendedPos()));
-				}
-			}
-		}
-		advance(it, increment);
-	}
-}
+    void DeFuzzier::selectBestSa(std::vector<SuppAlignmentAnno*>& processedSas,
+                                 SuppAlignmentAnno* consensusSa) const {
+        auto maxMateScore = -1;
+        auto maxExpectedDiscordants = -1;
+        auto index = 0;
+        std::vector<int> nonFuzzyIndices { };
+        for (auto &sa : processedSas) {
+            if (sa->getMateSupport() > maxMateScore) {
+                maxMateScore = sa->getMateSupport();
+            }
+            if (sa->getExpectedDiscordants() > maxExpectedDiscordants) {
+                maxExpectedDiscordants = sa->getExpectedDiscordants();
+            }
+            if (!sa->isFuzzy()) {
+                nonFuzzyIndices.push_back(index);
+            }
+            sa->setToRemove(true);
+            ++index;
+        }
+        SuppAlignmentAnno* selectedSa = nullptr;
+        if (!nonFuzzyIndices.empty()) {
+            auto bestElement = max_element(
+                nonFuzzyIndices.begin(),
+                nonFuzzyIndices.end(), //
+                [&](unsigned int a, unsigned int b) {
+                    return (processedSas[a]->getSupport() + processedSas[a]->getSecondarySupport())
+                                < (processedSas[b]->getSupport() + processedSas[b]->getSecondarySupport());
+                });
+            selectedSa = processedSas[(size_t) *bestElement];
+        } else {
+            auto bestElement = max_element(processedSas.begin(), processedSas.end(),
+                    [&](SuppAlignmentAnno* a, SuppAlignmentAnno* b) {return a->getMateSupport() < b->getMateSupport();});
+            selectedSa = *bestElement;
+            selectedSa->extendSuppAlignment(consensusSa->getPos(), consensusSa->getExtendedPos());
+        }
+        selectedSa->setToRemove(false);
+        selectedSa->setMateSupport(maxMateScore);
+        selectedSa->setExpectedDiscordants(maxExpectedDiscordants);
+    }
 
-void DeFuzzier::selectBestSa(vector<SuppAlignmentAnno*>& processedSas, SuppAlignmentAnno* consensusSa) const {
-	auto maxMateScore = -1;
-	auto maxExpectedDiscordants = -1;
-	auto index = 0;
-	vector<int> nonFuzzyIndices { };
-	for (auto &sa : processedSas) {
-		if (sa->getMateSupport() > maxMateScore) {
-			maxMateScore = sa->getMateSupport();
-		}
-		if (sa->getExpectedDiscordants() > maxExpectedDiscordants) {
-			maxExpectedDiscordants = sa->getExpectedDiscordants();
-		}
-		if (!sa->isFuzzy()) {
-			nonFuzzyIndices.push_back(index);
-		}
-		sa->setToRemove(true);
-		++index;
-	}
-	SuppAlignmentAnno* selectedSa = nullptr;
-	if (!nonFuzzyIndices.empty()) {
-		auto bestElement = max_element(nonFuzzyIndices.begin(), nonFuzzyIndices.end(), //
-				[&](int a, int b) {return processedSas[a]->getSupport()+processedSas[a]->getSecondarySupport() < processedSas[b]->getSupport()+processedSas[b]->getSecondarySupport();});
-		selectedSa = processedSas[*bestElement];
-	} else {
-		auto bestElement = max_element(processedSas.begin(), processedSas.end(), //
-				[&](SuppAlignmentAnno* a, SuppAlignmentAnno* b) {return a->getMateSupport() < b->getMateSupport();});
-		selectedSa = *bestElement;
-		selectedSa->extendSuppAlignment(consensusSa->getPos(), consensusSa->getExtendedPos());
-	}
-	selectedSa->setToRemove(false);
-	selectedSa->setMateSupport(maxMateScore);
-	selectedSa->setExpectedDiscordants(maxExpectedDiscordants);
-}
+    void DeFuzzier::deFuzzyDb(std::vector<MrefEntry>& bps) const {
+        for (auto it = bps.begin(); it != bps.end(); ++it) {
+            if (!it->isValid()) {
+                continue;
+            }
+            for (auto &sa : it->getSupplementsPtr()) {
+                if (sa->isToRemove()) {
+                    continue;
+                }
+                if (sa->isFuzzy() || sa->isStrictFuzzy()) {
+                    auto saTmp = sa;
+                    processFuzzySa(bps, it, saTmp);
+                }
+            }
+            it->removeMarkedFuzzies();
+            if (it->getValidityScore() == 0 && it->getSuppAlignments().empty()) {
+                it->setAsInvalid();
+            }
+        }
+        for (MrefEntry &bp : bps) {
+            if (bp.getValidityScore() == -1 || !bp.isValid()) {
+                bp.setAsInvalid();
+            }
+        }
+    }
 
-void DeFuzzier::deFuzzyDb(vector<MrefEntry>& bps) const {
-	for (auto it = bps.begin(); it != bps.end(); ++it) {
-		if (it->getPos() == -1) {
-			continue;
-		}
-		for (auto &sa : it->getSupplementsPtr()) {
-			if (sa->isToRemove()) {
-				continue;
-			}
-			if (sa->isFuzzy() || sa->isStrictFuzzy()) {
-				auto saTmp = sa;
-				processFuzzySa(bps, it, saTmp);
-			}
-		}
-		it->removeMarkedFuzzies();
-		if (it->getValidityScore() == 0 && it->getSuppAlignments().empty()) {
-			it->setAsInvalid();
-		}
-	}
-	for (auto &bp : bps) {
-		if (bp.getValidityScore() == -1 || bp.getPos() == -1) {
-			bp.setAsInvalid();
-		}
-	}
-}
+    void DeFuzzier::processFuzzySa(std::vector<MrefEntry>& bps,
+                                   std::vector<MrefEntry>::iterator startingIt,
+                                   SuppAlignmentAnno* startingSa) const {
+        SuppAlignmentAnno* consensusSa = startingSa;
+        std::unordered_set<unsigned short> fileIndices { };
+        for (auto fileIndex : startingIt->getFileIndices()) {
+            fileIndices.insert(fileIndex);
+        }
+        std::vector<SuppAlignmentAnno*> processedSas { startingSa };
+        if (!startingSa->isEncounteredM()) {
+            dbSweep(bps, startingIt, fileIndices, 1, consensusSa, processedSas);
+            dbSweep(bps, startingIt, fileIndices, -1, consensusSa, processedSas);
+        } else {
+            dbSweep(bps, startingIt, fileIndices, -1, consensusSa, processedSas);
+            dbSweep(bps, startingIt, fileIndices, 1, consensusSa, processedSas);
+        }
+        selectBestSa(processedSas, consensusSa, fileIndices);
+    }
 
-void DeFuzzier::processFuzzySa(vector<MrefEntry>& bps, vector<MrefEntry>::iterator startingIt, SuppAlignmentAnno* startingSa) const {
-	auto consensusSa = startingSa;
-	unordered_set<short> fileIndices { };
-	for (auto fileIndex : startingIt->getFileIndices()) {
-		fileIndices.insert(fileIndex);
-	}
-	vector<SuppAlignmentAnno*> processedSas { startingSa };
-	if (!startingSa->isEncounteredM()) {
-		dbSweep(bps, startingIt, fileIndices, 1, consensusSa, processedSas);
-		dbSweep(bps, startingIt, fileIndices, -1, consensusSa, processedSas);
-	} else {
-		dbSweep(bps, startingIt, fileIndices, -1, consensusSa, processedSas);
-		dbSweep(bps, startingIt, fileIndices, 1, consensusSa, processedSas);
-	}
-	selectBestSa(processedSas, consensusSa, fileIndices);
-}
+    void DeFuzzier::dbSweep(std::vector<MrefEntry>& bps,
+                            std::vector<MrefEntry>::iterator startingIt,
+                            std::unordered_set<unsigned short>& fileIndices,
+                            int increment,
+                            SuppAlignmentAnno* consensusSa,
+                            std::vector<SuppAlignmentAnno*>& processedSas) const {
+        auto it = startingIt;
+        if (it == bps.begin() || it == bps.end()) {
+            return;
+        }
+        advance(it, increment);
+        while (it != bps.begin() && it != bps.end()) {
+            if (it->isValid()) {
+                auto res = it->searchFuzzySa(*consensusSa);
+                if (!res && abs(static_cast<int>(startingIt->getPos()) - static_cast<int>(it->getPos())) > static_cast<int>(MAX_DISTANCE)) {
+                    break;
+                } else {
+                    if (res) {
+                        for (auto fileIndex : it->getFileIndices()) {
+                            fileIndices.insert(fileIndex);
+                        }
+                        processedSas.push_back(res);
+                        if (res->isFuzzy()) {
+                            consensusSa->extendSuppAlignment(std::min(res->getPos(), consensusSa->getPos()),
+                                                             std::max(res->getExtendedPos(), consensusSa->getExtendedPos()));
+                        }
+                    }
+                }
+            }
+            advance(it, increment);
+        }
+    }
 
-void DeFuzzier::dbSweep(vector<MrefEntry>& bps, vector<MrefEntry>::iterator startingIt, unordered_set<short>& fileIndices, int increment, SuppAlignmentAnno* consensusSa, vector<SuppAlignmentAnno*>& processedSas) const {
-	auto it = startingIt;
-	if (it == bps.begin() || it == bps.end()) {
-		return;
-	}
-	advance(it, increment);
-	while (it != bps.begin() && it != bps.end()) {
-		if (it->getPos() != -1) {
-			auto res = it->searchFuzzySa(*consensusSa);
-			if (!res && abs(startingIt->getPos() - it->getPos()) > MAXDISTANCE) {
-				break;
-			} else {
-				if (res) {
-					for (auto fileIndex : it->getFileIndices()) {
-						fileIndices.insert(fileIndex);
-					}
-					processedSas.push_back(res);
-					if (res->isFuzzy()) {
-						consensusSa->extendSuppAlignment(min(res->getPos(), consensusSa->getPos()), max(res->getExtendedPos(), consensusSa->getExtendedPos()));
-					}
-				}
-			}
-		}
-		advance(it, increment);
-	}
-}
-
-void DeFuzzier::selectBestSa(vector<SuppAlignmentAnno*>& processedSas, SuppAlignmentAnno* consensusSa, const unordered_set<short>& fileIndices) const {
-	auto maxMateScore = -1;
-	auto maxExpectedDiscordants = -1;
-	auto index = 0;
-	vector<int> nonFuzzyIndices { };
-	for (auto &sa : processedSas) {
-		if (sa->getMateSupport() > maxMateScore) {
-			maxMateScore = sa->getMateSupport();
-		}
-		if (sa->getExpectedDiscordants() > maxExpectedDiscordants) {
-			maxExpectedDiscordants = sa->getExpectedDiscordants();
-		}
-		if (!sa->isFuzzy()) {
-			nonFuzzyIndices.push_back(index);
-		}
-		sa->setToRemove(true);
-		++index;
-	}
-	SuppAlignmentAnno* selectedSa = nullptr;
-	if (!nonFuzzyIndices.empty()) {
-		auto bestElement = max_element(nonFuzzyIndices.begin(), nonFuzzyIndices.end(), //
-				[&](int a, int b) {return processedSas[a]->getSupportingIndices().size() < processedSas[b]->getSupportingIndices().size();});
-		selectedSa = processedSas[*bestElement];
-	} else {
-		auto bestElement = max_element(processedSas.begin(), processedSas.end(), //
-				[&](SuppAlignmentAnno* a, SuppAlignmentAnno* b) {return a->getSupportingIndices().size() < b->getSupportingIndices().size();});
-		if ((*bestElement)->getSupport() + (*bestElement)->getSecondarySupport() == 0) {
-			if (consensusSa->isEncounteredM()) {
-				selectedSa = processedSas.back();
-			} else {
-				selectedSa = processedSas[0];
-			}
-		} else {
-			selectedSa = *bestElement;
-		}
-		selectedSa->extendSuppAlignment(consensusSa->getPos(), consensusSa->getExtendedPos());
-	}
-	selectedSa->setToRemove(false);
-	selectedSa->setMateSupport(maxMateScore);
-	selectedSa->setExpectedDiscordants(maxExpectedDiscordants);
-	selectedSa->mrefSaConsensus(fileIndices);
-}
+    void DeFuzzier::selectBestSa(std::vector<SuppAlignmentAnno*>& processedSas,
+                                 SuppAlignmentAnno* consensusSa,
+                                 const std::unordered_set<unsigned short>& fileIndices) const {
+        auto maxMateScore = -1;
+        auto maxExpectedDiscordants = -1;
+        auto index = 0;
+        std::vector<int> nonFuzzyIndices { };
+        for (auto &sa : processedSas) {
+            if (sa->getMateSupport() > maxMateScore) {
+                maxMateScore = sa->getMateSupport();
+            }
+            if (sa->getExpectedDiscordants() > maxExpectedDiscordants) {
+                maxExpectedDiscordants = sa->getExpectedDiscordants();
+            }
+            if (!sa->isFuzzy()) {
+                nonFuzzyIndices.push_back(index);
+            }
+            sa->setToRemove(true);
+            ++index;
+        }
+        SuppAlignmentAnno* selectedSa = nullptr;
+        if (!nonFuzzyIndices.empty()) {
+            auto bestElement = max_element(
+                nonFuzzyIndices.begin(),
+                nonFuzzyIndices.end(),
+                [&](unsigned int a, unsigned int b) {
+                    return processedSas[a]->getSupportingIndices().size() < processedSas[b]->getSupportingIndices().size();
+                });
+            selectedSa = processedSas[static_cast<unsigned long>(*bestElement)];
+        } else {
+            auto bestElement = max_element(processedSas.begin(), processedSas.end(), //
+                    [&](SuppAlignmentAnno* a, SuppAlignmentAnno* b) {return a->getSupportingIndices().size() < b->getSupportingIndices().size();});
+            if ((*bestElement)->getSupport() + (*bestElement)->getSecondarySupport() == 0) {
+                if (consensusSa->isEncounteredM()) {
+                    selectedSa = processedSas.back();
+                } else {
+                    selectedSa = processedSas[0];
+                }
+            } else {
+                selectedSa = *bestElement;
+            }
+            selectedSa->extendSuppAlignment(consensusSa->getPos(), consensusSa->getExtendedPos());
+        }
+        selectedSa->setToRemove(false);
+        selectedSa->setMateSupport(maxMateScore);
+        selectedSa->setExpectedDiscordants(maxExpectedDiscordants);
+        selectedSa->mrefSaConsensus(fileIndices);
+    }
 
 }
 

@@ -22,167 +22,243 @@
  *      LICENSE: GPL
  */
 
-#include "ChrConverter.h"
+#include "GlobalAppConfig.h"
 #include "DeFuzzier.h"
 #include "HelperFunctions.h"
-#include "strtk.hpp"
+#include "strtk-wrap.h"
 #include <MasterRefProcessor.h>
 #include <algorithm>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/exception/all.hpp>
 #include <chrono>
 #include <cmath>
 #include <iostream>
 
 namespace sophia {
 
-using namespace std;
+    /**
+      * This constructor has a side-effect. It reads from the filesIn and write breakpoint
+      * information to
+      *
+      *    outputRootName + "_" + NUM_PIDS + "_mergedBpCounts.bed"
+      *
+      * @param filesIn            vector if input gzFile names.
+      * @param outputRootName     base name/path for the output files
+      * @param version            the version is matched in the gzFile name to find the realPidName.
+      * @param defaultreadlength  Value for the default read length used for the DeFuzzier.
+      */
+    MasterRefProcessor::MasterRefProcessor(const std::vector<std::string> &filesIn,
+                                           const std::string &outputRootName,
+                                           const std::string &version,
+                                           const ChrSize defaultReadLengthIn)
+        : NUM_PIDS { static_cast<int>(filesIn.size()) },
+          DEFAULT_READ_LENGTH{ defaultReadLengthIn },
+          mrefDb {} {
 
-MasterRefProcessor::MasterRefProcessor(const vector<string> &filesIn,
-                                       const string &outputRootName,
-                                       const string &version,
-                                       const int defaultReadLengthIn)
-    : NUMPIDS{static_cast<int>(filesIn.size())},
-      DEFAULTREADLENGTH{defaultReadLengthIn}, mrefDb{} {
-    const vector<int> CHRSIZES{
-        249250622, 243199374, 198022431, 191154277, 180915261, 171115068,
-        159138664, 146364023, 141213432, 135534748, 135006517, 133851896,
-        115169879, 107349541, 102531393, 90354754,  81195211,  78077249,
-        59128984,  63025521,  48129896,  51304567,  155270561, 59373567,
-        106434,    547497,    189790,    191470,    182897,    38915,
-        37176,     90086,     169875,    187036,    36149,     40104,
-        37499,     81311,     174589,    41002,     4263,      92690,
-        159170,    27683,     166567,    186859,    164240,    137719,
-        172546,    172295,    172150,    161148,    179199,    161803,
-        155398,    186862,    180456,    179694,    211174,    15009,
-        128375,    129121,    19914,     43692,     27387,     40653,
-        45942,     40532,     34475,     41935,     45868,     39940,
-        33825,     41934,     42153,     43524,     43342,     39930,
-        36652,     38155,     36423,     39787,     38503,     35477944,
-        171824};
-    for (auto i = 0; i < 85; ++i) {
-        //		mrefDbPtrs.emplace_back(CHRSIZES[i] + 1, nullptr);
-        mrefDb.emplace_back(CHRSIZES[i] + 1, MrefEntry{});
-    }
-    vector<string> header{"#chr", "start", "end"};
-    for (const auto &gzFile : filesIn) {
-        int posOnVersion = version.size() - 1;
-        bool counting{false};
-        string realPidName;
-        for (auto rit = gzFile.crbegin(); rit != gzFile.crend(); ++rit) {
-            if (!counting) {
-                if (*rit != version[posOnVersion]) {
-                    posOnVersion = version.size() - 1;
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+
+        // Preallocate the full memory in one go. Otherwise, the vector will be repeatedly
+        // copied and reallocated, which is slow. Also the finally reserved size will be
+        // larger than necessary.
+        // NOTE: This will allocate a lot of memory as the total size of the vectors is the
+        //       genome size (3.7 giga-bases for hg19).
+        std::vector<std::vector<sophia::MrefEntry>>::size_type totalSize = 0;
+        for (CompressedMrefIndex i = 0; i < chrConverter.nChromosomesCompressedMref(); ++i) {
+            totalSize += static_cast<std::vector<std::vector<sophia::MrefEntry>>::size_type>(
+                chrConverter.chrSizeCompressedMref(i) + 1);
+        }
+        std::cerr << "Allocating "
+             << std::ceil(sizeof(sophia::MrefEntry) * totalSize / 1024.0 / 1024.0 / 1024.0)
+             << " GB for mrefDb ..."
+             << std::endl;
+        mrefDb.reserve(totalSize);
+
+        // Initialize the mrefDb with default values.
+        for (CompressedMrefIndex i = 0; i < chrConverter.nChromosomesCompressedMref(); ++i) {
+            // It is unclear, why here +1 is added to the chromosomes sizes, in particular, as
+            // the original chromosome size data already had sized incremented by 1 summing up
+            // to total genome size here of N*2 additional positions, with N being the number of
+            // compressed master-ref chromosomes. This is just kept for all changes :|
+            mrefDb.emplace_back(chrConverter.chrSizeCompressedMref(i) + 1, MrefEntry{});
+        }
+
+        // Construct the output file header. This collects the `realPidName`s from the gzFile
+        // and appends them to the header. The `version` is matched in the gzFile name.
+        std::vector<std::string> header {"#chr", "start", "end"};
+        for (const auto &gzFile : filesIn) {
+            signed int posOnVersion = version.size() - 1;
+            bool counting { false };
+            std::string realPidName;
+            for (auto rit = gzFile.crbegin(); rit != gzFile.crend(); ++rit) {
+                if (!counting) {
+                    // Match the version in the gzFile name. Note that we traverse the gzFile name
+                    // in reverse order (from end), and therefore the matching algorithm is
+                    // formulated in reverse order.
+                    if (*rit != version[static_cast<unsigned long>(posOnVersion)]) {
+                        // No match, means continue searching.
+                        posOnVersion = version.size() - 1;
+                    } else {
+                        // Match, means continue matching.
+                        --posOnVersion;
+                        if (posOnVersion == -1) {
+                            // We have a match, therefore continue in the other branch that
+                            // collects the letters for the realPidName.
+                            ++rit;
+                            counting = true;
+                        }
+                    }
                 } else {
-                    --posOnVersion;
-                    if (posOnVersion == -1) {
-                        ++rit;
-                        counting = true;
+                    if (*rit == '/') {
+                        // We matched a '/' character, i.e. a path separator. Therefore, we are done
+                        // with the realPidName. Stop collecting letters.
+                        break;
+                    } else {
+                        // Everything we see is part of the realPidName.
+                        realPidName.push_back(*rit);
                     }
                 }
-            } else {
-                if (*rit == '/') {
-                    break;
-                } else {
-                    realPidName.push_back(*rit);
+            }
+            if (realPidName.size() == 0) {
+                throw_with_trace(std::runtime_error(
+                                    "Could not match realPidName in gzFile '" + gzFile + "'. "
+                                    "The version value '" + version + "' has to be contained "
+                                    "in the gzFile name. Rename the gzFile to match the pattern "
+                                    "'.*/$realPidName?$version.+'."));
+            }
+
+            reverse(realPidName.begin(), realPidName.end());
+            std::cerr << "Matched realPidName '" << realPidName
+                 << "' in gzFile '" << gzFile << "'" << std::endl;
+            header.push_back(realPidName);
+        }
+
+        // This reopens the gzFiles from filesIn and processes them. It logs information to the
+        // standard error output.
+        short fileIndex{0};
+        for (const auto &gzFile : filesIn) {
+            std::chrono::time_point<std::chrono::steady_clock> start =
+                std::chrono::steady_clock::now();
+            // newBreakpoints contains only information for chromosomes from the compressedMref set.
+            auto newBreakpoints = processFile(gzFile, fileIndex);
+            std::chrono::time_point<std::chrono::steady_clock> end = std::chrono::steady_clock::now();
+            std::chrono::seconds diff = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+            ++fileIndex;
+            std::cerr << gzFile << "\t" << diff.count() << "\t" << newBreakpoints << "\t"
+                 << fileIndex << "\t" << 100 * (fileIndex + 0.0) / NUM_PIDS << "%\n";
+        }
+
+        // Finally, open the output file, and write the header and the breakpoint information.
+        mergedBpsOutput = std::make_unique<std::ofstream>(
+            outputRootName + "_" + strtk::type_to_string<int>(NUM_PIDS) +
+            "_mergedBpCounts.bed");
+        auto defuzzier = DeFuzzier {DEFAULT_READ_LENGTH * 3, true};
+        CompressedMrefIndex compressedMrefChrIndex = chrConverter.nChromosomesCompressedMref() - 1;
+        while (!mrefDb.empty()) {
+            // Remove all invalid breakpoints.
+            mrefDb.back().erase(
+                remove_if(mrefDb.back().begin(), mrefDb.back().end(),
+                          [](const MrefEntry &bp) { return !bp.isValid(); }),
+                mrefDb.back().end());
+
+            // Run the DeFuzzier.
+            defuzzier.deFuzzyDb(mrefDb.back());
+
+            // Again, remove all invalid breakpoints.
+            mrefDb.back().erase(
+                remove_if(mrefDb.back().begin(), mrefDb.back().end(),
+                          [](const MrefEntry &bp) { return !bp.isValid(); }),
+                mrefDb.back().end());
+
+            // Write the breakpoint information.
+            std::string chromosome =
+                chrConverter.compressedMrefIndexToChrName(compressedMrefChrIndex);
+            --compressedMrefChrIndex;
+            for (auto &bp : mrefDb.back()) {
+                if (bp.isValid()) {
+                    // std::cout << bp.printArtifactRatios(chromosome);
+                    *mergedBpsOutput << bp.printBpInfo(chromosome);
+                }
+            }
+            mrefDb.pop_back();
+        }
+    }
+
+    /**
+      * Process the file at gzPath. Chromosomes not in the compressedMref set are ignored.
+      * The file format the one produced by the `sophia` tool.
+      */
+    unsigned long long
+    MasterRefProcessor::processFile(const std::string &gzPath, short fileIndex) {
+        std::cerr << "Processing file '" << gzPath << "'" << std::endl;
+        unsigned long long newBreakpoints{0};
+        std::ifstream refHandle(gzPath, std::ios_base::in | std::ios_base::binary);
+        boost::iostreams::filtering_istream gzStream{};
+        gzStream.push(boost::iostreams::gzip_decompressor());
+        gzStream.push(refHandle);
+        std::string sophiaLine{};
+
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+        CompressedMrefIndex vectorSize = chrConverter.nChromosomesCompressedMref();
+
+        std::vector<std::vector<BreakpointReduced>> fileBps = std::vector<std::vector<BreakpointReduced>>
+            { static_cast<unsigned int>(vectorSize), std::vector<BreakpointReduced>{}};
+        auto lineIndex = 0;
+
+        while (error_terminating_getline(gzStream, sophiaLine)) {
+            // Ignore comment lines.
+            if (sophiaLine[0] != '#') {
+                // Parse the chromosome name in the first column of the gzip file.
+                ChrIndex globalIndex;
+                try {
+                    globalIndex = chrConverter.parseChrAndReturnIndex(
+                        sophiaLine.cbegin(), sophiaLine.cend(), '\t');
+                } catch (const DomainError &e) {
+                    e << error_info_string("file = " + gzPath + ", line = " + sophiaLine);
+                    throw e;
+                }
+
+                // Ignore chromosomes not in the compressedMref set.
+                if (chrConverter.isCompressedMref(globalIndex)) {
+                    CompressedMrefIndex compressedMrefIndex =
+                        chrConverter.indexToCompressedMrefIndex(globalIndex);
+                    Breakpoint tmpBp = Breakpoint::parse(sophiaLine, true);
+                    fileBps[static_cast<unsigned int>(compressedMrefIndex)].emplace_back(
+                        tmpBp,
+                        lineIndex++,
+                        (sophiaLine.back() != '.' && sophiaLine.back() != '#'));
                 }
             }
         }
-        reverse(realPidName.begin(), realPidName.end());
-        header.push_back(realPidName);
-    }
-    mergedBpsOutput = make_unique<ofstream>(
-        outputRootName + "_" + strtk::type_to_string<int>(NUMPIDS) +
-        "_mergedBpCounts.bed");
-    short fileIndex{0};
-    for (const auto &gzFile : filesIn) {
-        chrono::time_point<chrono::steady_clock> start =
-            chrono::steady_clock::now();
-        auto newBreakpoints = processFile(gzFile, fileIndex);
-        chrono::time_point<chrono::steady_clock> end =
-            chrono::steady_clock::now();
-        chrono::seconds diff =
-            chrono::duration_cast<chrono::seconds>(end - start);
-        ++fileIndex;
-        cerr << gzFile << "\t" << diff.count() << "\t" << newBreakpoints << "\t"
-             << fileIndex << "\t" << 100 * (fileIndex + 0.0) / NUMPIDS << "%\n";
-    }
-    auto defuzzier = DeFuzzier{DEFAULTREADLENGTH * 3, true};
-    auto i = 84;
-    while (!mrefDb.empty()) {
-        mrefDb.back().erase(
-            remove_if(mrefDb.back().begin(), mrefDb.back().end(),
-                      [](const MrefEntry &bp) { return bp.getPos() == -1; }),
-            mrefDb.back().end());
-        defuzzier.deFuzzyDb(mrefDb.back());
-        mrefDb.back().erase(
-            remove_if(mrefDb.back().begin(), mrefDb.back().end(),
-                      [](const MrefEntry &bp) { return bp.getPos() == -1; }),
-            mrefDb.back().end());
-        auto chromosome = ChrConverter::indexToChrCompressedMref[i];
-        --i;
-        for (auto &bp : mrefDb.back()) {
-            if (bp.getPos() != -1 && bp.getValidityScore() != -1) {
-                //				cout <<
-                //bp.printArtifactRatios(chromosome);
-                *mergedBpsOutput << bp.printBpInfo(chromosome);
-            }
-        }
-        mrefDb.pop_back();
-    }
-}
 
-unsigned long long
-MasterRefProcessor::processFile(const string &gzPath, short fileIndex) {
-    unsigned long long newBreakpoints{0};
-    ifstream refHandle(gzPath, ios_base::in | ios_base::binary);
-    boost::iostreams::filtering_istream gzStream{};
-    gzStream.push(boost::iostreams::gzip_decompressor());
-    gzStream.push(refHandle);
-    string sophiaLine{};
-    vector<vector<BreakpointReduced>> fileBps{85, vector<BreakpointReduced>{}};
-    auto lineIndex = 0;
-    while (error_terminating_getline(gzStream, sophiaLine)) {
-        if (sophiaLine[0] != '#') {
-            auto chrIndex =
-                ChrConverter::indexConverter[ChrConverter::readChromosomeIndex(
-                    sophiaLine.cbegin(), '\t')];
-            if (chrIndex < 0) {
-                continue;
+        ChrIndex chrIndex = 0;
+        for (auto &chromosome : fileBps) {
+            DeFuzzier deFuzzierControl {DEFAULT_READ_LENGTH * 6, false};
+            deFuzzierControl.deFuzzyDb(chromosome);
+            for (auto &bp : chromosome) {
+                if (processBp(bp, chrIndex, fileIndex)) {
+                    ++newBreakpoints;
+                }
             }
-            Breakpoint tmpBp{sophiaLine, true};
-            fileBps[chrIndex].emplace_back(
-                tmpBp, lineIndex++,
-                (sophiaLine.back() != '.' && sophiaLine.back() != '#'));
+            ++chrIndex;
         }
+        return newBreakpoints;
     }
-    auto chrIndex = 0;
-    for (auto &chromosome : fileBps) {
-        DeFuzzier deFuzzierControl{DEFAULTREADLENGTH * 6, false};
-        deFuzzierControl.deFuzzyDb(chromosome);
-        for (auto &bp : chromosome) {
-            if (processBp(bp, chrIndex, fileIndex)) {
-                ++newBreakpoints;
-            }
-        }
-        ++chrIndex;
-    }
-    return newBreakpoints;
-}
 
-bool
-MasterRefProcessor::processBp(BreakpointReduced &bp, int chrIndex,
-                              short fileIndex) {
-    MrefEntry tmpMrefEntry{};
-    tmpMrefEntry.addEntry(bp, fileIndex);
-    auto validitiyInit =
-        mrefDb[chrIndex][tmpMrefEntry.getPos()].getValidityScore();
-    mrefDb[chrIndex][tmpMrefEntry.getPos()].mergeMrefEntries(tmpMrefEntry);
-    auto validitiyFinal =
-        mrefDb[chrIndex][tmpMrefEntry.getPos()].getValidityScore();
-    if (validitiyFinal > validitiyInit) {
-        return true;
+    bool
+    MasterRefProcessor::processBp(BreakpointReduced &bp,
+                                  ChrIndex chrIndex,
+                                  short fileIndex) {
+        MrefEntry tmpMrefEntry{};
+        tmpMrefEntry.addEntry(bp, fileIndex);
+
+        unsigned long pos = static_cast<unsigned long>(tmpMrefEntry.getPos());
+        unsigned int idx = static_cast<unsigned int>(chrIndex);
+
+        auto validityInit = mrefDb[idx][pos].getValidityScore();
+        mrefDb[idx][pos].mergeMrefEntries(tmpMrefEntry);
+        auto validityFinal = mrefDb[idx][pos].getValidityScore();
+
+        return validityFinal > validityInit;
     }
-    return false;
-}
 
 }   // namespace sophia

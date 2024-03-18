@@ -26,6 +26,7 @@
 #define MASTERREFPROCESSOR_H_
 
 #include "SuppAlignment.h"
+#include "global.h"
 #include <BreakpointReduced.h>
 #include <MrefEntry.h>
 #include <array>
@@ -40,25 +41,32 @@
 
 namespace sophia {
 
-using namespace std;
+    class MasterRefProcessor {
+      public:
+        MasterRefProcessor(const std::vector<std::string> &filesIn,
+                           const std::string &outputRootName,
+                           const std::string &version,
+                           const ChrSize defaultReadLengthIn);
 
-class MasterRefProcessor {
-  public:
-    MasterRefProcessor(const vector<string> &filesIn,
-                       const string &outputRootName, const string &version,
-                       const int defaultReadLengthIn);
-    ~MasterRefProcessor() = default;
+        ~MasterRefProcessor() = default;
 
-  private:
-    unsigned long long processFile(const string &gzPath, short fileIndex);
-    bool processBp(BreakpointReduced &bp, int chrIndex, short fileIndex);
-    const int NUMPIDS;
-    const int DEFAULTREADLENGTH;
-    unique_ptr<ofstream> mergedBpsOutput;
-    vector<vector<MrefEntry>> mrefDb;
-};
+      private:
+        // Note that all methods and fields are private.
+        // The MasterRefProcessor does all the work during construction time.
+
+        unsigned long long processFile(const std::string &gzPath, short fileIndex);
+        bool processBp(BreakpointReduced &bp, ChrIndex chrIndex, short fileIndex);
+
+        const int NUM_PIDS;
+        const ChrSize DEFAULT_READ_LENGTH;
+        std::unique_ptr<std::ofstream> mergedBpsOutput;
+
+        /** This will be a huge data structure, that contains one MrefEntry per position in the
+         *  master reference chromosomes.
+         **/
+        std::vector<std::vector<MrefEntry>> mrefDb;
+    };
 
 }   // namespace sophia
-/* namespace sophiaMref */
 
 #endif /* MASTERREFPROCESSOR_H_ */

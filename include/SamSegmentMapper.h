@@ -24,6 +24,7 @@
 
 #ifndef SAMSEGMENTMAPPER_H_
 #define SAMSEGMENTMAPPER_H_
+#include "global.h"
 #include "Breakpoint.h"
 #include "CoverageAtBase.h"
 #include "MateInfo.h"
@@ -36,32 +37,52 @@
 
 namespace sophia {
 
-using namespace std;
+    class SamSegmentMapper {
+      public:
 
-class SamSegmentMapper {
-  public:
-    SamSegmentMapper(int defaultReadLengthIn);
-    ~SamSegmentMapper() = default;
-    void parseSamStream();
+        SamSegmentMapper(ChrSize defaultReadLengthIn);
 
-  private:
-    void printBps(int alignmentStart);
-    void switchChromosome(const Alignment &alignment);
-    void incrementCoverages(const Alignment &alignment);
-    void assignBps(shared_ptr<Alignment> &alignment);
-    const time_t STARTTIME;
-    const bool PROPERPARIRCOMPENSATIONMODE;
-    const int DISCORDANTLEFTRANGE;
-    const int DISCORDANTRIGHTRANGE;
-    unsigned int printedBps;
-    int chrIndexCurrent;
-    int minPos, maxPos;
-    map<int, Breakpoint> breakpointsCurrent;
-    deque<CoverageAtBase> coverageProfiles;
-    deque<MateInfo> discordantAlignmentsPool;
-    deque<MateInfo> discordantAlignmentCandidatesPool;
-    deque<MateInfo> discordantLowQualAlignmentsPool;
-};
+        ~SamSegmentMapper() = default;
+
+        void parseSamStream();
+
+      private:
+
+        // Does not print anything by itself, but lets print via another call to
+        // Breakpoint::finalizeBreakpoint. Then Breakpoint::printBreakpointReport prints
+        // to stdout.
+        void printBps(ChrSize alignmentStart);
+
+        void switchChromosome(const Alignment &alignment);
+
+        void incrementCoverages(const Alignment &alignment);
+
+        void assignBps(std::shared_ptr<Alignment> &alignment);
+
+        const time_t STARTTIME;
+
+        const bool PROPER_PAIR_COMPENSATION_MODE;
+
+        const ChrSize DISCORDANT_LEFT_RANGE;
+
+        const ChrSize DISCORDANT_RIGHT_RANGE;
+
+        unsigned int printedBps;
+
+        ChrIndex chrIndexCurrent;
+
+        ChrSize minPos, maxPos;
+
+        std::map<ChrSize, Breakpoint> breakpointsCurrent;
+
+        std::deque<CoverageAtBase> coverageProfiles;
+
+        std::deque<MateInfo> discordantAlignmentsPool;
+
+        std::deque<MateInfo> discordantAlignmentCandidatesPool;
+
+        std::deque<MateInfo> discordantLowQualAlignmentsPool;
+    };
 
 } /* namespace sophia */
 

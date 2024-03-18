@@ -25,24 +25,35 @@
 #ifndef OVERHANGRANGE_H_
 #define OVERHANGRANGE_H_
 
+#include "global.h"
+
 namespace sophia {
 
-class OverhangRange {
-    friend class Alignment;
+    class OverhangRange {
+        friend class Alignment;
 
-  public:
-    OverhangRange(bool encounteredMIn, int bpPosIn, int startPosOnReadIn,
-                  int lengthIn)
-        : encounteredM{encounteredMIn}, bpPos{bpPosIn},
-          startPosOnRead{startPosOnReadIn}, length{lengthIn} {}
-    ~OverhangRange() = default;
+      public:
+        OverhangRange(bool encounteredMIn,
+                      ChrSize bpPosIn,
+                      ChrSize startPosOnReadIn,
+                      ChrSize lengthIn)
+            : encounteredM{encounteredMIn},
+              bpPos{bpPosIn},
+              startPosOnRead{startPosOnReadIn},
+              length{lengthIn} {}
 
-  private:
-    bool encounteredM;
-    int bpPos;
-    int startPosOnRead;
-    int length;
-};
+        ~OverhangRange() = default;
+
+      private:
+
+        bool encounteredM;
+
+        ChrSize bpPos;
+
+        ChrSize startPosOnRead;
+
+        ChrSize length;
+    };
 
 }   // namespace sophia
 

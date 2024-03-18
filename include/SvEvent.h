@@ -25,6 +25,7 @@
 #ifndef SVEVENT_H_
 #define SVEVENT_H_
 
+#include "global.h"
 #include "Breakpoint.h"
 #include "GermlineMatch.h"
 #include "MrefMatch.h"
@@ -39,193 +40,278 @@
 
 namespace sophia {
 
-using namespace std;
+    enum ArtifactStatus { ARTIFACT, BORDERLINE, CLEAN, AS_UNKNOWN };
 
-enum ArtifactStatus { ARTIFACT, BORDERLINE, CLEAN, UNKNOWN_a };
+    enum ClonalityStatus { HOMO, HETERO, SUBCLONAL, EXTREME_SUBCLONAL, CS_UNKNOWN };
 
-enum ClonalityStatus { HOMO, HETERO, SUBCLONAL, EXTREME_SUBCLONAL, UNKNOWN_c };
+    class SvEvent {
+      public:
+        static boost::format doubleFormatter;
 
-class SvEvent {
-  public:
-    static boost::format doubleFormatter;
-    static int GERMLINEOFFSETTHRESHOLD;
-    static double RELAXEDBPFREQTHRESHOLD;
-    static double BPFREQTHRESHOLD;
-    static double ARTIFACTFREQLOWTHRESHOLD;
-    static double ARTIFACTFREQHIGHTHRESHOLD;
-    static double CLONALITYLOWTHRESHOLD;
-    static double CLONALITYSTRICTLOWTHRESHOLD;
-    static double CLONALITYHIGHTHRESHOLD;
-    static string PIDSINMREFSTR;
-    static int HALFDEFAULTREADLENGTH;
-    static int GERMLINEDBLIMIT;
-    static bool ABRIDGEDOUTPUT;
-    static bool NOCONTROLMODE;
-    static bool DEBUGMODE;
-    const static vector<string> EVENTTYPES;
-    SvEvent(const BreakpointReduced &bp1In, const BreakpointReduced &bp2In,
-            const SuppAlignmentAnno &sa1In, const SuppAlignmentAnno &sa2In,
-            const vector<pair<int, string>> &overhangDb);
-    SvEvent(const BreakpointReduced &bp1In, const BreakpointReduced &bp2In,
-            const SuppAlignmentAnno &sa1In,
-            const vector<pair<int, string>> &overhangDb,
-            const SuppAlignmentAnno &dummySaIn);
-    SvEvent(const BreakpointReduced &bp1In, const SuppAlignmentAnno &sa1In,
-            GermlineMatch germlineInfo2, MrefMatch hitsInMref2In,
-            const vector<pair<int, string>> &overhangDb,
-            const SuppAlignmentAnno &dummySaIn);
+        static int GERMLINE_OFFSET_THRESHOLD;
 
-    //	vector<int> getKey() const;
-    string getKey() const;
+        static double RELAXED_BP_FREQ_THRESHOLD;
 
-    bool isGermline() const { return germline; }
+        static double BP_FREQ_THRESHOLD;
 
-    int getEventSize() const { return eventSize; }
+        static double ARTIFACT_FREQ_LOW_THRESHOLD;
 
-    bool isInverted() const { return inverted; }
+        static double ARTIFACT_FREQ_HIGH_THRESHOLD;
 
-    int getTotalEvidence1() const { return totalEvidence1; }
+        static double CLONALITY_LOW_THRESHOLD;
 
-    int getTotalEvidence2() const { return totalEvidence2; }
+        static double CLONALITY_STRICT_LOW_THRESHOLD;
 
-    int getEventScore() const { return eventScore; }
+        static double CLONALITY_HIGH_THRESHOLD;
 
-    int getSuspicious() const { return suspicious; }
+        static std::string PIDS_IN_MREF_STR;
 
-    double getMateRatio1() const { return mateRatio1; }
+        static int HALF_DEFAULT_READ_LENGTH;
 
-    double getMateRatio2() const { return mateRatio2; }
+        static int GERMLINE_DB_LIMIT;
 
-    short getEvidenceLevel1() const { return evidenceLevel1; }
+        static bool ABRIDGED_OUTPUT;
 
-    short getEvidenceLevel2() const { return evidenceLevel2; }
+        static bool NO_CONTROL_MODE;
 
-    bool isSemiSuspicious() const { return semiSuspicious; }
+        static bool DEBUG_MODE;
 
-    bool isDistant() const { return distant; }
+        const static std::vector<std::string> EVENTTYPES;
 
-    const SuppAlignmentAnno &getSelectedSa1() const { return selectedSa1; }
+        SvEvent(const BreakpointReduced &bp1In,
+                const BreakpointReduced &bp2In,
+                const SuppAlignmentAnno &sa1In,
+                const SuppAlignmentAnno &sa2In,
+                const std::vector<std::pair<int, std::string>> &overhangDb);
 
-    const SuppAlignmentAnno &getSelectedSa2() const { return selectedSa2; }
-    string printMatch(const vector<pair<int, string>> &overhangDb) const;
+        SvEvent(const BreakpointReduced &bp1In,
+                const BreakpointReduced &bp2In,
+                const SuppAlignmentAnno &sa1In,
+                const std::vector<std::pair<int, std::string>> &overhangDb,
+                const SuppAlignmentAnno &dummySaIn);
 
-    bool isToRemove() const { return toRemove; }
+        SvEvent(const BreakpointReduced &bp1In,
+                const SuppAlignmentAnno &sa1In,
+                GermlineMatch germlineInfo2,
+                MrefMatch hitsInMref2In,
+                const std::vector<std::pair<int, std::string>> &overhangDb,
+                const SuppAlignmentAnno &dummySaIn);
 
-    void setToRemove(bool toRemove) { this->toRemove = toRemove; }
+        //	vector<int> getKey() const;
+        std::string getKey() const;
 
-    int getContaminationCandidate() const { return contaminationCandidate; }
+        bool isGermline() const { return germline; }
 
-    void setEventScore(int eventScore) { this->eventScore = eventScore; }
+        int getEventSize() const { return eventSize; }
 
-    void setEventType(int eventType) { this->eventType = eventType; }
+        bool isInverted() const { return inverted; }
 
-    bool isOverhang1Compensation() const { return overhang1Compensation; }
+        int getTotalEvidence1() const { return totalEvidence1; }
 
-    double getOverhang1lengthRatio() const { return overhang1lengthRatio; }
-    double getOverhang2lengthRatio() const { return overhang2lengthRatio; }
+        int getTotalEvidence2() const { return totalEvidence2; }
 
-  private:
-    pair<int, double> mateQualityConditions(const SuppAlignmentAnno &sa);
-    pair<bool, int> assessOverhangQualityCompensation(
-        int lineIndex, const vector<pair<int, string>> &overhangDb) const;
-    pair<bool, short> processMrefHits(const MrefMatch &hitsInMref,
-                                      const SuppAlignmentAnno &sa,
-                                      int evidenceLevelIn) const;
-    double determineGermlineClonalityBp(const BreakpointReduced &bp1,
-                                        const SuppAlignmentAnno &sa,
-                                        double clonalityInit) const;
+        int getEventScore() const { return eventScore; }
 
-    void determineEventTypeAndSize(int posDifferential, bool matchEncounteredM);
+        int getSuspicious() const { return suspicious; }
 
-    int filterMatch(const BreakpointReduced &bp1, const BreakpointReduced &bp2);
-    int filterMatchSingle(const BreakpointReduced &bp1,
-                          const BreakpointReduced &bp2);
-    int filterMatchUnknown(const BreakpointReduced &bp1);
+        double getMateRatio1() const { return mateRatio1; }
 
-    pair<double, double> assessSvClonality(const BreakpointReduced &bp,
-                                           int eventSupportTotal) const;
+        double getMateRatio2() const { return mateRatio2; }
 
-    ClonalityStatus
-    assessBreakpointClonalityStatus(double clonalityRatioIn,
-                                    const BreakpointReduced &bp1,
-                                    const BreakpointReduced &bp2) const;
-    ClonalityStatus
-    assessBreakpointClonalityStatusSingle(double clonalityRatioIn,
-                                          const BreakpointReduced &bp1,
-                                          const BreakpointReduced &bp2) const;
-    ClonalityStatus
-    assessBreakpointClonalityStatusUnknown(double clonalityRatioIn,
-                                           const BreakpointReduced &bp1) const;
+        short getEvidenceLevel1() const { return evidenceLevel1; }
 
-    void assessSvArtifactStatus(const BreakpointReduced &bp1,
-                                const BreakpointReduced &bp2);
-    void assessSvArtifactStatusUnknown();
+        short getEvidenceLevel2() const { return evidenceLevel2; }
 
-    int assessEventScore(bool hardClipSuspiciousCall, int inputScoreCategory);
-    void assessContamination(const vector<pair<int, string>> &overhangDb);
-    pair<int, double>
-    assessContaminationSingleBp(int overhangIndex,
-                                const vector<pair<int, string>> &overhangDb,
-                                const SuppAlignmentAnno &selectedSa);
-    string collapseRange(const vector<string> &vec,
-                         const string &delimiter) const {
-        if (vec.empty()) {
-            return "_";
-        } else {
-            return boost::join(vec, delimiter);
+        bool isSemiSuspicious() const { return semiSuspicious; }
+
+        bool isDistant() const { return distant; }
+
+        const SuppAlignmentAnno &getSelectedSa1() const { return selectedSa1; }
+
+        const SuppAlignmentAnno &getSelectedSa2() const { return selectedSa2; }
+
+        std::string printMatch(const std::vector<std::pair<int, std::string>> &overhangDb) const;
+
+        bool isToRemove() const { return toRemove; }
+
+        void setToRemove(bool toRemove) { this->toRemove = toRemove; }
+
+        int getContaminationCandidate() const { return contaminationCandidate; }
+
+        void setEventScore(int eventScore) { this->eventScore = eventScore; }
+
+        void setEventType(unsigned int eventType) { this->eventType = eventType; }
+
+        bool isOverhang1Compensation() const { return overhang1Compensation; }
+
+        double getOverhang1lengthRatio() const { return overhang1lengthRatio; }
+        double getOverhang2lengthRatio() const { return overhang2lengthRatio; }
+
+      private:
+
+        std::pair<int, double> mateQualityConditions(const SuppAlignmentAnno &sa);
+
+        std::pair<bool, int> assessOverhangQualityCompensation(
+            int lineIndex,
+            const std::vector<std::pair<int, std::string>> &overhangDb) const;
+
+        std::pair<bool, short> processMrefHits(const MrefMatch &hitsInMref,
+                                          const SuppAlignmentAnno &sa,
+                                          int evidenceLevelIn) const;
+
+        double determineGermlineClonalityBp(const BreakpointReduced &bp1,
+                                            const SuppAlignmentAnno &sa,
+                                            double clonalityInit) const;
+
+        void determineEventTypeAndSize(ChrPosition pos1,
+                                       ChrPosition pos2,
+                                       bool matchEncounteredM);
+
+        int filterMatch(const BreakpointReduced &bp1,
+                        const BreakpointReduced &bp2);
+
+        int filterMatchSingle(const BreakpointReduced &bp1,
+                              const BreakpointReduced &bp2);
+
+        int filterMatchUnknown(const BreakpointReduced &bp1);
+
+        std::pair<double, double> assessSvClonality(const BreakpointReduced &bp,
+                                               int eventSupportTotal) const;
+
+        ClonalityStatus
+        assessBreakpointClonalityStatus(double clonalityRatioIn,
+                                        const BreakpointReduced &bp1,
+                                        const BreakpointReduced &bp2) const;
+
+        ClonalityStatus
+        assessBreakpointClonalityStatusSingle(double clonalityRatioIn,
+                                              const BreakpointReduced &bp1,
+                                              const BreakpointReduced &bp2) const;
+
+        ClonalityStatus
+        assessBreakpointClonalityStatusUnknown(double clonalityRatioIn,
+                                               const BreakpointReduced &bp1) const;
+
+        void assessSvArtifactStatus(const BreakpointReduced &bp1,
+                                    const BreakpointReduced &bp2);
+
+        void assessSvArtifactStatusUnknown();
+
+        int assessEventScore(bool hardClipSuspiciousCall, int inputScoreCategory);
+
+        void assessContamination(const std::vector<std::pair<int, std::string>> &overhangDb);
+
+        std::pair<int, double>
+        assessContaminationSingleBp(int overhangIndex,
+                                    const std::vector<std::pair<int, std::string>> &overhangDb,
+                                    const SuppAlignmentAnno &selectedSa);
+
+        std::string collapseRange(const std::vector<std::string> &vec,
+                             const std::string &delimiter) const {
+            if (vec.empty()) {
+                return "_";
+            } else {
+                return boost::join(vec, delimiter);
+            }
         }
-    }
 
-    bool toRemove;
-    int contaminationCandidate;
-    int chrIndex1;
-    int pos1;
-    int chrIndex2;
-    int pos2;
-    int lineIndex1;
-    int lineIndex2;
-    int eventType;
-    int eventSize;
-    bool inverted;
-    bool doubleSupport;
-    bool distant;
-    bool overhang1Compensation;
-    bool overhang2Compensation;
-    int overhang1Index;
-    int overhang2Index;
-    double overhang1lengthRatio;
-    double overhang2lengthRatio;
-    int inputScore;
-    int eventScore;
-    int totalEvidence1;
-    int span1;
-    int totalEvidence2;
-    int span2;
-    short evidenceLevel1;
-    short evidenceLevel2;
-    short mrefHits1;
-    bool mrefHits1Conservative;
-    short mrefHits2;
-    bool mrefHits2Conservative;
-    bool germline;
-    double germlineClonality1;
-    bool germlineStatus1;
-    double germlineClonality2;
-    bool germlineStatus2;
-    SuppAlignmentAnno selectedSa1;
-    SuppAlignmentAnno selectedSa2;
-    double mateRatio1;
-    double mateRatio2;
-    int suspicious;
-    bool semiSuspicious;
-    double artifactRatio1;
-    double clonalityRatio1;
-    ClonalityStatus clonalityStatus1;
-    double artifactRatio2;
-    double clonalityRatio2;
-    ClonalityStatus clonalityStatus2;
-    ArtifactStatus artifactStatus;
-};
+        bool toRemove;
+
+
+        int contaminationCandidate;
+
+        ChrIndex chrIndex1;
+
+        ChrPosition pos1;
+
+        ChrIndex chrIndex2;
+
+        ChrPosition pos2;
+
+        int lineIndex1;
+
+        int lineIndex2;
+
+        // Could probably be an enum.
+        unsigned int eventType;
+
+        int eventSize;
+
+        bool inverted;
+
+        bool doubleSupport;
+
+        bool distant;
+
+        bool overhang1Compensation;
+
+        bool overhang2Compensation;
+
+        // Can have value -1
+        int overhang1Index;
+        int overhang2Index;
+
+        double overhang1lengthRatio;
+
+        double overhang2lengthRatio;
+
+        int inputScore;
+
+        int eventScore;
+
+        int totalEvidence1;
+
+        int span1;
+
+        int totalEvidence2;
+
+        int span2;
+
+        short evidenceLevel1;
+        short evidenceLevel2;
+
+        short mrefHits1;
+
+        bool mrefHits1Conservative;
+        short mrefHits2;
+
+        bool mrefHits2Conservative;
+
+        bool germline;
+
+        double germlineClonality1;
+
+        bool germlineStatus1;
+        double germlineClonality2;
+
+        bool germlineStatus2;
+
+        SuppAlignmentAnno selectedSa1;
+
+        SuppAlignmentAnno selectedSa2;
+
+        double mateRatio1;
+
+        double mateRatio2;
+
+        int suspicious;
+
+        bool semiSuspicious;
+
+        double artifactRatio1;
+
+        double clonalityRatio1;
+
+        ClonalityStatus clonalityStatus1;
+
+        double artifactRatio2;
+
+        double clonalityRatio2;
+
+        ClonalityStatus clonalityStatus2;
+
+        ArtifactStatus artifactStatus;
+    };
 
 } /* namespace sophia */
 

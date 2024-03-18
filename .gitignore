@@ -1,6 +1,10 @@
 .idea/
 *.iml
-*.o
-Release_sophia/sophia
-Release_sophiaAnnotate/sophiaAnnotate
+build/*.o
 include/strtk.hpp
+include/rapidcsv.h
+sophia
+sophiaAnnotate
+sophiaMref
+testRunner
+boost/

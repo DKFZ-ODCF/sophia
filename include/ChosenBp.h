@@ -30,34 +30,55 @@
 
 namespace sophia {
 
-using namespace std;
+    class ChosenBp {
+        friend class Alignment;
 
-class ChosenBp {
-    friend class Alignment;
+      public:
 
-  public:
-    ChosenBp(char bpTypeIn, int bpSizeIn, bool bpEncounteredMIn,
-             int overhangStartIndexIn, int overhangLengthIn,
-             int selfNodeIndexIn)
-        : bpType{bpTypeIn}, bpSize{bpSizeIn}, bpEncounteredM{bpEncounteredMIn},
-          overhangStartIndex{overhangStartIndexIn},
-          overhangLength{overhangLengthIn}, supplementaryAlignments{},
-          childrenNodes{{selfNodeIndexIn}}, selfNodeIndex{selfNodeIndexIn} {}
-    ~ChosenBp() = default;
-    static int BPSUPPORTTHRESHOLD;
+        /**
+         *
+         * @param selfNodeIndexIn     Index into an array of supporting alignments.
+         *                            See alignment::setChosenBp.
+         */
+        ChosenBp(char bpTypeIn,
+                 int bpSizeIn,
+                 bool bpEncounteredMIn,
+                 ChrSize overhangStartIndexIn,
+                 ChrSize overhangLengthIn,
+                 int selfNodeIndexIn)
+            : bpType{bpTypeIn},
+              bpSize{bpSizeIn},
+              bpEncounteredM{bpEncounteredMIn},
+              overhangStartIndex{overhangStartIndexIn},
+              overhangLength{overhangLengthIn},
+              supplementaryAlignments{},
+              childrenNodes{{selfNodeIndexIn}},
+              selfNodeIndex{selfNodeIndexIn} {}
 
-  private:
-    char bpType;
-    int bpSize;
-    bool bpEncounteredM;
-    int overhangStartIndex, overhangLength;
-    vector<SuppAlignment> supplementaryAlignments;
-    vector<int> childrenNodes;
-    int selfNodeIndex;
-    void addChildNode(int indexIn);
-    void
-    addSupplementaryAlignments(const vector<SuppAlignment> &suppAlignments);
-};
+        ~ChosenBp() = default;
+
+        static int BP_SUPPORT_THRESHOLD;
+
+      private:
+
+        char bpType;
+
+        int bpSize;
+
+        bool bpEncounteredM;
+
+        ChrSize overhangStartIndex, overhangLength;
+
+        std::vector<SuppAlignment> supplementaryAlignments;
+
+        std::vector<int> childrenNodes;
+
+        int selfNodeIndex;
+
+        void addChildNode(int indexIn);
+
+        void addSupplementaryAlignments(const std::vector<SuppAlignment> &suppAlignments);
+    };
 
 }   // namespace sophia
 

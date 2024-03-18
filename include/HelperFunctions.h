@@ -26,13 +26,12 @@
 #include <iostream>
 #include <string>
 
+
 namespace sophia {
 
-using namespace std;
+    const int EXITCODE_IOERROR = 1;
 
-const int EXITCODE_IOERROR = 1;
-
-istream &error_terminating_getline(istream &is, string &str);
+    std::istream &error_terminating_getline(std::istream &is, std::string &str);
 
 } /* namespace sophia */
 

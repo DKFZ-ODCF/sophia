@@ -1,0 +1,196 @@
+/*
+ *     Author: Philip R. Kensche, DKFZ Heidelberg (Omics IT and Data Management Core Facility)
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *     LICENSE: GPL
+ */
+
+#ifndef GenericChrConverter_H_
+#define GenericChrConverter_H_
+
+#include "ChrConverter.h"
+#include "global.h"
+#include "ChrCategory.h"
+#include "ChrInfo.h"
+#include "ChrInfoTable.h"
+#include <string>
+#include <vector>
+#include <boost/unordered/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
+
+
+namespace sophia {
+
+    /** This converter provides fast by-index access to the ChrInfoTable.
+      *
+      * Manage all and compressed mref chromosomes.
+      * Allow mapping of all and compressed mref chromosomes.
+      * Freely mix (order) compressed mref chromosomes into all chromosemes.
+      *
+      * This implementation still leaks the compressed mref chromosome detail at a very low
+      * level into the code. More can probably only be improved, if the infamous parse/business
+      * logic mash up in the client code is resolved.
+      **/
+    class GenericChrConverter: public ChrConverter {
+
+      public:
+
+        using ChrToIndexMap =
+            boost::unordered::unordered_map<ChrName, ChrIndex>;
+        using CompressedMrefChrToIndexMap =
+            boost::unordered::unordered_map<ChrName, CompressedMrefIndex>;
+
+      protected:
+
+        /** The ChrInfoTable provides some access to chromosomes and chromosome categories and
+          * guarantees a consistent order of chromosomes. Thus, we use the ChrInfoTable as the
+          * to access chromosome names and sizes using their global index. */
+        const ChrInfoTable chrInfoTable;
+
+        /** ChrInfoTable, is *not* actually for the index-based access. Therefore, as we need
+          * a ChrName -> ChrIndex mapping, we manage this mapping here. */
+        const ChrToIndexMap allChromosomeLookup;
+        static ChrToIndexMap
+        buildAllChromosomeLookup(const ChrInfoTable::ChrNames &chr_info);
+
+        /** A mapping table to convert the compressed mref indices into the global index space */
+        const std::vector<ChrIndex> compressedToAllMapping;
+        static std::vector<ChrIndex>
+        buildCompressedMrefToAllMapping(ChrInfoTable chrInfoIn);
+
+        /** A mapping table to convert the global indices into the compressed mref index space.
+          * This is just a vector indexable by ChrIndex, that contains a non-null optional value
+          * with the CompressedMrefIndex. */
+        const std::vector<std::optional<CompressedMrefIndex>> allToCompressedMapping;
+        static std::vector<std::optional<CompressedMrefIndex>>
+        buildAllToCompressedMrefMapping(ChrInfoTable chrInfoIn);
+
+        // Helper functions
+
+        // ... for parsing
+        static
+        ChrName
+        parseChrBreakPoint(std::string::const_iterator startIt,
+                           std::string::const_iterator endIt,
+                           char stopChar,
+                           const std::string &stopCharExt);
+
+        static
+        ChrName
+        parseChrSimple(std::string::const_iterator startIt,
+                       std::string::const_iterator endIt,
+                       char stopChar);
+
+      public:
+
+        /** Initialize the hg38 chromosome converter with different types of contig/chromosome
+          * names and the sizes of the corresponding chromosomes.
+          **/
+        GenericChrConverter(std::string assemblyName,
+                            ChrInfoTable chrInfo);
+
+        /** This default constructor only makes sense, as long as the hg38 chromosome names are
+            hard-coded. */
+        GenericChrConverter();
+
+        /** Number of chromosomes. */
+        ChrIndex nChromosomes() const;
+
+        /** Number of compressed mref chromosomes. */
+        CompressedMrefIndex nChromosomesCompressedMref() const;
+
+        /** Map an index position to a chromosome name. */
+        ChrName indexToChrName(ChrIndex index) const;
+
+        /** Map an index position to a chromosome name for compressed mref files. */
+        ChrName compressedMrefIndexToChrName(CompressedMrefIndex index) const;
+
+        // The following methods could also be implemented as isCategory(ChrIndex, ChrCategory),
+        // but, for performance reason we provide them as separate methods.
+
+        /** chr1-chr22 */
+        bool isAutosome(ChrIndex index) const;
+
+        /** chrX */
+        bool isX(ChrIndex index) const;
+
+        /** chrY */
+        bool isY(ChrIndex index) const;
+
+        /** chrX, chrY */
+        bool isGonosome(ChrIndex index) const;
+
+        /** phix index. */
+        bool isTechnical(ChrIndex index) const;
+
+        /** NC_007605, EBV. */
+        bool isVirus(ChrIndex index) const;
+
+        /** Mitochondrial chromosome index. */
+        bool isExtrachromosomal(ChrIndex index) const;
+
+        /** Decoy sequence index. */
+        bool isDecoy(ChrIndex index) const;
+
+        /** HLA chromosome index. */
+        bool isHLA(ChrIndex index) const;
+
+        /** ALT chromosome index. */
+        bool isALT(ChrIndex index) const;
+
+        /** Unplaced chromosome index. */
+        bool isUnassigned(ChrIndex index) const;
+
+        /** Whether the chromosome index is that of a compressed mref chromosome. */
+        bool isCompressedMref(ChrIndex index) const;
+
+        /** Map the compressed mref index to the uncompressed mref index. */
+        ChrIndex compressedMrefIndexToIndex(CompressedMrefIndex index) const;
+
+        /** Map an index from the global index-space to the compressed mref index-space. */
+        CompressedMrefIndex indexToCompressedMrefIndex(ChrIndex index) const;
+
+        /** Map compressed mref index to chromosome size. */
+        ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const;
+
+        /** Map a chromosome name to an index position. */
+        ChrIndex chrNameToIndex(ChrName chrName) const;
+
+        /** Parse chromosome index. It takes a position in a character stream, and translates the
+          * following character(s) into index positions (using ChrConverter::indexToChrName).
+          * If the name cannot be parsed, throws a domain_error exception.
+          *
+          * This method parses up to the first occurrence of the `stopCharExt`. Then within the
+          * identified start and end range, parses up to the last occurrence of `stopChar`. This
+          * allows to parse a chromosome name "HLA-DRB1*13:01:01" from a string
+          * "HLA-DRB1*13:01:01:2914|(4,0,0?/0)" by first separating out the `|` separator
+          * (stopCharExt), and then finding the last `:` separator (stopChar).
+          **/
+        static
+        ChrName parseChr(std::string::const_iterator startIt,
+                         std::string::const_iterator endIt,
+                         char stopChar,
+                         const std::string &stopCharExt = "");
+
+        // The same as `parseChr`, but returns the index instead of the name.
+        ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
+                                        std::string::const_iterator endIt,
+                                        char stopChar,
+                                        const std::string &stopCharExt = nullptr) const;
+
+    };
+
+}
+
+#endif /* GenericChrConverter_H_ */

@@ -21,21 +21,21 @@
  */
 
 #include "HelperFunctions.h"
+#include <iostream>
 
 namespace sophia {
 
-using namespace std;
+    std::istream &
+    error_terminating_getline(std::istream &is,
+                              std::string &str) {
+        getline(is, str);
 
-istream &
-error_terminating_getline(istream &is, string &str) {
-    getline(is, str);
+        if (is.bad()) {
+            perror("Error reading line from file");
+            exit(EXITCODE_IOERROR);
+        }
 
-    if (is.bad()) {
-        perror("Error reading line from file");
-        exit(EXITCODE_IOERROR);
+        return is;
     }
-
-    return is;
-}
 
 } /* namespace sophia */
