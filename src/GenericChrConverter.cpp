@@ -83,11 +83,11 @@ namespace sophia {
     GenericChrConverter::GenericChrConverter(
         std::string assemblyNameIn,
         ChrInfoTable chrInfoTableIn)
-            : chrInfoTable { chrInfoTableIn },
+            : ChrConverter(assemblyNameIn),
+              chrInfoTable { chrInfoTableIn },
               allChromosomeLookup { buildAllChromosomeLookup(chrInfoTableIn.getNames()) },
               compressedToAllMapping { buildCompressedMrefToAllMapping(chrInfoTableIn) },
-              allToCompressedMapping { buildAllToCompressedMrefMapping(chrInfoTableIn) },
-              assemblyName { assemblyNameIn } {}
+              allToCompressedMapping { buildAllToCompressedMrefMapping(chrInfoTableIn) } {}
 
     /** Number of all chromosomes. */
     ChrIndex GenericChrConverter::nChromosomes() const {

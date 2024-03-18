@@ -22,7 +22,7 @@ namespace sophia {
     TEST_F(GenericChrConverterFixture, GenericChrConverter_assemblyName) {
         const GenericChrConverter &converter =
                 dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
-        EXPECT_EQ(converter.assemblyName, "hg38");
+        EXPECT_EQ(converter.getAssemblyName(), "hg38");
     }
 
     TEST_F(GenericChrConverterFixture, GenericChrConverter_nChromosomes) {

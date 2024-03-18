@@ -23,7 +23,14 @@
 
 namespace sophia {
 
+    ChrConverter::ChrConverter(const std::string &assemblyNameIn) :
+        assemblyName(assemblyNameIn) {}
+
     ChrConverter::~ChrConverter() {}
+
+    std::string ChrConverter::getAssemblyName() const {
+        return assemblyName;
+    }
 
     bool ChrConverter::isInBlockedRegion(ChrIndex chrIndex [[gnu::unused]],
                                          ChrSize position [[gnu::unused]]) const {

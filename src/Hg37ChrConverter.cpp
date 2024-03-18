@@ -359,8 +359,6 @@ namespace sophia {
 
     } /* namespace hg37 */
 
-    const std::string Hg37ChrConverter::assemblyName = "hg37";
-
     bool Hg37ChrConverter::isValid(ChrIndex index) {
         return index != hg37::INVALID && index != hg37::ZERO && (
             _isAutosome(index) ||
@@ -437,6 +435,7 @@ namespace sophia {
                                        const std::vector<ChrName> &compressedMrefIndexToChrName,
                                        const std::vector<ChrSize> &chrSizesCompressedMref,
                                        const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex) :
+                    ChrConverter("classic_hg37"),
                     _indexToChrName {indexToChrName},
                     _compressedMrefIndexToChrName {compressedMrefIndexToChrName},
                     _chrSizesCompressedMref {chrSizesCompressedMref},

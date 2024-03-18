@@ -94,8 +94,6 @@ namespace sophia {
 
       public:
 
-        const std::string assemblyName;
-
         /** Initialize the hg38 chromosome converter with different types of contig/chromosome
           * names and the sizes of the corresponding chromosomes.
           **/

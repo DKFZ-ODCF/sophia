@@ -41,12 +41,17 @@ namespace sophia {
       **/
     class ChrConverter {
 
+      private:
+
+        const std::string assemblyName;
+
       public:
+
+        ChrConverter(const std::string &assemblyNameIn);
 
         virtual ~ChrConverter();
 
-        /** The name of the assembly. */
-        static const std::string assemblyName;
+        std::string getAssemblyName() const;
 
         /** Number of chromosomes. */
         virtual ChrIndex nChromosomes() const = 0;
