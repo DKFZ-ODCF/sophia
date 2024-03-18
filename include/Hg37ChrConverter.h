@@ -33,28 +33,77 @@ namespace sophia {
       protected:
 
         /** The constructor does additional checks of the dimensions of the input vectors. */
-        Hg37ChrConverter(const std::vector<std::string>& indexToChr,
+        Hg37ChrConverter(const std::vector<std::string>& indexToChrName,
                          const std::vector<std::string>& indexToChrCompressedMref,
                          const std::vector<ChrSize>& chrSizesCompressedMref,
-                         const std::vector<ChrIndex>& compressedMrefToIndex);
+                         const std::vector<CompressedMrefIndex>& indexToCompressedMrefIndex);
 
         /** Mapping indices to chromosome names. */
-        const std::vector<std::string> indexToChr;
+        const std::vector<std::string> _indexToChrName;
 
         /** Mapping indices to chromosome names for compressed mref indices. */
-        const std::vector<std::string> indexToChrCompressedMref;
+        const std::vector<std::string> _compressedMrefIndexToChrName;
 
         /** Chromosome sizes in base pairs, only for compressed mref chromosomes. */
-        const std::vector<ChrSize> chrSizesCompressedMref;
+        const std::vector<ChrSize> _chrSizesCompressedMref;
 
         /** Mapping compressed mref indices names to indices. */
-        const std::vector<ChrIndex> compressedMrefToIndex;
+        const std::vector<CompressedMrefIndex> _indexToCompressedMrefIndex;
 
-        static const ChrIndex phixChrIndex;
+        /* Mapping of compressed mref indices to indices. */
+        const std::vector<ChrIndex> _compressedMrefIndexToIndex;
+
+        static bool isValid(ChrIndex index);
+
+        static void assertValid(ChrIndex index);
+
+        static bool isValid(CompressedMrefIndex index);
+
+        static void assertValid(CompressedMrefIndex index);
+
+        // The following static methods are used for checks during construction, but also
+        // to implement the public interface.
+
+        /** chr1-chr22, GL00+ */
+        inline static bool _isAutosome(ChrIndex index);
+
+        /** chrX */
+        inline static bool _isX(ChrIndex index);
+
+        /** chrY */
+        inline static bool _isY(ChrIndex index);
+
+        /** chrX, chrY */
+        inline static bool _isGonosome(ChrIndex index);
+
+        /** phix index. */
+        inline static bool _isTechnical(ChrIndex index);
+
+        /** NC_007605. */
+        inline static bool _isVirus(ChrIndex index);
+
+        /** Mitochondrial chromosome index. */
+        inline static bool _isExtrachromosomal(ChrIndex index);
+
+        /** Decoy sequence index. */
+        inline static bool _isDecoy(ChrIndex index);
+
+        /** GL00.+ */
+        inline static bool _isUnassigned(ChrIndex index);
+
+        /** none */
+        inline static bool _isALT(ChrIndex index);
+
+        /** none */
+        inline static bool _isHLA(ChrIndex index);
 
       public:
 
         static const std::string assemblyName;
+
+        static std::vector<ChrIndex> _buildCompressedMrefIndexToIndex(
+            CompressedMrefIndex nChromosomes,
+            const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex);
 
         Hg37ChrConverter();
 
@@ -68,10 +117,16 @@ namespace sophia {
         std::string indexToChrName(ChrIndex index) const;
 
         /** Map an index position to a chromosome name for compressed mref files. */
-        std::string indexToChrNameCompressedMref(CompressedMrefIndex index) const;
+        std::string compressedMrefIndexToChrName(CompressedMrefIndex index) const;
 
         /** chr1-chr22, GL00+ */
         bool isAutosome(ChrIndex index) const;
+
+        /** chrX */
+        bool isX(ChrIndex index) const;
+
+        /** chrY */
+        bool isY(ChrIndex index) const;
 
         /** chrX, Y, ... */
         bool isGonosome(ChrIndex index) const;
@@ -118,7 +173,7 @@ namespace sophia {
         bool isInBlockedRegion(ChrIndex chrIndex, ChrSize position) const;
 
         /* This is parsing code. It takes a position in a character stream, and translates the
-           following character(s) into index positions (see ChrConverter::indexToChr). It is
+           following character(s) into index positions (see ChrConverter::indexToChrName). It is
            slightly modified from the original implementation by Umut Toprak.
 
            If the first position is a digit, read up to the next stopChar.

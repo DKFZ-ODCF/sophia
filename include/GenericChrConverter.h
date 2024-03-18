@@ -39,7 +39,7 @@ namespace sophia {
       * Freely mix (order) compressed mref chromosomes into all chromosemes.
       *
       * This implementation still leaks the compressed mref chromosome detail at a very low
-      * level into the code. More can probably onl be improved, if the infamous parse/business
+      * level into the code. More can probably only be improved, if the infamous parse/business
       * logic mash up in the client code is resolved.
       **/
     class GenericChrConverter: public ChrConverter {
@@ -94,8 +94,6 @@ namespace sophia {
 
       public:
 
-        const std::string assemblyName;
-
         /** Initialize the hg38 chromosome converter with different types of contig/chromosome
           * names and the sizes of the corresponding chromosomes.
           **/
@@ -116,13 +114,19 @@ namespace sophia {
         ChrName indexToChrName(ChrIndex index) const;
 
         /** Map an index position to a chromosome name for compressed mref files. */
-        ChrName indexToChrNameCompressedMref(CompressedMrefIndex index) const;
+        ChrName compressedMrefIndexToChrName(CompressedMrefIndex index) const;
 
         // The following methods could also be implemented as isCategory(ChrIndex, ChrCategory),
         // but, for performance reason we provide them as separate methods.
 
         /** chr1-chr22 */
         bool isAutosome(ChrIndex index) const;
+
+        /** chrX */
+        bool isX(ChrIndex index) const;
+
+        /** chrY */
+        bool isY(ChrIndex index) const;
 
         /** chrX, chrY */
         bool isGonosome(ChrIndex index) const;
@@ -164,7 +168,7 @@ namespace sophia {
         ChrIndex chrNameToIndex(ChrName chrName) const;
 
         /** Parse chromosome index. It takes a position in a character stream, and translates the
-          * following character(s) into index positions (using ChrConverter::indexToChr).
+          * following character(s) into index positions (using ChrConverter::indexToChrName).
           * If the name cannot be parsed, throws a domain_error exception.
           *
           * This method parses up to the first occurrence of the `stopCharExt`. Then within the

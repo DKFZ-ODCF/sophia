@@ -21,8 +21,8 @@ chr19	58617616	TRUE	autosome
 chr20	64444167	TRUE	autosome
 chr21	46709983	TRUE	autosome
 chr22	50818468	TRUE	autosome
-chrX	156040895	TRUE	gonosome
-chrY	57227415	TRUE	gonosome
+chrX	156040895	TRUE	x
+chrY	57227415	TRUE	y
 chrM	16569	FALSE	extrachromosomal
 chr1_KI270706v1_random	175055	TRUE	unassigned
 chr1_KI270707v1_random	32032	TRUE	unassigned

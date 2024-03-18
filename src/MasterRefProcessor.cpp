@@ -55,13 +55,30 @@ namespace sophia {
           DEFAULT_READ_LENGTH{ defaultReadLengthIn },
           mrefDb {} {
 
-        // Initialize the mrefDb with default values. Only for compressed Mref indices.
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        for (CompressedMrefIndex i = 0;
-             i < chrConverter.nChromosomesCompressedMref();
-             ++i) {
-            // NOTE: This will allocate a lot of memory as the total size of the vectors is the
-            //       genome size (3.7GB for hg19).
+
+        // Preallocate the full memory in one go. Otherwise, the vector will be repeatedly
+        // copied and reallocated, which is slow. Also the finally reserved size will be
+        // larger than necessary.
+        // NOTE: This will allocate a lot of memory as the total size of the vectors is the
+        //       genome size (3.7 giga-bases for hg19).
+        std::vector<std::vector<sophia::MrefEntry>>::size_type totalSize = 0;
+        for (CompressedMrefIndex i = 0; i < chrConverter.nChromosomesCompressedMref(); ++i) {
+            totalSize += static_cast<std::vector<std::vector<sophia::MrefEntry>>::size_type>(
+                chrConverter.chrSizeCompressedMref(i) + 1);
+        }
+        cerr << "Allocating "
+             << std::ceil(sizeof(sophia::MrefEntry) * totalSize / 1024.0 / 1024.0 / 1024.0)
+             << " GB for mrefDb ..."
+             << endl;
+        mrefDb.reserve(totalSize);
+
+        // Initialize the mrefDb with default values.
+        for (CompressedMrefIndex i = 0; i < chrConverter.nChromosomesCompressedMref(); ++i) {
+            // It is unclear, why here +1 is added to the chromosomes sizes, in particular, as
+            // the original chromosome size data already had sized incremented by 1 summing up
+            // to total genome size here of N*2 additional positions, with N being the number of
+            // compressed master-ref chromosomes. This is just kept for all changes :|
             mrefDb.emplace_back(chrConverter.chrSizeCompressedMref(i) + 1, MrefEntry{});
         }
 
@@ -77,7 +94,7 @@ namespace sophia {
                     // Match the version in the gzFile name. Note that we traverse the gzFile name
                     // in reverse order (from end), and therefore the matching algorithm is
                     // formulated in reverse order.
-                    if (*rit != version[(unsigned long) posOnVersion]) {
+                    if (*rit != version[static_cast<unsigned long>(posOnVersion)]) {
                         // No match, means continue searching.
                         posOnVersion = version.size() - 1;
                     } else {
@@ -121,7 +138,6 @@ namespace sophia {
         for (const auto &gzFile : filesIn) {
             chrono::time_point<chrono::steady_clock> start =
                 chrono::steady_clock::now();
-
             // newBreakpoints contains only information for chromosomes from the compressedMref set.
             auto newBreakpoints = processFile(gzFile, fileIndex);
             chrono::time_point<chrono::steady_clock> end = chrono::steady_clock::now();
@@ -155,7 +171,7 @@ namespace sophia {
 
             // Write the breakpoint information.
             std::string chromosome =
-                chrConverter.indexToChrNameCompressedMref(compressedMrefChrIndex);
+                chrConverter.compressedMrefIndexToChrName(compressedMrefChrIndex);
             --compressedMrefChrIndex;
             for (auto &bp : mrefDb.back()) {
                 if (bp.isValid()) {
@@ -185,7 +201,7 @@ namespace sophia {
         CompressedMrefIndex vectorSize = chrConverter.nChromosomesCompressedMref();
 
         vector<vector<BreakpointReduced>> fileBps = vector<vector<BreakpointReduced>>
-            { (unsigned int) vectorSize, vector<BreakpointReduced>{}};
+            { static_cast<unsigned int>(vectorSize), vector<BreakpointReduced>{}};
         auto lineIndex = 0;
 
         while (error_terminating_getline(gzStream, sophiaLine)) {
@@ -197,8 +213,7 @@ namespace sophia {
                     globalIndex = chrConverter.parseChrAndReturnIndex(
                         sophiaLine.cbegin(), sophiaLine.cend(), '\t');
                 } catch (const DomainError &e) {
-                    e <<
-                        error_info_string("file = " + gzPath + ", line = " + sophiaLine);
+                    e << error_info_string("file = " + gzPath + ", line = " + sophiaLine);
                     throw e;
                 }
 
@@ -207,8 +222,9 @@ namespace sophia {
                     CompressedMrefIndex compressedMrefIndex =
                         chrConverter.indexToCompressedMrefIndex(globalIndex);
                     Breakpoint tmpBp = Breakpoint::parse(sophiaLine, true);
-                    fileBps[(unsigned int) compressedMrefIndex].emplace_back(
-                        tmpBp, lineIndex++,
+                    fileBps[static_cast<unsigned int>(compressedMrefIndex)].emplace_back(
+                        tmpBp,
+                        lineIndex++,
                         (sophiaLine.back() != '.' && sophiaLine.back() != '#'));
                 }
             }
@@ -234,10 +250,14 @@ namespace sophia {
                                   short fileIndex) {
         MrefEntry tmpMrefEntry{};
         tmpMrefEntry.addEntry(bp, fileIndex);
-        auto validityInit = mrefDb[(unsigned long) chrIndex][tmpMrefEntry.getPos()].getValidityScore();
-        mrefDb[(unsigned long) chrIndex][tmpMrefEntry.getPos()].mergeMrefEntries(tmpMrefEntry);
-        auto validityFinal =
-            mrefDb[(unsigned long) chrIndex][tmpMrefEntry.getPos()].getValidityScore();
+
+        unsigned long pos = static_cast<unsigned long>(tmpMrefEntry.getPos());
+        unsigned int idx = static_cast<unsigned int>(chrIndex);
+
+        auto validityInit = mrefDb[idx][pos].getValidityScore();
+        mrefDb[idx][pos].mergeMrefEntries(tmpMrefEntry);
+        auto validityFinal = mrefDb[idx][pos].getValidityScore();
+
         return validityFinal > validityInit;
     }
 

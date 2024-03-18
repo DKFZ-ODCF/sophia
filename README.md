@@ -192,6 +192,7 @@ If you built SOPHIA with dynamic libraries, the some libraries are runtime requi
   * Boost 1.82.0
   * libbacktrace 20220708
   * gtest 1.14.0
+  * gmock 1.14.0
   * rapidcsv 8.0.0
   * strtk 0.6.0
 
@@ -356,6 +357,7 @@ If you want to know more then, currently, the only documentation of we can offer
   * Patch: Added unit tests.
   * Patch: Code readability improvements, documentation, `.editorconfig` file, and `clang-format` configuration
   * Patch: Major refactorings for code clarity (and understanding of the convoluted code) and to improve usage of C++ type system for compiler-based checks of changes.
+  * Patch: For `sophiaAnnotate` the default value for clonalitylofreq was advertised in the usage information as 10, but the actual value was 5. Now, the correct values (5) is advertised as default.
     
 * 35 (9e3b6ed)
   * Forked from [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)

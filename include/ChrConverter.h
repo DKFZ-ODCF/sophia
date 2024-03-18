@@ -41,17 +41,23 @@ namespace sophia {
       **/
     class ChrConverter {
 
+      private:
+
+        const std::string assemblyName;
+
       public:
+
+        ChrConverter(const std::string &assemblyNameIn);
 
         virtual ~ChrConverter();
 
-        /** The name of the assembly. */
-        static const std::string assemblyName;
+        std::string getAssemblyName() const;
 
         /** Number of chromosomes. */
         virtual ChrIndex nChromosomes() const = 0;
 
-        /** Map an index position to a chromosome name. */
+        /** Map an index position to a chromosome name. Throws illegal_argument error, if the
+            the index is not valid. */
         virtual ChrName indexToChrName(ChrIndex index) const = 0;
 
         /** Map a chromosome name to an index position. */
@@ -62,6 +68,12 @@ namespace sophia {
 
         /** chrX, Y, ...*/
         virtual bool isGonosome(ChrIndex index) const = 0;
+
+        /** chrX */
+        virtual bool isX(ChrIndex index) const = 0;
+
+        /** chrY */
+        virtual bool isY(ChrIndex index) const = 0;
 
         /** phix index. */
         virtual bool isTechnical(ChrIndex index) const = 0;
@@ -91,7 +103,7 @@ namespace sophia {
         virtual CompressedMrefIndex nChromosomesCompressedMref() const = 0;
 
         /** Map an index position to a chromosome name for compressed mref files. */
-        virtual ChrName indexToChrNameCompressedMref(CompressedMrefIndex index) const = 0;
+        virtual ChrName compressedMrefIndexToChrName(CompressedMrefIndex index) const = 0;
 
         /** Map an index from the global index-space to the compressed mref index-space. */
         virtual CompressedMrefIndex indexToCompressedMrefIndex(ChrIndex index) const = 0;
@@ -116,7 +128,7 @@ namespace sophia {
           *
           * If the `stopCharExt` parameter is an empty string, then it takes a position in a
           * character stream, and translates the following character(s) into index positions
-          * (using ChrConverter::indexToChr). If the name cannot be parsed, throws a domain_error
+          * (using ChrConverter::indexToChrName). If the name cannot be parsed, throws a domain_error
           * exception.
           *
           * IMPORTANT: Implementations may or may not use the `stopCharExt` parameter. Therefore,

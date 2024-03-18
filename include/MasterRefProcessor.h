@@ -52,7 +52,7 @@ namespace sophia {
 
       private:
         // Note that all methods and fields are private.
-        // The MasterRefProcessor is does all the work during construction time.
+        // The MasterRefProcessor does all the work during construction time.
 
         unsigned long long processFile(const string &gzPath, short fileIndex);
         bool processBp(BreakpointReduced &bp, ChrIndex chrIndex, short fileIndex);
@@ -60,6 +60,10 @@ namespace sophia {
         const int NUM_PIDS;
         const ChrSize DEFAULT_READ_LENGTH;
         unique_ptr<ofstream> mergedBpsOutput;
+
+        /** This will be a huge data structure, that contains one MrefEntry per position in the
+         *  master reference chromosomes.
+         **/
         vector<vector<MrefEntry>> mrefDb;
     };
 

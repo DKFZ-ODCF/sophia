@@ -21,8 +21,8 @@ chromosome	size	compressedMref	category
 20	63025520	TRUE	autosome
 21	48129895	TRUE	autosome
 22	51304566	TRUE	autosome
-X	155270560	TRUE	gonosome
-Y	59373566	TRUE	gonosome
+X	155270560	TRUE	x
+Y	59373566	TRUE	y
 MT	16569	FALSE	extrachromosomal
 GL000207.1	4262	TRUE	unassigned
 GL000226.1	15008	TRUE	unassigned

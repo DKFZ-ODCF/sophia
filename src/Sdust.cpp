@@ -89,7 +89,7 @@ namespace sophia {
             if (i < 0) {
                 throw_with_trace(std::logic_error("Sdust::findPerfectRegions index variable i < 0"));
             }
-            auto t = w[(unsigned int) i];
+            auto t = w[static_cast<unsigned int>(i)];
             addTripletInfo(r, c, t);
             auto newScore = r / (static_cast<int>(w.size()) - i - 1.0);
             if ((newScore * 10) > SCORE_THRESHOLD) {
@@ -129,14 +129,14 @@ namespace sophia {
         ++L;
         addTripletInfo(rW, cW, t);
         addTripletInfo(rV, cV, t);
-        if ((cV[(unsigned int) t] * 10) > (SCORE_THRESHOLD * 2)) {
+        if ((cV[static_cast<unsigned int>(t)] * 10) > (SCORE_THRESHOLD * 2)) {
             int s{0};
             do {
-                int idx = (int) w.size() - (int) L;
+                int idx = static_cast<int>(w.size()) - static_cast<int>(L);
                 if (idx < 0) {
                     throw_with_trace(std::logic_error("Sdust::shiftWindow index (w.size() - L) < 0"));
                 }
-                s = w[(unsigned int) idx];
+                s = w[static_cast<unsigned int>(idx)];
                 removeTripletInfo(rV, cV, s);
                 --L;
             } while (s != t);
@@ -148,8 +148,8 @@ namespace sophia {
         if (t < 0) {
             throw_with_trace(std::logic_error("Sdust::addTripletInfo index variable t < 0"));
         }
-        r += c[(unsigned int) t];
-        ++c[(unsigned int) t];
+        r += c[static_cast<unsigned int>(t)];
+        ++c[static_cast<unsigned int>(t)];
     }
 
     void
@@ -157,8 +157,8 @@ namespace sophia {
         if (t < 0) {
             throw_with_trace(std::logic_error("Sdust::removeTripletInfo index variable t < 0"));
         }
-        --c[(unsigned int) t];
-        r -= c[(unsigned int) t];
+        --c[static_cast<unsigned int>(t)];
+        r -= c[static_cast<unsigned int>(t)];
     }
 
     int
@@ -166,9 +166,9 @@ namespace sophia {
         if (indexPos < 0) {
             throw_with_trace(std::logic_error("Sdust::triplet index variable indexPos < 0"));
         }
-        return 16 * overhangIn[(unsigned int) indexPos] +
-                4 * overhangIn[(unsigned int) indexPos + 1] +
-                    overhangIn[(unsigned int) indexPos + 2];
+        return 16 * overhangIn[static_cast<unsigned int>(indexPos)] +
+                4 * overhangIn[static_cast<unsigned int>(indexPos) + 1] +
+                    overhangIn[static_cast<unsigned int>(indexPos) + 2];
     }
 
 } /* namespace sophia */

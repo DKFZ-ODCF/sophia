@@ -53,8 +53,8 @@ namespace sophia {
             BASE_QUALITY_THRESHOLD,
             BASE_QUALITY_THRESHOLD_LOW;
 
-        static unsigned int CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD,
-                            INDEL_NUCLEOTIDE_COUNT_THRESHOLD;
+        static ChrSize CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD,
+                       INDEL_NUCLEOTIDE_COUNT_THRESHOLD;
 
         static double ISIZEMAX;
 
@@ -70,7 +70,7 @@ namespace sophia {
 
         const string &getSamLine() const { return samLine; }
 
-        const vector<ChrSize> &getSamChunkPositions() const {
+        const vector<unsigned int> &getSamChunkPositions() const {
             return samTabPositions;
         }
 
@@ -84,7 +84,7 @@ namespace sophia {
             return readBreakpointTypes;
         }
 
-        void setChosenBp(ChrSize chosenBpLoc, unsigned int alignmentIndex);
+        void setChosenBp(ChrSize chosenBpLoc, int alignmentIndex);
 
         bool isOverhangEncounteredM() const { return chosenBp->bpEncounteredM; }
 
@@ -139,7 +139,7 @@ namespace sophia {
 
         void mappingQualityCheck();
 
-        /** The `Alignment` isEventCandidate` is true, if the last CIGAR code indicates a match,
+        /** The `Alignment::isEventCandidate` is true, if the last CIGAR code indicates a match,
          *  or if the CIGAR indicates a soft-clip, hard-clip, insertion, or deletion.
          */
         bool isEventCandidate() const;
@@ -187,7 +187,7 @@ namespace sophia {
 
         bool validLine;
 
-        vector<ChrSize> samTabPositions;
+        vector<unsigned int> samTabPositions;
 
         string::const_iterator saCbegin, saCend;
 

@@ -16,7 +16,6 @@
 #include "GlobalAppConfig.h"
 #include "Hg37ChrConverter.h"
 #include "GenericChrConverter.h"
-#include "HelperFunctions.h"
 #include "ChrInfo.h"
 #include "ChrInfoTable.h"
 #include "ChrCategory.h"
@@ -26,7 +25,7 @@ int main(int argc, char** argv) {
     using namespace std;
     using namespace sophia;
 
-    unsigned int defaultReadLength { 0 };
+    ChrSize defaultReadLength { 0 };
     string assemblyName = "classic_hg37";
 
     try {
@@ -47,7 +46,7 @@ int main(int argc, char** argv) {
                 boost::program_options::value<string>(&assemblyName)->default_value("classic_hg37"),
                 "assembly name (classic_hg37, hg38, ...)")
             ("defaultreadlength",
-                boost::program_options::value<unsigned int>(&defaultReadLength),
+                boost::program_options::value<ChrSize>(&defaultReadLength),
                 "Default read length for the technology used in sequencing, e.g. 101 or 151.")
         ;
 
@@ -90,11 +89,17 @@ int main(int argc, char** argv) {
         }
 
         if (inputVariables.count("defaultreadlength")) {
-            defaultReadLength = inputVariables["defaultreadlength"].as<unsigned int>();
+            defaultReadLength = inputVariables["defaultreadlength"].as<ChrSize>();
         } else {
-            cerr << "Default read Length not given, exiting" << endl;
+            cerr << "Default read length not given, exiting" << endl;
             return 1;
         }
+        if (defaultReadLength < 1) {
+            cerr << "Default read length " << std::to_string(defaultReadLength)
+                 << " is invalid." << endl;
+            return 1;
+        }
+
 
         string outputRoot { };
         if (inputVariables.count("outputrootname")) {
@@ -107,6 +112,8 @@ int main(int argc, char** argv) {
         SuppAlignment::DEFAULT_READ_LENGTH = defaultReadLength;
         SuppAlignmentAnno::DEFAULT_READ_LENGTH = defaultReadLength;
         MrefEntry::NUM_PIDS = gzListIn.size();
+
+        cerr << "Running sophiaMref on " << MrefEntry::NUM_PIDS << " PIDs ..." << endl;
         MasterRefProcessor mRefProcessor { gzListIn, outputRoot, version, defaultReadLength };
 
         return 0;

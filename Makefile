@@ -97,6 +97,7 @@ sophia: $(BUILD_DIR)/global.o \
 		$(BUILD_DIR)/Breakpoint.o \
 		$(BUILD_DIR)/ChosenBp.o \
 		$(BUILD_DIR)/ChrConverter.o \
+		$(BUILD_DIR)/IndexRange.o \
 		$(BUILD_DIR)/Hg37ChrConverter.o \
 		$(BUILD_DIR)/GenericChrConverter.o \
 		$(BUILD_DIR)/MateInfo.o \
@@ -121,6 +122,7 @@ sophiaAnnotate: $(BUILD_DIR)/global.o \
 				$(BUILD_DIR)/Breakpoint.o \
 				$(BUILD_DIR)/BreakpointReduced.o \
 				$(BUILD_DIR)/ChrConverter.o \
+				$(BUILD_DIR)/IndexRange.o \
 				$(BUILD_DIR)/Hg37ChrConverter.o \
 				$(BUILD_DIR)/GenericChrConverter.o \
 				$(BUILD_DIR)/DeFuzzier.o \
@@ -149,6 +151,7 @@ sophiaMref: $(BUILD_DIR)/global.o \
 			$(BUILD_DIR)/Alignment.o \
 			$(BUILD_DIR)/GlobalAppConfig.o \
 			$(BUILD_DIR)/ChrConverter.o \
+			$(BUILD_DIR)/IndexRange.o \
 			$(BUILD_DIR)/Hg37ChrConverter.o \
 			$(BUILD_DIR)/GenericChrConverter.o \
 			$(BUILD_DIR)/HelperFunctions.o \

@@ -3,9 +3,8 @@
 
 
 #include <string>
-#include <boost/unordered/unordered_map.hpp>
 #include <iterator>
-
+#include <boost/unordered/unordered_map.hpp>
 
 namespace sophia {
 
@@ -27,6 +26,8 @@ namespace sophia {
         // Used for initialization.
         static const boost::unordered::unordered_map<std::string, const ChrCategory> categories;
 
+        static const std::vector<ChrCategory> sorted_categories;
+
       public:
         // Only used to define categories.
         ChrCategory(const std::string &s, std::size_t index);
@@ -36,8 +37,10 @@ namespace sophia {
 
         /** Autosomal contigs, e.g. chr1, chr2, ..., chr22 */
         static const ChrCategory& AUTOSOME;
-        /** Gonosomal contigs, e.g. chrX, Y */
-        static const ChrCategory& GONOSOME;
+        /** X chromosome */
+        static const ChrCategory& X;
+        /** Y chromosome */
+        static const ChrCategory& Y;
         /** extrachromosomalContigs  Extrachromosomal contigs, e.g. chrM, chrMT */
         static const ChrCategory& EXTRACHROMOSOMAL;
         /** Joined category for unlocalized, unplaced, or random placed contigs
@@ -63,7 +66,7 @@ namespace sophia {
 
         static size_type numCategories();
 
-        static std::vector<ChrCategory> getCategories();
+        static const std::vector<ChrCategory>& getCategories();
 
         std::string getName() const;
 
@@ -100,7 +103,14 @@ namespace std {
     template<>
     struct equal_to<sophia::ChrCategory> {
         bool operator()(const sophia::ChrCategory& lhs, const sophia::ChrCategory& rhs) const {
-            return lhs.getName() == rhs.getName();
+            return lhs.operator==(rhs);
+        }
+    };
+
+    template<>
+    struct less<sophia::ChrCategory> {
+        bool operator()(const sophia::ChrCategory& lhs, const sophia::ChrCategory& rhs) const {
+            return lhs.operator<(rhs);
         }
     };
 

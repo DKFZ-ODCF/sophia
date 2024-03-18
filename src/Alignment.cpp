@@ -43,8 +43,8 @@ namespace sophia {
     int Alignment::BASE_QUALITY_THRESHOLD{},
         Alignment::BASE_QUALITY_THRESHOLD_LOW{};
 
-    unsigned int Alignment::CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD{},
-                 Alignment::INDEL_NUCLEOTIDE_COUNT_THRESHOLD{};
+    ChrSize Alignment::CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD{},
+            Alignment::INDEL_NUCLEOTIDE_COUNT_THRESHOLD{};
 
     double Alignment::ISIZEMAX{};
     Alignment::Alignment()
@@ -79,13 +79,13 @@ namespace sophia {
             }
             try {
                 chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
-                    next(samLine.cbegin(), (signed long) samTabPositions[1] + 1),
+                    next(samLine.cbegin(), static_cast<long>(samTabPositions[1]) + 1),
                     samLine.cend(),
                     '\t');
             } catch (DomainError &e) {
                 e << error_info_string("line = " +
                                        std::string(next(samLine.cbegin(),
-                                                   (signed long) samTabPositions[1] + 1),
+                                                   static_cast<long>(samTabPositions[1]) + 1),
                                                    samLine.cend()));
                 throw e;
             }
@@ -95,12 +95,12 @@ namespace sophia {
     void
     Alignment::continueConstruction() {
         mappingQualityCheck();  // May set the readType to 7!
-        for (auto startPos_cit = samLine.cbegin() + 1 + (signed long) samTabPositions[2];
-             startPos_cit != samLine.cbegin() + (signed long) samTabPositions[3];
+        for (auto startPos_cit = samLine.cbegin() + 1 + static_cast<int>(samTabPositions[2]);
+             startPos_cit != samLine.cbegin() + static_cast<int>(samTabPositions[3]);
              ++startPos_cit) {
-            startPos = startPos * 10 + (ChrSize) ChrSize(*startPos_cit - '0');
+            startPos = startPos * 10 + ChrSize(*startPos_cit - '0');
         }
-        signed int readLength = (signed int) (samTabPositions[9] - samTabPositions[8] - 1);
+        ChrSize readLength = static_cast<ChrSize>(samTabPositions[9] - samTabPositions[8] - 1);
         if (readLength < 0) {
             throw_with_trace(std::logic_error("Invalid calculated readLength < 0: " +
                                               std::to_string(readLength)));
@@ -108,8 +108,8 @@ namespace sophia {
         endPos = startPos + ChrSize(readLength);
 
         unsigned short flag = 0;
-        for (auto flag_cit = samLine.cbegin() + 1 + (signed long) samTabPositions[0];
-             flag_cit != samLine.cbegin() + (signed long) samTabPositions[1]; ++flag_cit) {
+        for (auto flag_cit = samLine.cbegin() + 1 + static_cast<long>(samTabPositions[0]);
+             flag_cit != samLine.cbegin() + static_cast<long>(samTabPositions[1]); ++flag_cit) {
              if (*flag_cit >= '0') {
                 flag = flag * 10 + (unsigned short) ((signed short) *flag_cit - '0');
             } else {
@@ -128,8 +128,8 @@ namespace sophia {
             createCigarChunks();
             assignBreakpointsAndOverhangs();
             if (supplementary) {
-                auto startCit = next(samLine.cbegin(), 1 + (signed long) samTabPositions[9]);
-                auto endCit = next(samLine.cbegin(), (signed long)  samTabPositions[10]);
+                auto startCit = next(samLine.cbegin(), 1 + static_cast<long>(samTabPositions[9]));
+                auto endCit = next(samLine.cbegin(), static_cast<long>(samTabPositions[10]));
                 vector<int> overhangPerBaseQuality{};
                 fullMedianQuality(startCit, endCit, overhangPerBaseQuality);
                 if (overhangPerBaseQuality.empty() ||
@@ -199,8 +199,8 @@ namespace sophia {
             break;
         }
 
-        for (auto mpos_cit = samLine.cbegin() + 1 + (signed long) samTabPositions[6];
-             mpos_cit != samLine.cbegin() + (signed long) samTabPositions[7]; ++mpos_cit) {
+        for (auto mpos_cit = samLine.cbegin() + 1 + static_cast<long>(samTabPositions[6]);
+             mpos_cit != samLine.cbegin() + static_cast<long>(samTabPositions[7]); ++mpos_cit) {
             matePos = matePos * 10 + ChrSize(*mpos_cit - '0');
         }
         if (samLine[1 + samTabPositions[5]] == '=') {
@@ -209,13 +209,13 @@ namespace sophia {
             try {
                 mateChrIndex = GlobalAppConfig::getInstance().getChrConverter().
                     parseChrAndReturnIndex(
-                        next(samLine.cbegin(), 1 + (signed long) samTabPositions[5]),
+                        next(samLine.cbegin(), 1 + static_cast<long>(samTabPositions[5])),
                         samLine.cend(),
                         '\t');
             } catch (const DomainError &e) {
                 throw e << error_info_string(
                     "from = " + std::string(next(samLine.cbegin(),
-                                                 1 + (signed long) samTabPositions[5]),
+                                                 1 + static_cast<long>(samTabPositions[5])),
                                             samLine.cend()));
             }
         }
@@ -223,13 +223,13 @@ namespace sophia {
 
     void
     Alignment::mappingQualityCheck() {
-        if (samTabPositions[4] - samTabPositions[3] - 1) {
-            throw_with_trace(std::logic_error("Inconsistent values in samTabPositions"));
-        }
         int mapq = boost::lexical_cast<int>(
             samLine.substr(samTabPositions[3] + 1,
-                           (unsigned int) samTabPositions[4] - samTabPositions[3] - 1));
-        if (mapq != 0) {
+                           samTabPositions[4] - samTabPositions[3] - 1));
+        if (mapq == 0) {
+            nullMapq = true;
+            // readType = 0; lowMapq = true; see constructor
+        } else {
             nullMapq = false;
 
             if (mapq < 13) {
@@ -251,8 +251,8 @@ namespace sophia {
         } else {
             // If the CIGAR does not end with a match, then (continue parsing the CIGAR string).
             // Return true, if there is a soft-clip, hard-clip, insertion, or deletion.
-            for (auto cigarString_it = samLine.cbegin() + (signed long) samTabPositions[4] + 1;
-                 cigarString_it != samLine.cbegin() + (signed long) samTabPositions[5] - 1;
+            for (auto cigarString_it = samLine.cbegin() + static_cast<long>(samTabPositions[4]) + 1;
+                 cigarString_it != samLine.cbegin() + static_cast<long>(samTabPositions[5]) - 1;
                  ++cigarString_it) {
                 switch (*cigarString_it) {
                 case 'S': // soft-clipped
@@ -278,8 +278,8 @@ namespace sophia {
              indelAdjustment = 0,
              leftClipAdjustment = 0,
              rightClipAdjustment = 0;
-        for (auto cigarString_cit = samLine.cbegin() + 1 + (signed long) samTabPositions[4];
-             cigarString_cit != samLine.cbegin() + (signed long) samTabPositions[5];
+        for (auto cigarString_cit = samLine.cbegin() + 1 + static_cast<long>(samTabPositions[4]);
+             cigarString_cit != samLine.cbegin() + static_cast<long>(samTabPositions[5]);
              ++cigarString_cit) {
             if (isdigit(*cigarString_cit)) {
                 currentNucleotideCount =
@@ -349,14 +349,14 @@ namespace sophia {
                     readOverhangCoords.emplace_back(
                         chunk.encounteredM,
                         endPos,
-                        (long) chunk.startPosOnRead - (long) chunk.indelAdjustment,
+                        static_cast<long>(chunk.startPosOnRead) - static_cast<long>(chunk.indelAdjustment),
                         chunk.length);
                 } else {
                     readBreakpoints.push_back(startPos);
                     readOverhangCoords.emplace_back(
                         chunk.encounteredM,
                         startPos,
-                        (long) chunk.startPosOnRead - (long) chunk.indelAdjustment,
+                        static_cast<long>(chunk.startPosOnRead) - static_cast<long>(chunk.indelAdjustment),
                         chunk.length);
                 }
                 break;
@@ -396,17 +396,14 @@ namespace sophia {
 
     void
     Alignment::qualityCheckCascade() {
-        // cerr << "a\n";
         if (!clipCountCheck()) {
             readType = 5;
             return;
         }
-        // cerr << "b\n";
         if (!uniqueSuppCheck()) {
             readType = 5;
             return;
         }
-        // cerr << "c\n";
         if (!qualChecked) {
             for (const auto &cigarChunk : cigarChunks) {
                 if (cigarChunk.chunkType == 'S' &&
@@ -417,9 +414,7 @@ namespace sophia {
                 }
             }
         }
-        // cerr << "d\n";
         assessReadType();
-        // cerr << "e\n";
     }
 
     bool
@@ -466,7 +461,7 @@ namespace sophia {
         saCend = samLine.cend();
         if (samLine.back() == ';' && samLine[samTabPositions.back() + 1] == 'S' &&
             samLine[samTabPositions.back() + 2] == 'A') {
-            saCbegin = samLine.cbegin() + (signed long) samTabPositions.back() + 6;
+            saCbegin = samLine.cbegin() + static_cast<long>(samTabPositions.back()) + 6;
             saCend = samLine.cend() - 1;
             hasSa = true;
         } else {
@@ -474,8 +469,8 @@ namespace sophia {
                 if (samLine[samTabPositions[i + 1] - 1] == ';' &&
                     samLine[samTabPositions[i] + 1] == 'S' &&
                     samLine[samTabPositions[i] + 2] == 'A') {
-                    saCbegin = samLine.cbegin() + (signed long) samTabPositions[i] + 6;
-                    saCend = samLine.cbegin() + (signed long) samTabPositions[i + 1] - 1;
+                    saCbegin = samLine.cbegin() + static_cast<long>(samTabPositions[i]) + 6;
+                    saCend = samLine.cbegin() + static_cast<long>(samTabPositions[i + 1]) - 1;
                     hasSa = true;
                     break;
                 }
@@ -528,27 +523,25 @@ namespace sophia {
         if (!cigarChunk.encounteredM) {
             auto startCit = next(
                 samLine.cbegin(),
-                1 + (long) samTabPositions[9] +
-                ((long) cigarChunk.startPosOnRead - (long) cigarChunk.indelAdjustment));
+                1 + static_cast<long>(samTabPositions[9]) +
+                (static_cast<long>(cigarChunk.startPosOnRead) - static_cast<long>(cigarChunk.indelAdjustment)));
             auto endCit =
                 next(samLine.cbegin(),
-                     1 + (long) samTabPositions[9] +
-                     ((long) cigarChunk.startPosOnRead - (long) cigarChunk.indelAdjustment) +
-                     (long) cigarChunk.length);
-                     // This worked without the cast before. All types are chosen to unspecific as
-                     // signed int, although unsigned int would be more logical.
+                     1 + static_cast<long>(samTabPositions[9]) +
+                     (static_cast<long>(cigarChunk.startPosOnRead) - static_cast<long>(cigarChunk.indelAdjustment)) +
+                     static_cast<long>(cigarChunk.length));
             fullMedianQuality(startCit, endCit, overhangPerBaseQuality);
         } else {
             string::const_reverse_iterator startCrit{
                 next(samLine.cbegin(),
-                     1 + (long) samTabPositions[9] +
-                     ((long) cigarChunk.startPosOnRead - (long) cigarChunk.indelAdjustment) +
-                     (long) cigarChunk.length)
+                     1 + static_cast<long>(samTabPositions[9]) +
+                     (static_cast<long>(cigarChunk.startPosOnRead) - static_cast<long>(cigarChunk.indelAdjustment)) +
+                     static_cast<long>(cigarChunk.length))
              };   // dito
             string::const_reverse_iterator endCrit{
                 next(samLine.cbegin(),
-                     1 + (long) samTabPositions[9] +
-                     ((long) cigarChunk.startPosOnRead - (long) cigarChunk.indelAdjustment))};
+                     1 + static_cast<long>(samTabPositions[9]) +
+                     (static_cast<long>(cigarChunk.startPosOnRead) - static_cast<long>(cigarChunk.indelAdjustment)))};
             fullMedianQuality(startCrit, endCrit, overhangPerBaseQuality);
         }
         if (overhangPerBaseQuality.empty()) {
@@ -581,13 +574,13 @@ namespace sophia {
         for (const auto &chunk : cigarChunks) {
             switch (chunk.chunkType) {
             case 'S':
-                if (chunk.length >= CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD) {
+                if (static_cast<ChrSize>(chunk.length) >= CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD) {
                     readType = 1;
                     return;
                 }
                 break;
             case 'H':
-                if (chunk.length >= CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD) {
+                if (static_cast<ChrSize>(chunk.length) >= CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD) {
                     hardLongClip = true;
                 }
                 break;
@@ -614,16 +607,16 @@ namespace sophia {
         case 1:
             return true;
         default:
-            if (*(samLine.cbegin() + 1 + (signed long) samTabPositions[5]) != '=') {
+            if (*(samLine.cbegin() + 1 + static_cast<long>(samTabPositions[5])) != '=') {
                 distantMate = 1;
                 return true;
             } else {
-                auto isize_cit = samLine.cbegin() + 1 + (signed long) samTabPositions[7];
+                auto isize_cit = samLine.cbegin() + 1 + static_cast<long>(samTabPositions[7]);
                 if (*isize_cit == '-') {
                     ++isize_cit;
                 }
                 auto isize = 0;
-                for (; isize_cit != samLine.cbegin() + (signed long) samTabPositions[8];
+                for (; isize_cit != samLine.cbegin() + static_cast<long>(samTabPositions[8]);
                      ++isize_cit) {
                     isize = isize * 10 + (*isize_cit - '0');
                 }
@@ -638,9 +631,9 @@ namespace sophia {
     }
 
     void
-    Alignment::setChosenBp(ChrSize chosenBpLoc, unsigned int alignmentIndex) {
+    Alignment::setChosenBp(ChrSize chosenBpLoc, int alignmentIndex) {
         auto overhangStartIndex = 0;
-        auto overhangLength = 0;
+        ChrSize overhangLength = 0;
         char bpType{};
         auto bpEncounteredM = false;
         auto bpSize = 0;
@@ -651,7 +644,7 @@ namespace sophia {
                 if (bpType == 'S') {
                     for (const auto &overhang : readOverhangCoords) {
                         if (overhang.bpPos == chosenBpLoc) {
-                            overhangStartIndex = 1 + samTabPositions[8] + overhang.startPosOnRead;
+                            overhangStartIndex = 1 + static_cast<int>(samTabPositions[8]) + overhang.startPosOnRead;
                             overhangLength = overhang.length;
                             break;
                         }
@@ -662,12 +655,12 @@ namespace sophia {
             }
         }
         chosenBp.reset();
-        chosenBp = make_unique<ChosenBp>(bpType,
-                                         bpSize,
-                                         bpEncounteredM,
-                                         overhangStartIndex,
-                                         overhangLength,
-                                         alignmentIndex /* origin index */);
+        chosenBp = make_unique<ChosenBp>(ChosenBp(bpType,
+                                                  bpSize,
+                                                  bpEncounteredM,
+                                                  overhangStartIndex,
+                                                  overhangLength,
+                                                  alignmentIndex /* origin index */));
     }
 
     vector<SuppAlignment>
@@ -735,13 +728,13 @@ namespace sophia {
     string
     Alignment::printOverhang() const {
         string res{};
-        res.reserve((unsigned long) chosenBp->overhangLength + 9);
+        res.reserve(static_cast<unsigned long>(chosenBp->overhangLength) + 9);
         if (chosenBp->bpEncounteredM) {
-            res.append("|").append(samLine.substr((long unsigned) chosenBp->overhangStartIndex,
-                                                  (long unsigned) chosenBp->overhangLength));
+            res.append("|").append(samLine.substr(static_cast<unsigned long>(chosenBp->overhangStartIndex),
+                                                  static_cast<unsigned long>(chosenBp->overhangLength)));
         } else {
-            res.append(samLine.substr((long unsigned) chosenBp->overhangStartIndex,
-                                      (long unsigned) chosenBp->overhangLength))
+            res.append(samLine.substr(static_cast<unsigned long>(chosenBp->overhangStartIndex),
+                                      static_cast<unsigned long>(chosenBp->overhangLength)))
                 .append("|");
         }
         res.append("(")
@@ -755,8 +748,8 @@ namespace sophia {
         auto fullSizesTotal = 0.0;
         auto maskedIntervalsTotal = 0.0;
         vector<int> overhang;
-        for (long unsigned i = 0; i < (long unsigned) chosenBp->overhangLength; ++i) {
-            switch (samLine[(unsigned long) (chosenBp->overhangStartIndex) + i]) {
+        for (unsigned long i = 0; i < static_cast<unsigned long>(chosenBp->overhangLength); ++i) {
+            switch (samLine[static_cast<unsigned long>(chosenBp->overhangStartIndex) + i]) {
             case 'A':
                 overhang.push_back(0);
                 break;

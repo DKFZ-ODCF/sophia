@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
 
     using namespace sophia;
 
-    unsigned int defaultReadLength = 0;
+    ChrSize defaultReadLength = 0;
 
     int baseQuality = 23,
         baseQualityLow = 12,
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
         namespace po = boost::program_options;
         po::options_description desc("Allowed options for sophia");
         desc.add_options()
-            ("help", "printe help message")
+            ("help", "print help message")
             ("assemblyname",
                 po::value<std::string>(&assemblyName)->default_value(assemblyName),
                 ("assembly name (classic_hg37, hg38, ...)"))
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
                 po::value<double>(),
                "percentage standard deviation of the insert size for the merged bam")
             ("defaultreadlength",
-                po::value<unsigned int>(&defaultReadLength),
+                po::value<ChrSize>(&defaultReadLength),
                 "Default read length for the technology used in sequencing 101, 151, etc.")
             ("clipsize",
                 po::value<int>(&clipSize)->default_value(clipSize),
@@ -100,9 +100,14 @@ int main(int argc, char** argv) {
         setApplicationConfig(assemblyNameOpt);
 
         if (inputVariables.count("defaultreadlength")) {
-            defaultReadLength = inputVariables["defaultreadlength"].as<unsigned int>();
+            defaultReadLength = inputVariables["defaultreadlength"].as<ChrSize>();
         } else {
-            cerr << "Default read Length not given, exiting" << endl;
+            cerr << "Default read Length not given, exiting. Use --defaultreadlength." << endl;
+            return 1;
+        }
+        if (defaultReadLength < 1) {
+            cerr << "Default read length " << std::to_string(defaultReadLength)
+                 << " is invalid." << endl;
             return 1;
         }
 
@@ -165,14 +170,14 @@ int main(int argc, char** argv) {
             }
         }
 
-        Alignment::CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD = (unsigned int) clipSize;
+        Alignment::CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD = static_cast<int>(clipSize);
         Alignment::BASE_QUALITY_THRESHOLD = baseQuality + 33;
         Alignment::BASE_QUALITY_THRESHOLD_LOW = baseQualityLow + 33;
         Alignment::LOW_QUAL_CLIP_THRESHOLD = (ChrSize) lowQualClipSize;
         Breakpoint::BP_SUPPORT_THRESHOLD = bpSupport;
         Breakpoint::DEFAULT_READ_LENGTH = defaultReadLength;
-        Breakpoint::DISCORDANT_LOW_QUAL_LEFT_RANGE = static_cast<unsigned int>(round(defaultReadLength * 1.11));
-        Breakpoint::DISCORDANT_LOW_QUAL_RIGHT_RANGE = static_cast<unsigned int>(round(defaultReadLength * 0.51));
+        Breakpoint::DISCORDANT_LOW_QUAL_LEFT_RANGE = static_cast<ChrSize>(round(defaultReadLength * 1.11));
+        Breakpoint::DISCORDANT_LOW_QUAL_RIGHT_RANGE = static_cast<ChrSize>(round(defaultReadLength * 0.51));
 
         SuppAlignment::DEFAULT_READ_LENGTH = defaultReadLength;
         ChosenBp::BP_SUPPORT_THRESHOLD = bpSupport;

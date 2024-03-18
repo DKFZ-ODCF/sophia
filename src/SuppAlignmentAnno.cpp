@@ -41,8 +41,8 @@ namespace sophia {
 
     ChrSize SuppAlignmentAnno::DEFAULT_READ_LENGTH{};
 
-    static const string STOP_CHARS = "|(\t";
-    inline bool isStopChar(char c) {
+    const string SuppAlignmentAnno::STOP_CHARS = "|(\t";
+    bool SuppAlignmentAnno::isStopChar(char c) {
         return STOP_CHARS.find(c) != std::string::npos;
     };
 
@@ -113,9 +113,9 @@ namespace sophia {
                     break;
                 } else if (saStrIn.at(index) != '|') {
                     if (!fuzzy) {
-                        pos = 10 * pos + (unsigned int) (saStrIn.at(index) - '0');
+                        pos = 10 * pos + static_cast<int>(saStrIn.at(index) - '0');
                     } else {
-                        extendedPos = 10 * extendedPos + (unsigned int) (saStrIn.at(index) - '0');
+                        extendedPos = 10 * extendedPos + static_cast<int>(saStrIn.at(index) - '0');
                     }
                 }
             }
@@ -225,17 +225,28 @@ namespace sophia {
                                          const SuppAlignmentAnno &saAnnoIn)
         : chrIndex{emittingBpChrIndex},
           pos{saAnnoIn.isDistant()
-                  ? (unsigned int) max(1, static_cast<int>(
-                            round(emittingBpPos - 1.5 * (int) DEFAULT_READ_LENGTH)))
+                  ? static_cast<int>(
+                        max(1,
+                            static_cast<int>(
+                                round(emittingBpPos - static_cast<ChrSize>(1.5 * DEFAULT_READ_LENGTH)))
+                            )
+                    )
                   : emittingBpPos},
           extendedPos{
               saAnnoIn.isDistant()
-                  ? static_cast<unsigned int>(emittingBpPos + 1.5 * DEFAULT_READ_LENGTH)
+                  ? emittingBpPos + static_cast<ChrSize>(1.5 * DEFAULT_READ_LENGTH)
                   : emittingBpPos},
-          support{0}, secondarySupport{0}, mateSupport{0}, expectedDiscordants{0},
-          encounteredM{true}, toRemove{true}, inverted{saAnnoIn.isInverted()},
-          fuzzy{saAnnoIn.isDistant()}, strictFuzzy{saAnnoIn.isDistant()},
-          strictFuzzyCandidate{true}, distant{saAnnoIn.isDistant()},
+          support{0},
+          secondarySupport{0},
+          mateSupport{0},
+          expectedDiscordants{0},
+          encounteredM{true},
+          toRemove{true},
+          inverted{saAnnoIn.isInverted()},
+          fuzzy{saAnnoIn.isDistant()},
+          strictFuzzy{saAnnoIn.isDistant()},
+          strictFuzzyCandidate{true},
+          distant{saAnnoIn.isDistant()},
           suspicious{saAnnoIn.isSuspicious()},
           semiSuspicious{saAnnoIn.isSemiSuspicious()},
           properPairErrorProne{saAnnoIn.isProperPairErrorProne()},
@@ -300,14 +311,14 @@ namespace sophia {
                 }
                 fuzziness = 2.5 * DEFAULT_READ_LENGTH;
                 if (rhs.getPos() >= extendedPos) {
-                    return ((long) rhs.getPos() - (long) extendedPos) <= (long) fuzziness;
+                    return (static_cast<long>(rhs.getPos()) - static_cast<long>(extendedPos)) <= fuzziness;
                 }
-                return ((long) pos - (long) rhs.getExtendedPos()) <= (long) fuzziness;
+                return (static_cast<long>(pos) - static_cast<long>(rhs.getExtendedPos())) <= fuzziness;
                 //			return (rhs.getPos() - fuzziness) <= (extendedPos +
                 //fuzziness) && (pos - fuzziness) <= (rhs.getExtendedPos() +
                 //fuzziness);
             } else {
-                return abs((long) pos - (long) rhs.getPos()) <= (long) fuzziness;
+                return abs(static_cast<long>(pos) - static_cast<long>(rhs.getPos())) <= fuzziness;
             }
         } else {
             return false;
@@ -325,11 +336,11 @@ namespace sophia {
                 }
                 fuzziness = 2.5 * DEFAULT_READ_LENGTH;
                 if (rhs.getPos() >= extendedPos) {
-                    return ((long) rhs.getPos() - (long) extendedPos) <= (long) fuzziness;
+                    return (static_cast<long>(rhs.getPos()) - static_cast<long>(extendedPos)) <= fuzziness;
                 }
-                return ((long) pos - (long) rhs.getExtendedPos()) <= (long) fuzziness;
+                return (static_cast<long>(pos) - static_cast<long>(rhs.getExtendedPos())) <= fuzziness;
             } else {
-                return abs((long) pos - (long) rhs.getPos()) <= (long) fuzziness;
+                return abs(static_cast<long>(pos) - static_cast<long>(rhs.getPos())) <= fuzziness;
             }
         } else {
             return false;

@@ -167,8 +167,13 @@ namespace sophia {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
                               !selectedSa2.isProperPairErrorProne() &&
-                              chrConverter.isAutosome(chrIndex1) &&
-                              chrConverter.isAutosome(chrIndex2);
+                              // Used to be indexConverter[chrIndex] < 23, with no check for whether
+                              // the values was valid (i.e. != -2). Note that the index check is
+                              // on the CompressedIndexChr range. 23 is the Y chromosome, while 22
+                              // is the X chromosome in this range. Therefore, here we need to check
+                              // for autosomes or X chromosome.
+                              (chrConverter.isAutosome(chrIndex1) || chrConverter.isX(chrIndex1))  &&
+                              (chrConverter.isAutosome(chrIndex2) || chrConverter.isX(chrIndex2));
         auto splitSupportThreshold1 =
             (strictNonDecoy && !selectedSa1.isSemiSuspicious() &&
              (mateRatio1 >= 0.6))
@@ -376,8 +381,10 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                              chrConverter.isAutosome(chrIndex1) &&
-                              chrConverter.isAutosome(chrIndex2);
+                              // Used to be indexConverter[chrIndex] < 23, with no check for whether
+                              // the values was valid (i.e. != -2).
+                              (chrConverter.isAutosome(chrIndex1) || chrConverter.isX(chrIndex1))  &&
+                              (chrConverter.isAutosome(chrIndex2) || chrConverter.isX(chrIndex2));
         auto splitSupportThreshold =
             (strictNonDecoy && !selectedSa2.isSemiSuspicious() &&
              (mateRatio1 >= 0.66))
@@ -490,7 +497,8 @@ namespace sophia {
 
     SvEvent::SvEvent(const BreakpointReduced &bp1In,
                      const SuppAlignmentAnno &sa1In,
-                     GermlineMatch germlineInfo2, MrefMatch hitsInMref2In,
+                     GermlineMatch germlineInfo2,
+                     MrefMatch hitsInMref2In,
                      const vector<pair<int, string>> &overhangDb,
                      const SuppAlignmentAnno &dummySaIn)
         : toRemove{false}, contaminationCandidate{0},
@@ -517,7 +525,8 @@ namespace sophia {
           span1{bp1In.getNormalSpans()},
           totalEvidence2{0},
           evidenceLevel1{0},
-          evidenceLevel2{0}, mrefHits1{bp1In.getMrefHits().getNumConsevativeHits()},
+          evidenceLevel2{0},
+          mrefHits1{bp1In.getMrefHits().getNumConsevativeHits()},
           mrefHits1Conservative{true},
           mrefHits2{hitsInMref2In.getNumConsevativeHits()},
           mrefHits2Conservative{true},
@@ -525,16 +534,19 @@ namespace sophia {
           germlineClonality1{bp1In.getGermlineInfo().getConservativeClonality()},
           germlineStatus1{bp1In.getGermlineInfo().getConservativeClonality() > 0.15},
           germlineClonality2{germlineInfo2.getClonality()},
-          germlineStatus2{germlineInfo2.getClonality() > 0.15}, selectedSa1{sa1In},
+          germlineStatus2{germlineInfo2.getClonality() > 0.15},
+          selectedSa1{sa1In},
           selectedSa2{dummySaIn},
           mateRatio1{sa1In.getExpectedDiscordants() > 0
                          ? sa1In.getMateSupport() /
                                (0.0 + sa1In.getExpectedDiscordants())
                          : 1.0},
-          mateRatio2{1.0}, suspicious{0}, semiSuspicious{sa1In.isSemiSuspicious()} {
+          mateRatio2{1.0},
+          suspicious{0},
+          semiSuspicious{sa1In.isSemiSuspicious()} {
         auto truePos2 = pos2;
         if (chrIndex1 == chrIndex2) {
-            if (abs((long) pos1 - (long) pos2) > abs((long) pos1 - (long) sa1In.getExtendedPos())) {
+            if (abs(static_cast<long>(pos1) - static_cast<long>(pos2)) > abs(static_cast<long>(pos1) - static_cast<long>(sa1In.getExtendedPos()))) {
                 truePos2 = sa1In.getExtendedPos();
             }
         }
@@ -550,9 +562,9 @@ namespace sophia {
         if (distant && selectedSa1.isFuzzy() &&
             bp1In.getChrIndex() == selectedSa1.getChrIndex() &&
             selectedSa1.isStrictFuzzyCandidate()) {
-            auto fuzDiff = (long) selectedSa1.getExtendedPos() - (long) selectedSa1.getPos();
-            if (max(0l, (long) pos1 - fuzDiff) <= (long) selectedSa1.getExtendedPos() &&
-                (long) selectedSa1.getPos() <= ((long) pos1 + fuzDiff)) {
+            auto fuzDiff = static_cast<long>(selectedSa1.getExtendedPos()) - static_cast<long>(selectedSa1.getPos());
+            if (max(0l, static_cast<long>(pos1) - fuzDiff) <= static_cast<long>(selectedSa1.getExtendedPos()) &&
+                static_cast<long>(selectedSa1.getPos()) <= (static_cast<long>(pos1) + fuzDiff)) {
                 distant = false;
             } else if (eventSize < 5000) {
                 distant = false;
@@ -586,8 +598,10 @@ namespace sophia {
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         auto strictNonDecoy = !selectedSa1.isProperPairErrorProne() &&
-                              chrConverter.isAutosome(chrIndex1) &&
-                              chrConverter.isAutosome(chrIndex2);
+                              // Used to be indexConverter[chrIndex] < 23, with no check for whether
+                              // the values was valid (i.e. != -2).
+                              (chrConverter.isAutosome(chrIndex1) || chrConverter.isX(chrIndex1))  &&
+                              (chrConverter.isAutosome(chrIndex2) || chrConverter.isX(chrIndex2));
         auto splitSupportThreshold =
             (strictNonDecoy && (mateRatio1 >= 0.66) ? 0 : 2);
 
@@ -939,7 +953,7 @@ namespace sophia {
                 if (bp1.getChrIndex() == bp2.getChrIndex()) {
                     if (selectedSa1.isStrictFuzzy() ||
                         selectedSa2.isStrictFuzzy()) {
-                        if (abs((long) bp1.getPos() - (long) bp2.getPos()) < 5000l) {
+                        if (abs(static_cast<long>(bp1.getPos()) - static_cast<long>(bp2.getPos())) < 5000l) {
                             return 14;
                         }
                     }
@@ -965,7 +979,7 @@ namespace sophia {
             }
         }
         if (bp1.getChrIndex() != bp2.getChrIndex() ||
-            abs((long) bp1.getPos() - (long) bp2.getPos()) > 150l) {
+            abs(static_cast<long>(bp1.getPos()) - static_cast<long>(bp2.getPos())) > 150l) {
             auto eventTotal1 = bp1.getPairedBreaksSoft() +
                                bp1.getPairedBreaksHard() +
                                bp1.getUnpairedBreaksSoft();
@@ -1101,10 +1115,10 @@ namespace sophia {
             if (selectedSa1.isFuzzy() || (selectedSa1.getSupport() +
                                           selectedSa1.getSecondarySupport()) < 3) {
                 if (bp1.getChrIndex() == bp2.getChrIndex()) {
-                    if (abs((long) bp1.getPos() - (long) bp2.getPos()) < 5000l) {
+                    if (abs(static_cast<long>(bp1.getPos()) - static_cast<long>(bp2.getPos())) < 5000l) {
                         return 26;
                     }
-                    if (inverted && abs((long) bp1.getPos() - (long) bp2.getPos()) < 10000l) {
+                    if (inverted && abs(static_cast<long>(bp1.getPos()) - static_cast<long>(bp2.getPos())) < 10000l) {
                         return 27;
                     }
                 }
@@ -1137,7 +1151,7 @@ namespace sophia {
             }
         }
         if (mrefHits1 > BP_FREQ_THRESHOLD) {
-            if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
+            if (!chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
                 mrefHits2 > BP_FREQ_THRESHOLD) {
                 return 431;
             }
@@ -1147,7 +1161,7 @@ namespace sophia {
             }
         }
         if (mrefHits2 > BP_FREQ_THRESHOLD) {
-            if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(chrIndex2) ||
+            if (chrConverter.isDecoy(chrIndex1) || !chrConverter.isDecoy(chrIndex2) ||
                 mrefHits1 > BP_FREQ_THRESHOLD) {
                 return 432;
             }
@@ -1178,11 +1192,13 @@ namespace sophia {
             return 29;
         }
         if (mrefHits1 > GERMLINE_DB_LIMIT &&
-            !(chrConverter.isDecoy(bp1.getChrIndex()) || chrConverter.isVirus(bp1.getChrIndex()))) {
+            !(chrConverter.isDecoy(bp1.getChrIndex()) ||
+              chrConverter.isVirus(bp1.getChrIndex()))) {
             return 301;
         }
-        if (mrefHits2 > GERMLINE_DB_LIMIT && !(chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
-                                             chrConverter.isVirus(selectedSa1.getChrIndex()))) {
+        if (mrefHits2 > GERMLINE_DB_LIMIT &&
+            !(chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
+              chrConverter.isVirus(selectedSa1.getChrIndex()))) {
             return 302;
         }
         if (!distant) {
@@ -1248,7 +1264,7 @@ namespace sophia {
             }
         }
         if (mrefHits1 > BP_FREQ_THRESHOLD) {
-            if (chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
+            if (!chrConverter.isDecoy(chrIndex1) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
                 mrefHits2 > BP_FREQ_THRESHOLD) {
                 return 471;
             }
@@ -1258,7 +1274,7 @@ namespace sophia {
             }
         }
         if (mrefHits2 > BP_FREQ_THRESHOLD) {
-            if (chrConverter.isDecoy(chrIndex2) || chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
+            if (chrConverter.isDecoy(chrIndex2) || !chrConverter.isDecoy(selectedSa1.getChrIndex()) ||
                 mrefHits1 > BP_FREQ_THRESHOLD) {
                 return 472;
             }
@@ -1741,8 +1757,8 @@ namespace sophia {
 
         auto overhangLengthMax = 0;
         auto overhangLength = 0;
-        for (auto cit = overhangDb[(unsigned int) overhangIndex].second.cbegin();
-             cit != overhangDb[(unsigned int) overhangIndex].second.cend(); ++cit) {
+        for (auto cit = overhangDb[static_cast<unsigned int>(overhangIndex)].second.cbegin();
+             cit != overhangDb[static_cast<unsigned int>(overhangIndex)].second.cend(); ++cit) {
             switch (*cit) {
             case '(':
                 overhangLengthMax = max(overhangLengthMax, overhangLength);
@@ -1867,9 +1883,9 @@ namespace sophia {
         outputFields.emplace_back(inputScore == 2 ? selectedSa2.print() : "_");
 
         outputFields.emplace_back(
-            overhang1Index != -1 ? overhangDb[(unsigned int) overhang1Index].second : ".");
+            overhang1Index != -1 ? overhangDb[static_cast<unsigned int>(overhang1Index)].second : ".");
         outputFields.emplace_back(
-            overhang2Index != -1 ? overhangDb[(unsigned int) overhang2Index].second : ".");
+            overhang2Index != -1 ? overhangDb[static_cast<unsigned int>(overhang2Index)].second : ".");
 
         return collapseRange(outputFields, "\t").append("\n");
     }

@@ -61,12 +61,7 @@ namespace sophia {
             return pos < rhs.getPos();
         }
 
-        /** This seems to be a function used for sorting positions, that assumes that the ordering
-          * of chromosomes produces a total order, i.e., e.g., that all positions on chr1 are
-          * "smaller" than all positions on chr2 (if chr1 has a smaller index than chr2).
-          *
-          * I doubt there is a biological meaning in the ordering of the chromosomes in the
-          * classic Hg37ChrConverter. */
+        /** This is used for sorting breakpoints. No biological meaning. */
         bool fullSmaller(const BreakpointReduced &rhs) const {
             if (chrIndex < rhs.getChrIndex()) {
                 return true;
@@ -89,9 +84,10 @@ namespace sophia {
 
         template <typename T> int distanceToBp(const T &compIn) const {
             if (chrIndex == compIn.getChrIndex()) {
-                return abs((int) pos - (int) compIn.getPos());
+                return abs(static_cast<int>(pos) - static_cast<int>(compIn.getPos()));
             } else {
-                // Ups. -1 is used in < comparisons. Check usages, before refactoring this.
+                // This seems to be a special value. It is not explicitly used in comparisons.
+                // Check usages, before refactoring this.
                 return -1;
             }
         }
@@ -152,36 +148,36 @@ namespace sophia {
             return res;
         }
 
-        bool closeToSupp(const SuppAlignmentAnno &compIn, ChrSize fuzziness) const {
+        bool closeToSupp(const SuppAlignmentAnno &compIn, ChrDistance fuzziness) const {
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
-                    fuzziness = ChrSize(2.5 * DEFAULT_READ_LENGTH);  // truncate
-                    return ((long) pos - (long) fuzziness) <= (long) (compIn.getExtendedPos() + fuzziness) &&
-                           ((long) compIn.getPos() - (long) fuzziness) <= (long) (pos + fuzziness);
+                    fuzziness = ChrDistance(2.5 * DEFAULT_READ_LENGTH);  // truncate
+                    return (ChrDistance(pos) - fuzziness) <= (ChrDistance(compIn.getExtendedPos()) + fuzziness) &&
+                           (ChrDistance(compIn.getPos()) - fuzziness) <= (ChrDistance(pos) + fuzziness);
                 } else {
-                    return abs((long) pos - (long) compIn.getPos()) <= (long) fuzziness;
+                    return abs(ChrDistance(pos) - ChrDistance(compIn.getPos())) <= fuzziness;
                 }
             } else {
                 return false;
             }
         }
 
-        ChrSize distanceToSupp(const SuppAlignmentAnno &compIn) const {
-            ChrSize result;
+        ChrDistance distanceToSupp(const SuppAlignmentAnno &compIn) const {
+            ChrDistance result;
             if (chrIndex == compIn.getChrIndex()) {
                 if (compIn.isFuzzy()) {
                     if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
                         result = 0;
                     } else {
                         if (pos < compIn.getPos()) {
-                            result = ChrSize(compIn.getPos() - pos);
+                            result = ChrDistance(compIn.getPos() - pos);
                         } else {
                             // TODO Why here getExtendenPos(), but getPos() above?
-                            result = ChrSize(pos - compIn.getExtendedPos());
+                            result = ChrDistance(pos - compIn.getExtendedPos());
                         }
                     }
                 } else {
-                    result = ChrSize(abs((long) pos - (long) compIn.getPos()));
+                    result = ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos())));
                 }
             } else {
                 result = 1000000;
@@ -224,12 +220,20 @@ namespace sophia {
         int lineIndex;
         ChrIndex chrIndex;
         ChrSize pos;
-        int normalSpans, lowQualSpansSoft, lowQualSpansHard, unpairedBreaksSoft,
-            unpairedBreaksHard, breaksShortIndel, lowQualBreaksSoft,
-            lowQualBreaksHard, repetitiveOverhangBreaks;
-        int pairedBreaksSoft, pairedBreaksHard;
+        int normalSpans,
+            lowQualSpansSoft,
+            lowQualSpansHard,
+            unpairedBreaksSoft,
+            unpairedBreaksHard,
+            breaksShortIndel,
+            lowQualBreaksSoft,
+            lowQualBreaksHard,
+            repetitiveOverhangBreaks;
+        int pairedBreaksSoft,
+            pairedBreaksHard;
         int mateSupport;
-        int leftCoverage, rightCoverage;
+        int leftCoverage,
+            rightCoverage;
         MrefMatch mrefHits;
         GermlineMatch germlineInfo;
         vector<SuppAlignmentAnno> suppAlignments;

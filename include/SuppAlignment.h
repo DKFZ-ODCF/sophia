@@ -128,7 +128,7 @@ namespace sophia {
 
         void setMateSupport(int mateSupportIn) { mateSupport = mateSupportIn; }
 
-        ChrSize getPos() const { return pos; }
+        ChrPosition getPos() const { return pos; }
 
         bool isPrimary() const { return primary; }
 
@@ -185,13 +185,13 @@ namespace sophia {
 
         int getDistinctReads() const { return distinctReads; }
 
-        ChrSize getMatchFuzziness() const { return matchFuzziness; }
+        ChrPositionDifference getMatchFuzziness() const { return matchFuzziness; }
 
         bool isFuzzy() const { return fuzzy; }
 
         bool isStrictFuzzy() const { return strictFuzzy; }
 
-        ChrSize getExtendedPos() const { return extendedPos; }
+        ChrPosition getExtendedPos() const { return extendedPos; }
 
         bool isLowMapqSource() const { return lowMapqSource; }
 
@@ -269,10 +269,10 @@ namespace sophia {
         }
 
       private:
-        ChrSize matchFuzziness;
+        ChrPositionDifference matchFuzziness;
         ChrIndex chrIndex;
-        ChrSize pos;
-        ChrSize extendedPos;
+        ChrPosition pos;
+        ChrPosition extendedPos;
         int mapq;
         vector<int> supportingIndices;
         vector<int> supportingIndicesSecondary;
