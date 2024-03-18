@@ -683,7 +683,7 @@ namespace sophia {
                     }
                     break;
                 case 'N':
-                    chrIndex = hg37::decoyIndex;
+                    chrIndex = hg37::virusIndex;
                     break;
                 case 'p':
                     chrIndex = hg37::phixIndex;
