@@ -190,6 +190,10 @@ namespace sophia {
         bool semiSuspicious;
         bool properPairErrorProne;
         vector<int> supportingIndices;
+
+        static const string STOP_CHARS;
+        inline bool isStopChar(char c);
+
     };
 } /* namespace sophia */
 

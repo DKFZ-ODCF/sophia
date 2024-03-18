@@ -299,7 +299,8 @@ namespace sophia {
             return allChromosomeLookup.at(chrName);
         } catch (std::out_of_range& e) {
             throw_with_trace(DomainError(
-                "Chromosome name not found: '" + chrName));
+                "Chromosome name '" + chrName + "' not found for assembly '" +
+                getAssemblyName() + "'."));
         }
         // Just to get rid of a warning.
         return std::numeric_limits<ChrIndex>::max();

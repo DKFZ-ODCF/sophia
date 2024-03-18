@@ -25,7 +25,6 @@
 
 
 int main(int argc, char** argv) {
-    using namespace std;
     using namespace sophia;
 
     string assemblyName = "classic_hg37";
@@ -243,7 +242,7 @@ int main(int argc, char** argv) {
         if (inputVariables.count("controlresults")) {
             string controlResults { inputVariables["controlresults"].as<string>() };
             if (inputVariables.count("defaultreadlengthcontrol")) {
-                defaultReadLengthControl = inputVariables["defaultreadlengthtumor"].as<ChrSize>();
+                defaultReadLengthControl = inputVariables["defaultreadlengthcontrol"].as<ChrSize>();
             } else {
                 cerr << "Default read length control not given, exiting" << endl;
                 return 1;

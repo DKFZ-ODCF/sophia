@@ -396,17 +396,14 @@ namespace sophia {
 
     void
     Alignment::qualityCheckCascade() {
-        // cerr << "a\n";
         if (!clipCountCheck()) {
             readType = 5;
             return;
         }
-        // cerr << "b\n";
         if (!uniqueSuppCheck()) {
             readType = 5;
             return;
         }
-        // cerr << "c\n";
         if (!qualChecked) {
             for (const auto &cigarChunk : cigarChunks) {
                 if (cigarChunk.chunkType == 'S' &&
@@ -417,9 +414,7 @@ namespace sophia {
                 }
             }
         }
-        // cerr << "d\n";
         assessReadType();
-        // cerr << "e\n";
     }
 
     bool

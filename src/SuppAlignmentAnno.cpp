@@ -41,8 +41,8 @@ namespace sophia {
 
     ChrSize SuppAlignmentAnno::DEFAULT_READ_LENGTH{};
 
-    static const string STOP_CHARS = "|(\t";
-    inline bool isStopChar(char c) {
+    const string SuppAlignmentAnno::STOP_CHARS = "|(\t";
+    bool SuppAlignmentAnno::isStopChar(char c) {
         return STOP_CHARS.find(c) != std::string::npos;
     };
 

@@ -445,10 +445,14 @@ namespace sophia {
                         indexToCompressedMrefIndex)}{
             if (indexToChrName.size() != indexToCompressedMrefIndex.size())
                 throw_with_trace(std::invalid_argument(
-                    "indexToChrName and indexToCompressedMrefIndex must have the same size"));
+                    "indexToChrName and indexToCompressedMrefIndex must have the same size. "
+                    "Found sizes: indexToChrName=" + std::to_string(indexToChrName.size()) +
+                    ", indexToCompressedMrefIndex=" + std::to_string(indexToCompressedMrefIndex.size())));
             if (compressedMrefIndexToChrName.size() != chrSizesCompressedMref.size())
                 throw_with_trace(std::invalid_argument(
-                    "compressedMrefIndexToChrName and chrSizesCompressedMref must have the same size"));
+                    "compressedMrefIndexToChrName and chrSizesCompressedMref must have the same size. "
+                    "Found sizes: compressedMrefIndexToChrName=" + std::to_string(compressedMrefIndexToChrName.size()) +
+                    ", chrSizesCompressedMref=" + std::to_string(chrSizesCompressedMref.size())));
         }
 
     Hg37ChrConverter::Hg37ChrConverter()

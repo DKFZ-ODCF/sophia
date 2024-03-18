@@ -16,7 +16,6 @@
 #include "GlobalAppConfig.h"
 #include "Hg37ChrConverter.h"
 #include "GenericChrConverter.h"
-#include "HelperFunctions.h"
 #include "ChrInfo.h"
 #include "ChrInfoTable.h"
 #include "ChrCategory.h"
