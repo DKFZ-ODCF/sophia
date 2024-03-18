@@ -67,7 +67,10 @@ namespace sophia {
             totalSize += static_cast<std::vector<std::vector<sophia::MrefEntry>>::size_type>(
                 chrConverter.chrSizeCompressedMref(i) + 1);
         }
-        cerr << "Allocating " << (totalSize / 1024 / 1024) << " MB for mrefDb ..." << endl;
+        cerr << "Allocating "
+             << (sizeof(sophia::MrefEntry) * totalSize / 1024 / 1024 / 1024)
+             << " GB for mrefDb ..."
+             << endl;
         mrefDb.reserve(totalSize);
 
         // Initialize the mrefDb with default values.
