@@ -243,7 +243,6 @@ namespace sophia {
         static const ChrIndex INVALID = 1003;
 
         static const IndexRange automoseRange = {1, 23};
-        static const IndexRange gonosomeRange = {40, 42};
         static const IndexRange unassignedRange = {191, 250};
         static const IndexRange decoyRange = {decoyIndex, decoyIndex + 1};
         static const IndexRange virusRange = {virusIndex, virusIndex + 1};
@@ -365,7 +364,8 @@ namespace sophia {
     bool Hg37ChrConverter::isValid(ChrIndex index) {
         return index != hg37::INVALID && index != hg37::ZERO && (
             _isAutosome(index) ||
-            _isGonosome(index) ||
+            _isX(index) ||
+            _isY(index) ||
             _isTechnical(index) ||
             _isVirus(index) ||
             _isExtrachromosomal(index) ||
@@ -480,9 +480,25 @@ namespace sophia {
         return _isAutosome(index);
     }
 
+    /** chrX */
+    bool Hg37ChrConverter::_isX(ChrIndex index) {
+        return index == hg37::xIndex;
+    }
+    bool Hg37ChrConverter::isX(ChrIndex index) const {
+        return _isX(index);
+    }
+
+    /** chrY */
+    bool Hg37ChrConverter::_isY(ChrIndex index) {
+        return index == hg37::yIndex;
+    }
+    bool Hg37ChrConverter::isY(ChrIndex index) const {
+        return _isY(index);
+    }
+
     /** chrX, chrY */
     bool Hg37ChrConverter::_isGonosome(ChrIndex index) {
-        return hg37::gonosomeRange.contains(index);
+        return  _isX(index) || _isY(index);
     }
     bool Hg37ChrConverter::isGonosome(ChrIndex index) const {
         return _isGonosome(index);

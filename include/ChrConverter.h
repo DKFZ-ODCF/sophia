@@ -64,6 +64,12 @@ namespace sophia {
         /** chrX, Y, ...*/
         virtual bool isGonosome(ChrIndex index) const = 0;
 
+        /** chrX */
+        virtual bool isX(ChrIndex index) const = 0;
+
+        /** chrY */
+        virtual bool isY(ChrIndex index) const = 0;
+
         /** phix index. */
         virtual bool isTechnical(ChrIndex index) const = 0;
 

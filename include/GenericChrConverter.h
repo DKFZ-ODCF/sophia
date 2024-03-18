@@ -124,6 +124,12 @@ namespace sophia {
         /** chr1-chr22 */
         bool isAutosome(ChrIndex index) const;
 
+        /** chrX */
+        bool isX(ChrIndex index) const;
+
+        /** chrY */
+        bool isY(ChrIndex index) const;
+
         /** chrX, chrY */
         bool isGonosome(ChrIndex index) const;
 

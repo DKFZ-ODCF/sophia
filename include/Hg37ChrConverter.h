@@ -67,7 +67,13 @@ namespace sophia {
         /** chr1-chr22, GL00+ */
         inline static bool _isAutosome(ChrIndex index);
 
-        /** chrX, Y, ... */
+        /** chrX */
+        inline static bool _isX(ChrIndex index);
+
+        /** chrY */
+        inline static bool _isY(ChrIndex index);
+
+        /** chrX, chrY */
         inline static bool _isGonosome(ChrIndex index);
 
         /** phix index. */
@@ -115,6 +121,12 @@ namespace sophia {
 
         /** chr1-chr22, GL00+ */
         bool isAutosome(ChrIndex index) const;
+
+        /** chrX */
+        bool isX(ChrIndex index) const;
+
+        /** chrY */
+        bool isY(ChrIndex index) const;
 
         /** chrX, Y, ... */
         bool isGonosome(ChrIndex index) const;

@@ -12,18 +12,20 @@ namespace sophia {
 
     const boost::unordered::unordered_map<std::string, const ChrCategory> ChrCategory::categories = {
             {"AUTOSOME", ChrCategory("AUTOSOME", 0)},
-            {"GONOSOME", ChrCategory("GONOSOME", 1)},
-            {"EXTRACHROMOSOMAL", ChrCategory("EXTRACHROMOSOMAL", 2)},
-            {"UNASSIGNED", ChrCategory("UNASSIGNED", 3)},
-            {"ALT", ChrCategory("ALT", 4)},
-            {"HLA", ChrCategory("HLA", 5)},
-            {"VIRUS", ChrCategory("VIRUS", 6)},
-            {"DECOY", ChrCategory("DECOY", 7)},
-            {"TECHNICAL", ChrCategory("TECHNICAL", 8)}
+            {"X", ChrCategory("X", 1)},
+            {"Y", ChrCategory("Y", 2)},
+            {"EXTRACHROMOSOMAL", ChrCategory("EXTRACHROMOSOMAL", 3)},
+            {"UNASSIGNED", ChrCategory("UNASSIGNED", 4)},
+            {"ALT", ChrCategory("ALT", 5)},
+            {"HLA", ChrCategory("HLA", 6)},
+            {"VIRUS", ChrCategory("VIRUS", 7)},
+            {"DECOY", ChrCategory("DECOY", 8)},
+            {"TECHNICAL", ChrCategory("TECHNICAL", 9)}
         };
 
     const ChrCategory& ChrCategory::AUTOSOME = ChrCategory::categories.at("AUTOSOME");
-    const ChrCategory& ChrCategory::GONOSOME = ChrCategory::categories.at("GONOSOME");
+    const ChrCategory& ChrCategory::X = ChrCategory::categories.at("X");
+    const ChrCategory& ChrCategory::Y = ChrCategory::categories.at("Y");
     const ChrCategory& ChrCategory::EXTRACHROMOSOMAL = ChrCategory::categories.at("EXTRACHROMOSOMAL");
     const ChrCategory& ChrCategory::UNASSIGNED = ChrCategory::categories.at("UNASSIGNED");
     const ChrCategory& ChrCategory::ALT = ChrCategory::categories.at("ALT");
@@ -35,7 +37,8 @@ namespace sophia {
 
     const std::vector<ChrCategory> ChrCategory::sorted_categories = {
         ChrCategory::AUTOSOME,
-        ChrCategory::GONOSOME,
+        ChrCategory::X,
+        ChrCategory::Y,
         ChrCategory::EXTRACHROMOSOMAL,
         ChrCategory::UNASSIGNED,
         ChrCategory::ALT,

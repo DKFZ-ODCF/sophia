@@ -25,9 +25,11 @@ namespace sophia {
         EXPECT_EQ(chr_info_table->getNames(ChrCategory::AUTOSOME).size(), 22);
         EXPECT_EQ(chr_info_table->getNames(ChrCategory::AUTOSOME)[0], "chr1");
 
-        EXPECT_EQ(chr_info_table->getNames(ChrCategory::GONOSOME).size(), 2);
-        EXPECT_EQ(chr_info_table->getNames(ChrCategory::GONOSOME)[0], "chrX");
-        EXPECT_EQ(chr_info_table->getNames(ChrCategory::GONOSOME)[1], "chrY");
+        EXPECT_EQ(chr_info_table->getNames(ChrCategory::X).size(), 1);
+        EXPECT_EQ(chr_info_table->getNames(ChrCategory::X)[0], "chrX");
+
+        EXPECT_EQ(chr_info_table->getNames(ChrCategory::Y).size(), 1);
+        EXPECT_EQ(chr_info_table->getNames(ChrCategory::Y)[0], "chrY");
 
         EXPECT_EQ(chr_info_table->getNames(ChrCategory::EXTRACHROMOSOMAL).size(), 1);
         EXPECT_EQ(chr_info_table->getNames(ChrCategory::EXTRACHROMOSOMAL)[0], "chrM");

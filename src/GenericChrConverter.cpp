@@ -117,9 +117,19 @@ namespace sophia {
         return chrInfoTable.getChrInfos()[static_cast<long>(index)].getCategory() == ChrCategory::AUTOSOME;
     }
 
+    /** chrX */
+    bool GenericChrConverter::isX(ChrIndex index) const {
+        return chrInfoTable.getChrInfos()[static_cast<long>(index)].getCategory() == ChrCategory::X;
+    }
+
+    /** chrY */
+    bool GenericChrConverter::isY(ChrIndex index) const {
+        return chrInfoTable.getChrInfos()[static_cast<long>(index)].getCategory() == ChrCategory::Y;
+    }
+
     /** chrX, chrY */
     bool GenericChrConverter::isGonosome(ChrIndex index) const {
-        return chrInfoTable.getChrInfos()[static_cast<long>(index)].getCategory() == ChrCategory::GONOSOME;
+        return isX(index) || isY(index);
     }
 
     /** phix index. */
