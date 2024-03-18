@@ -68,7 +68,7 @@ namespace sophia {
                 chrConverter.chrSizeCompressedMref(i) + 1);
         }
         cerr << "Allocating "
-             << (sizeof(sophia::MrefEntry) * totalSize / 1024 / 1024 / 1024)
+             << std::ceil(sizeof(sophia::MrefEntry) * totalSize / 1024.0 / 1024.0 / 1024.0)
              << " GB for mrefDb ..."
              << endl;
         mrefDb.reserve(totalSize);
