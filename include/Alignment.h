@@ -38,8 +38,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     class Alignment {
 
       public:
@@ -64,13 +62,13 @@ namespace sophia {
 
         int getReadType() const { return readType; }
 
-        const vector<ChrSize> &getReadBreakpoints() const { return readBreakpoints; }
+        const std::vector<ChrSize> &getReadBreakpoints() const { return readBreakpoints; }
 
         bool isValidLine() const { return validLine; }
 
-        const string &getSamLine() const { return samLine; }
+        const std::string &getSamLine() const { return samLine; }
 
-        const vector<unsigned int> &getSamChunkPositions() const {
+        const std::vector<unsigned int> &getSamChunkPositions() const {
             return samTabPositions;
         }
 
@@ -80,7 +78,7 @@ namespace sophia {
 
         ChrSize getMatePos() const { return matePos; }
 
-        const vector<char> &getReadBreakpointTypes() const {
+        const std::vector<char> &getReadBreakpointTypes() const {
             return readBreakpointTypes;
         }
 
@@ -92,16 +90,16 @@ namespace sophia {
 
         ChrSize getOverhangStartIndex() const { return ChrSize(chosenBp->overhangStartIndex); }
 
-        vector<SuppAlignment> generateSuppAlignments(ChrIndex bpChrIndex, int bpPos);
+        std::vector<SuppAlignment> generateSuppAlignments(ChrIndex bpChrIndex, int bpPos);
 
-        const vector<SuppAlignment> &getSupplementaryAlignments() const {
+        const std::vector<SuppAlignment> &getSupplementaryAlignments() const {
             return chosenBp->supplementaryAlignments;
         }
 
         ChrIndex getChrIndex() const { return chrIndex; }
 
         /** This returns a signed integer, because break-point sizes can be negative. **/
-        const vector<signed int> &getReadBreakpointsSizes() const {
+        const std::vector<signed int> &getReadBreakpointsSizes() const {
             return readBreakpointSizes;
         }
 
@@ -116,17 +114,17 @@ namespace sophia {
 
         void addChildNode(int indexIn) { chosenBp->addChildNode(indexIn); }
 
-        void addSupplementaryAlignments(const vector<SuppAlignment> &suppAlignments) {
+        void addSupplementaryAlignments(const std::vector<SuppAlignment> &suppAlignments) {
             chosenBp->addSupplementaryAlignments(suppAlignments);
         }
 
-        const vector<int> &getChildrenNodes() const {
+        const std::vector<int> &getChildrenNodes() const {
             return chosenBp->childrenNodes;
         }
 
         int getOriginIndex() const { return chosenBp->selfNodeIndex; }
 
-        string printOverhang() const;
+        std::string printOverhang() const;
 
         double overhangComplexityMaskRatio() const;
 
@@ -158,7 +156,7 @@ namespace sophia {
 
         template <typename Iterator>
         void fullMedianQuality(Iterator qualBegin, Iterator qualEnd,
-                               vector<int> &overhangPerBaseQuality) const;
+                               std::vector<int> &overhangPerBaseQuality) const;
 
         template <typename Iterator>
         double getMedian(Iterator begin, Iterator end) const;
@@ -171,7 +169,7 @@ namespace sophia {
 
         int distantMate;
 
-        unique_ptr<ChosenBp> chosenBp;
+        std::unique_ptr<ChosenBp> chosenBp;
 
         ChrIndex chrIndex;
 
@@ -183,13 +181,13 @@ namespace sophia {
 
         ChrSize matePos;
 
-        string samLine;
+        std::string samLine;
 
         bool validLine;
 
-        vector<unsigned int> samTabPositions;
+        std::vector<unsigned int> samTabPositions;
 
-        string::const_iterator saCbegin, saCend;
+        std::string::const_iterator saCbegin, saCend;
 
         bool hasSa;
 
@@ -201,19 +199,19 @@ namespace sophia {
 
         bool qualChecked;
 
-        vector<CigarChunk> cigarChunks;
+        std::vector<CigarChunk> cigarChunks;
 
-        vector<ChrSize> readBreakpoints;
+        std::vector<ChrSize> readBreakpoints;
 
-        vector<char> readBreakpointTypes;
+        std::vector<char> readBreakpointTypes;
 
-        vector<signed int> readBreakpointSizes;
+        std::vector<signed int> readBreakpointSizes;
 
-        vector<double> readBreakpointComplexityMaskRatios;
+        std::vector<double> readBreakpointComplexityMaskRatios;
 
-        deque<bool> readBreakpointsEncounteredM;
+        std::deque<bool> readBreakpointsEncounteredM;
 
-        vector<OverhangRange> readOverhangCoords;
+        std::vector<OverhangRange> readOverhangCoords;
 
     };
 

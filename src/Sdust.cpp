@@ -27,21 +27,19 @@
 
 namespace sophia {
 
-    using namespace std;
-
-    Sdust::Sdust(const vector<int> &overhangIn)
+    Sdust::Sdust(const std::vector<int> &overhangIn)
         : res{},
           P{},
           w{},
           L{0},
           rW{0},
           rV{0},
-          cW{vector<int>(WINDOW_SIZE, 0)},
-          cV{vector<int>(WINDOW_SIZE, 0)} {
+          cW{std::vector<int>(WINDOW_SIZE, 0)},
+          cV{std::vector<int>(WINDOW_SIZE, 0)} {
 
         auto wStart = 0;
         for (auto wFinish = 2; wFinish < static_cast<int>(overhangIn.size()); ++wFinish) {
-            wStart = max(wFinish - WINDOW_SIZE + 1, 0);
+            wStart = std::max(wFinish - WINDOW_SIZE + 1, 0);
             saveMaskedRegions(wStart);
             auto t = triplet(overhangIn, wFinish - 2);
             shiftWindow(t);
@@ -49,7 +47,7 @@ namespace sophia {
                 findPerfectRegions(wStart, rV, cV);
             }
         }
-        wStart = max(0, static_cast<int>(overhangIn.size()) - WINDOW_SIZE + 1);
+        wStart = std::max(0, static_cast<int>(overhangIn.size()) - WINDOW_SIZE + 1);
         while (!P.empty()) {
             saveMaskedRegions(wStart);
             ++wStart;
@@ -63,7 +61,7 @@ namespace sophia {
                 auto interval = res.back();
                 if (P.rbegin()->startIndex <= (interval.endIndex + 1)) {
                     res[res.size() - 1].endIndex =
-                        max(P.rbegin()->endIndex, interval.endIndex);
+                        std::max(P.rbegin()->endIndex, interval.endIndex);
                 } else {
                     res.push_back(PerfectInterval{P.rbegin()->startIndex,
                                                   P.rbegin()->endIndex, 0.0});
@@ -83,7 +81,7 @@ namespace sophia {
     }
 
     void
-    Sdust::findPerfectRegions(int wStart, int r, vector<int> c) {
+    Sdust::findPerfectRegions(int wStart, int r, std::vector<int> c) {
         auto maxScore = 0.0;
         for (auto i = static_cast<int>(w.size()) - L - 1; i >= 0; --i) {
             if (i < 0) {
@@ -98,7 +96,7 @@ namespace sophia {
                     if (cit->startIndex < i + wStart) {
                         break;
                     }
-                    maxScore = max(maxScore, cit->score);
+                    maxScore = std::max(maxScore, cit->score);
                     ++cit;
                 }
                 if (newScore >= maxScore) {
@@ -144,7 +142,7 @@ namespace sophia {
     }
 
     void
-    Sdust::addTripletInfo(int &r, vector<int> &c, int t) {
+    Sdust::addTripletInfo(int &r, std::vector<int> &c, int t) {
         if (t < 0) {
             throw_with_trace(std::logic_error("Sdust::addTripletInfo index variable t < 0"));
         }
@@ -153,7 +151,7 @@ namespace sophia {
     }
 
     void
-    Sdust::removeTripletInfo(int &r, vector<int> &c, int t) {
+    Sdust::removeTripletInfo(int &r, std::vector<int> &c, int t) {
         if (t < 0) {
             throw_with_trace(std::logic_error("Sdust::removeTripletInfo index variable t < 0"));
         }
@@ -162,7 +160,7 @@ namespace sophia {
     }
 
     int
-    Sdust::triplet(const vector<int> &overhangIn, int indexPos) {
+    Sdust::triplet(const std::vector<int> &overhangIn, int indexPos) {
         if (indexPos < 0) {
             throw_with_trace(std::logic_error("Sdust::triplet index variable indexPos < 0"));
         }

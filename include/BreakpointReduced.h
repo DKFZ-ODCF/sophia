@@ -35,8 +35,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     class BreakpointReduced {
 
       public:
@@ -47,7 +45,7 @@ namespace sophia {
 
         static double ARTIFACT_FREQ_HIGH_THRESHOLD;
 
-        static string PIDS_IN_MREF_STR;
+        static std::string PIDS_IN_MREF_STR;
 
         static boost::format doubleFormatter;
 
@@ -129,7 +127,7 @@ namespace sophia {
 
         int getRightCoverage() const { return rightCoverage; }
 
-        const vector<SuppAlignmentAnno> &getSuppAlignments() const {
+        const std::vector<SuppAlignmentAnno> &getSuppAlignments() const {
             return suppAlignments;
         }
 
@@ -140,8 +138,8 @@ namespace sophia {
 
         int getLineIndex() const { return lineIndex; }
 
-        vector<SuppAlignmentAnno *> getSupplementsPtr() {
-            vector<SuppAlignmentAnno *> res{};
+        std::vector<SuppAlignmentAnno *> getSupplementsPtr() {
+            std::vector<SuppAlignmentAnno *> res{};
             for (auto &sa : suppAlignments) {
                 res.push_back(&sa);
             }
@@ -195,8 +193,8 @@ namespace sophia {
 
         bool testOverhangBasedCandidacy() const;
 
-        string printOverhang(double germlineClonality, int numHits,
-                             const string &overhang) const;
+        std::string printOverhang(double germlineClonality, int numHits,
+                             const std::string &overhang) const;
 
         const GermlineMatch &getGermlineInfo() const { return germlineInfo; }
 
@@ -236,7 +234,7 @@ namespace sophia {
             rightCoverage;
         MrefMatch mrefHits;
         GermlineMatch germlineInfo;
-        vector<SuppAlignmentAnno> suppAlignments;
+        std::vector<SuppAlignmentAnno> suppAlignments;
     };
 
 } /* namespace sophia */

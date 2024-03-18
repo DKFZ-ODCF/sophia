@@ -27,6 +27,7 @@
 #include "strtk-wrap.h"
 #include "global.h"
 #include <algorithm>
+#include <vector>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/exception/all.hpp>
 #include <cmath>
@@ -35,8 +36,8 @@
 
 namespace sophia {
 
-    const string Breakpoint::COLUMN_STR = boost::join(
-        vector<string>{
+    const std::string Breakpoint::COLUMN_STR = boost::join(
+        std::vector<std::string>{
             "#chr", "start", "end",
             "covTypes(pairedBreaksSoft,pairedBreaksHard,mateReadSupport,"
             "unpairedBreaksSoft,unpairedBreaksHard,shortIndelReads,normalSpans,"
@@ -64,13 +65,13 @@ namespace sophia {
 
     template <typename T>
     inline void
-    Breakpoint::cleanUpVector(vector<T> &objectPool) {
+    Breakpoint::cleanUpVector(std::vector<T> &objectPool) {
         while (!objectPool.empty() && objectPool.back().isToRemove()) {
             objectPool.pop_back();
         }
         for (auto saIt = objectPool.begin(); saIt != objectPool.end(); ++saIt) {
             if (saIt->isToRemove()) {
-                swap(*saIt, objectPool.back());
+                std::swap(*saIt, objectPool.back());
             }
             while (!objectPool.empty() && objectPool.back().isToRemove()) {
                 objectPool.pop_back();
@@ -79,7 +80,7 @@ namespace sophia {
     }
 
     void
-    Breakpoint::addSoftAlignment(shared_ptr<Alignment> alignmentIn) {
+    Breakpoint::addSoftAlignment(std::shared_ptr<Alignment> alignmentIn) {
         if (!alignmentIn->isSupplementary()) {
             if (supportingSoftAlignments.size() <= MAX_PERMISSIBLE_SOFTCLIPS) {
                 supportingSoftAlignments.push_back(alignmentIn);
@@ -88,7 +89,7 @@ namespace sophia {
     }
 
     void
-    Breakpoint::addHardAlignment(shared_ptr<Alignment> alignmentIn) {
+    Breakpoint::addHardAlignment(std::shared_ptr<Alignment> alignmentIn) {
         if (alignmentIn->isSupplementary()) {
             if (!(alignmentIn->isLowMapq() || alignmentIn->isNullMapq())) {
                 if (supportingHardAlignments.size() <= MAX_PERMISSIBLE_HARDCLIPS) {
@@ -108,10 +109,10 @@ namespace sophia {
     // TODO Check for hard-coded cutoffs. Centralize these in GlobalAppConfig.
     bool
     Breakpoint::finalizeBreakpoint(
-        const deque<MateInfo> &discordantAlignmentsPool,
-        const deque<MateInfo> &discordantLowQualAlignmentsPool,
-        const deque<MateInfo> &discordantAlignmentCandidatesPool) {
-        auto overhangStr = string();
+        const std::deque<MateInfo> &discordantAlignmentsPool,
+        const std::deque<MateInfo> &discordantLowQualAlignmentsPool,
+        const std::deque<MateInfo> &discordantAlignmentCandidatesPool) {
+        auto overhangStr = std::string();
         auto eventTotal =
             unpairedBreaksSoft + unpairedBreaksHard + breaksShortIndel;
         auto artifactTotal =
@@ -152,11 +153,11 @@ namespace sophia {
             (eventTotal + artifactTotal < BP_SUPPORT_THRESHOLD &&
              doubleSidedMatches.empty() && supplementsPrimary.empty())) {
             if (chrIndex == 999 && pos == 19404) {
-                cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
-                     << "OverhangStr: " << overhangStr << endl
-                     << "MissingInfoBp: " << missingInfoBp << endl
-                     << "Branch: " << branch << endl
-                     << "Short circuited 1!" << endl;
+                std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
+                     << "OverhangStr: " << overhangStr << std::endl
+                     << "MissingInfoBp: " << missingInfoBp << std::endl
+                     << "Branch: " << branch << std::endl
+                     << "Short circuited 1!" << std::endl;
             }
             return false;
         }
@@ -175,29 +176,29 @@ namespace sophia {
             auto covCriterion = (eventTotal2 + artifactTotal2) > 10;
             if (!(covCriterion && eventTotal2Strict + artifactTotal2Relaxed > 0)) {
                 if (chrIndex == 999 && pos == 19404) {
-                    cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
-                         << "OverhangStr: " << overhangStr << endl
-                         << "MissingInfoBp: " << missingInfoBp << endl
-                         << "Branch: " << branch << endl
-                         << "Short circuited 2!" << endl;
+                    std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
+                         << "OverhangStr: " << overhangStr << std::endl
+                         << "MissingInfoBp: " << missingInfoBp << std::endl
+                         << "Branch: " << branch << std::endl
+                         << "Short circuited 2!" << std::endl;
                 }
                 return false;
             }
         }
         if (chrIndex == 999 && pos == 19404) {
-            cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
-                 << "OverhangStr: " << overhangStr << endl
-                 << "MissingInfoBp: " << missingInfoBp << endl
-                 << "Branch: " << branch << endl
-                 << "Printed!" << endl;
+            std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
+                 << "OverhangStr: " << overhangStr << std::endl
+                 << "MissingInfoBp: " << missingInfoBp << std::endl
+                 << "Branch: " << branch << std::endl
+                 << "Printed!" << std::endl;
         }
         printBreakpointReport(overhangStr);
         return true;
     }
 
     void
-    Breakpoint::printBreakpointReport(const string &overhangStr) {
-        string res{};
+    Breakpoint::printBreakpointReport(const std::string &overhangStr) {
+        std::string res{};
         res.reserve(350);
         res.append(GlobalAppConfig::getInstance().getChrConverter().
             indexToChrName(chrIndex)).
@@ -240,12 +241,12 @@ namespace sophia {
                 res.append(overhangStr).append("\n");
             }
         }
-        cout << res;
+        std::cout << res;
     }
 
     void
-    Breakpoint::collapseSuppRange(string &res,
-                                  const vector<SuppAlignment> &vec) const {
+    Breakpoint::collapseSuppRange(std::string &res,
+                                  const std::vector<SuppAlignment> &vec) const {
         if (vec.empty()) {
             res.append(".");
         } else {
@@ -256,13 +257,13 @@ namespace sophia {
         }
     }
 
-    string
+    std::string
     Breakpoint::finalizeOverhangs() {
         ++bpindex;
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         if (chrIndex == 999 && pos == 19404) {
-            cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
-                 << "supportingSoftAlignments.size()" << supportingSoftAlignments.size() << endl;
+            std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
+                 << "supportingSoftAlignments.size()" << supportingSoftAlignments.size() << std::endl;
         }
         for (size_t i = 0u; i < supportingSoftAlignments.size(); ++i) {
             supportingSoftAlignments[i]->setChosenBp(pos, i);
@@ -307,12 +308,12 @@ namespace sophia {
                 }
             }
         }
-        vector<SuppAlignment> supplementsPrimaryTmp {};
+        std::vector<SuppAlignment> supplementsPrimaryTmp {};
         sort(supportingSoftAlignments.begin(), supportingSoftAlignments.end(),
-             [](const shared_ptr<Alignment> &a, const shared_ptr<Alignment> &b) {
+             [](const std::shared_ptr<Alignment> &a, const std::shared_ptr<Alignment> &b) {
                  return a->getOverhangLength() < b->getOverhangLength();
              });
-        vector<shared_ptr<Alignment>> supportingSoftParentAlignments{};
+        std::vector<std::shared_ptr<Alignment>> supportingSoftParentAlignments{};
         while (!supportingSoftAlignments.empty()) {
             auto substrCheck = false;
             auto tmpSas = supportingSoftAlignments.back()->generateSuppAlignments(chrIndex, pos);
@@ -370,7 +371,7 @@ namespace sophia {
             supportingSoftAlignments.pop_back();
         }
 
-        string consensusOverhangsTmp {};
+        std::string consensusOverhangsTmp {};
         consensusOverhangsTmp.reserve(250);
         {
             auto i = 1;
@@ -421,10 +422,10 @@ namespace sophia {
                 consensusOverhangsTmp.pop_back();
             } else {
                 if (chrIndex == 999 && pos == 19404) {
-                    cerr << "Breakpoint: " << chrIndex << ":" << pos << endl
-                         << "consensusOverhangsTmp is empty" << endl;
+                    std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
+                         << "consensusOverhangsTmp is empty" << std::endl;
                 }
-                return string();
+                return std::string();
             }
         }
         for (const auto &sa : supplementsPrimaryTmp) {
@@ -450,8 +451,8 @@ namespace sophia {
     }
 
     bool
-    Breakpoint::matchDetector(const shared_ptr<Alignment> &longAlignment,
-                              const shared_ptr<Alignment> &shortAlignment) const {
+    Breakpoint::matchDetector(const std::shared_ptr<Alignment> &longAlignment,
+                              const std::shared_ptr<Alignment> &shortAlignment) const {
         if (longAlignment->isOverhangEncounteredM() !=
             shortAlignment->isOverhangEncounteredM()) {
             return false;
@@ -503,7 +504,7 @@ namespace sophia {
 
     void
     Breakpoint::detectDoubleSupportSupps() {
-        vector<SuppAlignment> saHardTmpLowQual;
+        std::vector<SuppAlignment> saHardTmpLowQual;
         {
             auto i = 0u;  // this is used further down in the code ...
             for (; i < supportingHardAlignments.size(); ++i) {
@@ -588,7 +589,7 @@ namespace sophia {
             supportingHardLowMapqAlignments.clear();
         }
         {
-            vector<int> lowMapqHardSupportWhitelistIndices {};
+            std::vector<int> lowMapqHardSupportWhitelistIndices {};
             for (auto primarySupptIt = supplementsPrimary.begin();
                  primarySupptIt != supplementsPrimary.end(); ++primarySupptIt) {
                 auto foundMatch = false;
@@ -677,8 +678,8 @@ namespace sophia {
         for (auto &sa : supplementsPrimary) {
             sa.finalizeSupportingIndices();
         }
-        vector<int> uniqueDoubleSupportPrimaryIndices{};
-        vector<int> uniqueDoubleSupportSecondaryIndices{};
+        std::vector<int> uniqueDoubleSupportPrimaryIndices{};
+        std::vector<int> uniqueDoubleSupportSecondaryIndices{};
         for (auto &sa : doubleSidedMatches) {
             sa.finalizeSupportingIndices();
             uniqueDoubleSupportPrimaryIndices.insert(
@@ -728,10 +729,10 @@ namespace sophia {
             rightSideExpectedErrors =
                 rightSideDiscordantCandidates * IMPROPER_PAIR_RATIO;
             leftDiscordantsTotal =
-                max(0, static_cast<int>(
+                std::max(0, static_cast<int>(
                            round(leftDiscordantsTotal - leftSideExpectedErrors)));
             rightDiscordantsTotal =
-                max(0, static_cast<int>(
+                std::max(0, static_cast<int>(
                            round(rightDiscordantsTotal - rightSideExpectedErrors)));
             leftSideExpectedErrors *= 0.5;
             rightSideExpectedErrors *= 0.5;
@@ -766,7 +767,7 @@ namespace sophia {
                 sa.setToRemove(true);
             }
         }
-        vector<SuppAlignment> candidateSupplementsSecondary{};
+        std::vector<SuppAlignment> candidateSupplementsSecondary{};
         sort(supplementsSecondary.begin(), supplementsSecondary.end(),
              [](const SuppAlignment &a, const SuppAlignment &b) {
                  return a.getMapq() < b.getMapq();
@@ -807,7 +808,7 @@ namespace sophia {
         for (auto &sa : candidateSupplementsSecondary) {
             sa.finalizeSupportingIndices();
         }
-        vector<int> originIndices{};
+        std::vector<int> originIndices{};
         for (auto &sa : candidateSupplementsSecondary) {
             if (sa.isDistant()) {
                 if (sa.isEncounteredM()) {
@@ -832,7 +833,7 @@ namespace sophia {
         sort(originIndices.begin(), originIndices.end());
         int uniqueCount = unique(originIndices.begin(), originIndices.end()) -
                           originIndices.begin();
-        uniqueCount = min(lowQualBreaksHard, uniqueCount);
+        uniqueCount = std::min(lowQualBreaksHard, uniqueCount);
         lowQualBreaksHard -= uniqueCount;
         lowQualBreaksSoft += uniqueCount;
 
@@ -943,7 +944,7 @@ namespace sophia {
     }
 
     void
-    Breakpoint::compressMatePool(vector<MateInfo> &discordantAlignmentsPool) {
+    Breakpoint::compressMatePool(std::vector<MateInfo> &discordantAlignmentsPool) {
         if (discordantAlignmentsPool.empty())
             return;
         unsigned int lastIndex = 0;
@@ -956,10 +957,10 @@ namespace sophia {
                 lastIndex = i;
             } else {
                 discordantAlignmentsPool[lastIndex].mateEndPos =
-                    max(discordantAlignmentsPool[lastIndex].mateEndPos,
+                    std::max(discordantAlignmentsPool[lastIndex].mateEndPos,
                         discordantAlignmentsPool[i].mateEndPos);
                 discordantAlignmentsPool[lastIndex].mateStartPos =
-                    min(discordantAlignmentsPool[lastIndex].mateStartPos,
+                    std::min(discordantAlignmentsPool[lastIndex].mateStartPos,
                         discordantAlignmentsPool[i].mateStartPos);
                 ++discordantAlignmentsPool[lastIndex].matePower;
                 if (discordantAlignmentsPool[i].inverted) {
@@ -1014,9 +1015,9 @@ namespace sophia {
 
     void
     Breakpoint::fillMatePool(
-        const deque<MateInfo> &discordantAlignmentsPool,
-        const deque<MateInfo> &discordantLowQualAlignmentsPool,
-        const deque<MateInfo> &discordantAlignmentCandidatesPool) {
+        const std::deque<MateInfo> &discordantAlignmentsPool,
+        const std::deque<MateInfo> &discordantLowQualAlignmentsPool,
+        const std::deque<MateInfo> &discordantAlignmentCandidatesPool) {
         poolLeft.reserve(discordantAlignmentsPool.size());
         poolRight.reserve(discordantAlignmentsPool.size());
         {
@@ -1090,8 +1091,8 @@ namespace sophia {
 
     void
     Breakpoint::collectMateSupportHelper(
-        SuppAlignment &sa, vector<MateInfo> &discordantAlignmentsPool,
-        vector<MateInfo> &discordantLowQualAlignmentsPool) {
+        SuppAlignment &sa, std::vector<MateInfo> &discordantAlignmentsPool,
+        std::vector<MateInfo> &discordantLowQualAlignmentsPool) {
         auto maxEvidenceLevel = 0;
         for (auto &mateInfo : discordantAlignmentsPool) {
             if (mateInfo.suppAlignmentFuzzyMatch(sa)) {
@@ -1134,9 +1135,9 @@ namespace sophia {
         }
         auto lowQualDiscordantSupports =
             lowQualSupports +
-            min(lowQualSupports,
-                static_cast<int>(discordantLowQualAlignmentsPool.size()) -
-                    lowQualSupports);
+            std::min(lowQualSupports,
+                     static_cast<int>(discordantLowQualAlignmentsPool.size()) -
+                                      lowQualSupports);
         sa.setExpectedDiscordants(sa.getExpectedDiscordants() +
                                   lowQualDiscordantSupports);
         if (sa.getMateSupport() == 0) {
@@ -1197,7 +1198,7 @@ namespace sophia {
       *  @param bpIn            a line from the breakpoint tumorGz file
       *  @param ignoreOverhang  whether to ignore overhangs
       */
-    Breakpoint Breakpoint::parse(const string &bpIn, bool ignoreOverhang) {
+    Breakpoint Breakpoint::parse(const std::string &bpIn, bool ignoreOverhang) {
         Breakpoint result = Breakpoint(0, 0);
         result.covFinalized = true;
         result.hitsInMref = 0;
@@ -1205,7 +1206,7 @@ namespace sophia {
         unsigned int index = 0;
 
         // Collect ends of the columns in BED file. The end of the last column won't be contained.
-        vector<unsigned int> columnSeparatorPos {};
+        std::vector<unsigned int> columnSeparatorPos {};
         columnSeparatorPos.reserve(7);
         for (auto it = bpIn.cbegin(); it != bpIn.cend(); ++it) {
             if (*it == '\t') {
@@ -1348,7 +1349,7 @@ namespace sophia {
         }
 
         // Some calculations.
-        auto shortClipTotal = result.normalSpans - min(result.leftCoverage, result.rightCoverage);
+        auto shortClipTotal = result.normalSpans - std::min(result.leftCoverage, result.rightCoverage);
         if (shortClipTotal > 0) {
             result.normalSpans -= shortClipTotal;
             if (result.pairedBreaksSoft > 0) {
@@ -1363,7 +1364,7 @@ namespace sophia {
             result.missingInfoBp = true;
         } else {
             if (bpIn[supportStart] != '.') {
-                string saStr{};
+                std::string saStr{};
                 for (auto i = supportStart; i < supportEnd; ++i) {
                     if (bpIn[i] == ';') {
                         result.doubleSidedMatches.emplace_back(SuppAlignment::parseSaSupport(saStr));
@@ -1381,7 +1382,7 @@ namespace sophia {
 
             // Column 7: supplementsPrimary
             if (bpIn[supplementsPrimaryStart] != '.') {
-                string saStr{};
+                std::string saStr{};
                 for (auto i = supplementsPrimaryStart; i < supplementsPrimaryEnd;
                      ++i) {
                     if (bpIn[i] == ';') {
@@ -1403,9 +1404,9 @@ namespace sophia {
 
             // Column 8: significantOverhangs
             if (!ignoreOverhang && bpIn[overhangsStart] != '.') {
-                string overhang{};
+                std::string overhang{};
                 for (auto i = overhangsStart;
-                     i < static_cast<string::size_type>(bpIn.length());
+                     i < static_cast<std::string::size_type>(bpIn.length());
                      ++i) {
                     if (bpIn[i] == ';') {
                         result.consensusOverhangs.emplace_back(overhang);

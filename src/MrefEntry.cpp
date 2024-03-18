@@ -31,8 +31,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     boost::format MrefEntry::doubleFormatter { "%.5f" };
 
     unsigned int MrefEntry::NUM_PIDS { };
@@ -157,13 +155,13 @@ namespace sophia {
                 suppAlignments.push_back(*saPtr);
             }
         }
-        validity = max(validity, entry2.getValidityScore());
+        validity = std::max(validity, entry2.getValidityScore());
     }
 
     /** This prints the output of the `sophiaMref` tool. */
-    string MrefEntry::printBpInfo(const string& chromosome) {
+    std::string MrefEntry::printBpInfo(const std::string& chromosome) {
         finalizeFileIndices();
-        vector<string> outputFields { };
+        std::vector<std::string> outputFields { };
         outputFields.emplace_back(chromosome);
         outputFields.emplace_back(strtk::type_to_string<int>(pos));
         outputFields.emplace_back(strtk::type_to_string<int>(pos + 1));
@@ -179,7 +177,7 @@ namespace sophia {
         if (suppAlignments.empty()) {
             outputFields.emplace_back(".");
         } else {
-            vector<string> saFields { };
+            std::vector<std::string> saFields { };
             saFields.reserve(suppAlignments.size());
             for (auto &sa : suppAlignments) {
                 sa.finalizeSupportingIndices();
@@ -193,7 +191,7 @@ namespace sophia {
                 outputFields.emplace_back(boost::join(saFields, ";"));
             }
         }
-        vector<string> fileIndicesStr { };
+        std::vector<std::string> fileIndicesStr { };
         transform(fileIndices.begin(), fileIndices.end(), back_inserter(fileIndicesStr),
                   [](int fileIndex) {return strtk::type_to_string<int>(fileIndex);});
         outputFields.emplace_back(boost::join(fileIndicesStr, ","));
@@ -201,13 +199,13 @@ namespace sophia {
     }
 
     // Currently, not used.
-    string MrefEntry::printArtifactRatios(const string& chromosome) {
-        vector<string> outputFields { };
+    std::string MrefEntry::printArtifactRatios(const std::string& chromosome) {
+        std::vector<std::string> outputFields { };
         outputFields.reserve(NUM_PIDS + 3u);
         outputFields.emplace_back(chromosome);
         outputFields.emplace_back(strtk::type_to_string<int>(pos));
         outputFields.emplace_back(strtk::type_to_string<int>(pos + 1));
-        vector<string> artifactRatiosOutput(NUM_PIDS, ".");
+        std::vector<std::string> artifactRatiosOutput(NUM_PIDS, ".");
         for (size_t i = 0; i < fileIndicesWithArtifactRatios.size(); ++i) {
             artifactRatiosOutput[fileIndicesWithArtifactRatios[i]] =
                 boost::str(doubleFormatter % artifactRatios[i]);

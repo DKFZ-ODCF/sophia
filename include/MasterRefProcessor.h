@@ -43,9 +43,9 @@ namespace sophia {
 
     class MasterRefProcessor {
       public:
-        MasterRefProcessor(const vector<std::string> &filesIn,
-                           const string &outputRootName,
-                           const string &version,
+        MasterRefProcessor(const std::vector<std::string> &filesIn,
+                           const std::string &outputRootName,
+                           const std::string &version,
                            const ChrSize defaultReadLengthIn);
 
         ~MasterRefProcessor() = default;
@@ -54,17 +54,17 @@ namespace sophia {
         // Note that all methods and fields are private.
         // The MasterRefProcessor does all the work during construction time.
 
-        unsigned long long processFile(const string &gzPath, short fileIndex);
+        unsigned long long processFile(const std::string &gzPath, short fileIndex);
         bool processBp(BreakpointReduced &bp, ChrIndex chrIndex, short fileIndex);
 
         const int NUM_PIDS;
         const ChrSize DEFAULT_READ_LENGTH;
-        unique_ptr<ofstream> mergedBpsOutput;
+        std::unique_ptr<std::ofstream> mergedBpsOutput;
 
         /** This will be a huge data structure, that contains one MrefEntry per position in the
          *  master reference chromosomes.
          **/
-        vector<vector<MrefEntry>> mrefDb;
+        std::vector<std::vector<MrefEntry>> mrefDb;
     };
 
 }   // namespace sophia

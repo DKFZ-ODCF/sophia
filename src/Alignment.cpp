@@ -36,8 +36,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     ChrSize Alignment::LOW_QUAL_CLIP_THRESHOLD{};
 
     int Alignment::BASE_QUALITY_THRESHOLD{},
@@ -59,7 +57,7 @@ namespace sophia {
           mateChrIndex(0),
           matePos(0),
           samLine(),
-          validLine(error_terminating_getline(cin, samLine)),
+          validLine(error_terminating_getline(std::cin, samLine)),
           samTabPositions(),
           saCbegin(),
           saCend(),
@@ -116,7 +114,7 @@ namespace sophia {
                 throw_with_trace(std::logic_error("Invalid flag in SAM file: " + samLine));
             }
         }
-        auto flags = bitset<12>(flag);
+        auto flags = std::bitset<12>(flag);
         supplementary = (flags[11] == true);
         fwdStrand = (flags[4] == false);
         auto mateFwdStrand = (flags[5] == false);
@@ -130,7 +128,7 @@ namespace sophia {
             if (supplementary) {
                 auto startCit = next(samLine.cbegin(), 1 + static_cast<long>(samTabPositions[9]));
                 auto endCit = next(samLine.cbegin(), static_cast<long>(samTabPositions[10]));
-                vector<int> overhangPerBaseQuality{};
+                std::vector<int> overhangPerBaseQuality{};
                 fullMedianQuality(startCit, endCit, overhangPerBaseQuality);
                 if (overhangPerBaseQuality.empty() ||
                     getMedian(overhangPerBaseQuality.begin(),
@@ -519,7 +517,7 @@ namespace sophia {
 
     double
     Alignment::overhangMedianQuality(const CigarChunk &cigarChunk) const {
-        vector<int> overhangPerBaseQuality{};
+        std::vector<int> overhangPerBaseQuality{};
         if (!cigarChunk.encounteredM) {
             auto startCit = next(
                 samLine.cbegin(),
@@ -532,13 +530,13 @@ namespace sophia {
                      static_cast<long>(cigarChunk.length));
             fullMedianQuality(startCit, endCit, overhangPerBaseQuality);
         } else {
-            string::const_reverse_iterator startCrit{
+            std::string::const_reverse_iterator startCrit{
                 next(samLine.cbegin(),
                      1 + static_cast<long>(samTabPositions[9]) +
                      (static_cast<long>(cigarChunk.startPosOnRead) - static_cast<long>(cigarChunk.indelAdjustment)) +
                      static_cast<long>(cigarChunk.length))
              };   // dito
-            string::const_reverse_iterator endCrit{
+            std::string::const_reverse_iterator endCrit{
                 next(samLine.cbegin(),
                      1 + static_cast<long>(samTabPositions[9]) +
                      (static_cast<long>(cigarChunk.startPosOnRead) - static_cast<long>(cigarChunk.indelAdjustment)))};
@@ -655,22 +653,22 @@ namespace sophia {
             }
         }
         chosenBp.reset();
-        chosenBp = make_unique<ChosenBp>(ChosenBp(bpType,
-                                                  bpSize,
-                                                  bpEncounteredM,
-                                                  overhangStartIndex,
-                                                  overhangLength,
-                                                  alignmentIndex /* origin index */));
+        chosenBp = std::make_unique<ChosenBp>(ChosenBp(bpType,
+                                                       bpSize,
+                                                       bpEncounteredM,
+                                                       overhangStartIndex,
+                                                       overhangLength,
+                                                       alignmentIndex /* origin index */));
     }
 
-    vector<SuppAlignment>
+    std::vector<SuppAlignment>
     Alignment::generateSuppAlignments(ChrIndex bpChrIndex, int bpPos) {
-        vector<SuppAlignment> suppAlignmentsTmp;
+        std::vector<SuppAlignment> suppAlignmentsTmp;
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 
         if (hasSa) {
-            vector<string::const_iterator> saBegins = {saCbegin};
-            vector<string::const_iterator> saEnds;
+            std::vector<std::string::const_iterator> saBegins = {saCbegin};
+            std::vector<std::string::const_iterator> saEnds;
             for (auto it = saCbegin; it != saCend; ++it) {
                 if (*it == ';') {
                     saEnds.push_back(it);
@@ -725,9 +723,9 @@ namespace sophia {
         return suppAlignmentsTmp;
     }
 
-    string
+    std::string
     Alignment::printOverhang() const {
-        string res{};
+        std::string res{};
         res.reserve(static_cast<unsigned long>(chosenBp->overhangLength) + 9);
         if (chosenBp->bpEncounteredM) {
             res.append("|").append(samLine.substr(static_cast<unsigned long>(chosenBp->overhangStartIndex),
@@ -747,7 +745,7 @@ namespace sophia {
     Alignment::overhangComplexityMaskRatio() const {
         auto fullSizesTotal = 0.0;
         auto maskedIntervalsTotal = 0.0;
-        vector<int> overhang;
+        std::vector<int> overhang;
         for (unsigned long i = 0; i < static_cast<unsigned long>(chosenBp->overhangLength); ++i) {
             switch (samLine[static_cast<unsigned long>(chosenBp->overhangStartIndex) + i]) {
             case 'A':
@@ -796,7 +794,7 @@ namespace sophia {
     template <typename Iterator>
     void
     Alignment::fullMedianQuality(Iterator qualBegin, Iterator qualEnd,
-                                 vector<int> &overhangPerBaseQuality) const {
+                                 std::vector<int> &overhangPerBaseQuality) const {
         overhangPerBaseQuality.reserve((size_t) distance(qualBegin, qualEnd));
         auto consecutiveLowQuals = 0;
         for (auto cit = qualBegin; cit != qualEnd; ++cit) {

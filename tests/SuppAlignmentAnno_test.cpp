@@ -67,7 +67,7 @@ namespace sophia {
         EXPECT_EQ(anno.isProperPairErrorProne(), false);
 
         EXPECT_EQ(anno.getSupportingIndices().size(), 0);
-        anno.addSupportingIndices(vector<int>({1, 2, 3}));
+        anno.addSupportingIndices(std::vector<int>({1, 2, 3}));
         EXPECT_THAT(anno.getSupportingIndices(), ElementsAre(1, 2, 3));
 
         // !suspicious, semisuspicious, 10 expected discordants, 6 supporting, 5 secondary supporting, 4 mate supporting

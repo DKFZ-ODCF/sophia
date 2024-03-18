@@ -35,8 +35,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     /**
      * @brief The SuppAlignmentAnno class
      * This is similar to SuppAlignment.
@@ -48,7 +46,7 @@ namespace sophia {
 
       public:
 
-        SuppAlignmentAnno(const string &saStrIn);
+        SuppAlignmentAnno(const std::string &saStrIn);
 
         SuppAlignmentAnno(const SuppAlignment &saIn);
 
@@ -64,11 +62,11 @@ namespace sophia {
 
         static ChrSize DEFAULT_READ_LENGTH;
 
-        string print() const;
+        std::string print() const;
 
         void extendSuppAlignment(ChrSize minPos, ChrSize maxPos) {
-            pos = min(pos, minPos);
-            extendedPos = max(extendedPos, maxPos);
+            pos = std::min(pos, minPos);
+            extendedPos = std::max(extendedPos, maxPos);
         }
 
         bool saCloseness(const SuppAlignmentAnno &rhs, int fuzziness) const;
@@ -137,13 +135,13 @@ namespace sophia {
 
         bool isStrictFuzzyCandidate() const { return strictFuzzyCandidate; }
 
-        void addSupportingIndices(const vector<int> &supportingIndicesIn) {
+        void addSupportingIndices(const std::vector<int> &supportingIndicesIn) {
             supportingIndices.insert(supportingIndices.end(),
                                      supportingIndicesIn.cbegin(),
                                      supportingIndicesIn.cend());
         }
 
-        const vector<int> &getSupportingIndices() const {
+        const std::vector<int> &getSupportingIndices() const {
             return supportingIndices;
         }
 
@@ -156,7 +154,7 @@ namespace sophia {
             supportingIndices.push_back(fileIndex);
         }
 
-        void mrefSaConsensus(const unordered_set<unsigned short> &fileIndices) {
+        void mrefSaConsensus(const std::unordered_set<unsigned short> &fileIndices) {
             supportingIndices.clear();
             for (const auto &index : fileIndices) {
                 supportingIndices.push_back(index);
@@ -189,9 +187,9 @@ namespace sophia {
         bool suspicious;
         bool semiSuspicious;
         bool properPairErrorProne;
-        vector<int> supportingIndices;
+        std::vector<int> supportingIndices;
 
-        static const string STOP_CHARS;
+        static const std::string STOP_CHARS;
         inline bool isStopChar(char c);
 
     };

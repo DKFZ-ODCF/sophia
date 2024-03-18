@@ -40,22 +40,20 @@
 
 namespace sophia {
 
-    using namespace std;
-
     class AnnotationProcessor {
       public:
 
         static bool ABRIDGED_OUTPUT;
 
-        AnnotationProcessor(const string &tumorResultsIn,
-                            vector<vector<MrefEntryAnno>> &mref,
+        AnnotationProcessor(const std::string &tumorResultsIn,
+                            std::vector<std::vector<MrefEntryAnno>> &mref,
                             ChrSize defaultReadLengthTumorIn,
                             bool controlCheckModeIn,
                             int GERMLINE_DB_LIMIT);
 
-        AnnotationProcessor(const string &tumorResultsIn,
-                            vector<vector<MrefEntryAnno>> &mref,
-                            const string &controlResultsIn,
+        AnnotationProcessor(const std::string &tumorResultsIn,
+                            std::vector<std::vector<MrefEntryAnno>> &mref,
+                            const std::string &controlResultsIn,
                             ChrSize defaultReadLengthTumorIn,
                             ChrSize DEFAULT_READ_LENGTHControlIn,
                             int GERMLINE_DB_LIMIT,
@@ -71,25 +69,25 @@ namespace sophia {
 
       private:
 
-        void searchMatches(vector<vector<MrefEntryAnno>> &mref);
+        void searchMatches(std::vector<std::vector<MrefEntryAnno>> &mref);
 
         void createDoubleMatchSv(BreakpointReduced &sourceBp,
                                  BreakpointReduced &targetBp,
                                  const SuppAlignmentAnno &sa,
                                  const SuppAlignmentAnno &saMatch,
                                  bool checkOrder,
-                                 vector<vector<MrefEntryAnno>> &mref);
+                                 std::vector<std::vector<MrefEntryAnno>> &mref);
 
         bool createDoubleMatchSvPreCheck(const SuppAlignmentAnno &saMatch);
 
         void createUnmatchedSaSv(BreakpointReduced &sourceBp,
                                  BreakpointReduced &targetBp,
                                  const SuppAlignmentAnno &sa,
-                                 vector<vector<MrefEntryAnno>> &mref);
+                                 std::vector<std::vector<MrefEntryAnno>> &mref);
 
         void createUnknownMatchSv(BreakpointReduced &sourceBp,
                                   const SuppAlignmentAnno &sa,
-                                  vector<vector<MrefEntryAnno>> &mref,
+                                  std::vector<std::vector<MrefEntryAnno>> &mref,
                                   bool doubleSupportSa);
 
         bool createUnknownMatchSvPreCheck(const SuppAlignmentAnno &sa,
@@ -100,7 +98,7 @@ namespace sophia {
         MrefMatch searchMrefHitsNew(const BreakpointReduced &bpIn,
                                     int distanceThreshold,
                                     int conservativeDistanceThreshold,
-                                    vector<vector<MrefEntryAnno>> &mref);
+                                    std::vector<std::vector<MrefEntryAnno>> &mref);
 
         GermlineMatch searchGermlineHitsNew(const BreakpointReduced &bpIn,
                                             int distanceThreshold,
@@ -110,14 +108,14 @@ namespace sophia {
                       size_t dbIndex,
                       const SuppAlignmentAnno &sa,
                       bool doubleSupportSa,
-                      vector<vector<MrefEntryAnno>> &mref);
+                      std::vector<std::vector<MrefEntryAnno>> &mref);
 
         bool applyMassiveInversionFiltering(bool stricterMode,
                                             bool controlCheckMode);
 
         bool applyPathogenContaminationFiltering();
 
-        void printUnresolvedRareOverhangs(vector<vector<MrefEntryAnno>> &mref);
+        void printUnresolvedRareOverhangs(std::vector<std::vector<MrefEntryAnno>> &mref);
 
         const bool NO_CONTROL_MODE;
 
@@ -129,17 +127,17 @@ namespace sophia {
 
         //	unordered_set<vector<int>, VectorHash> filteredResultKeys;
 
-        unordered_set<string> filteredResultKeys;
+        std::unordered_set<std::string> filteredResultKeys;
 
-        vector<SvEvent> filteredResults;
+        std::vector<SvEvent> filteredResults;
 
-        vector<vector<BreakpointReduced>> tumorResults;
+        std::vector<std::vector<BreakpointReduced>> tumorResults;
 
-        vector<vector<BreakpointReduced>> controlResults;
+        std::vector<std::vector<BreakpointReduced>> controlResults;
 
-        vector<pair<int, string>> overhangs;
+        std::vector<std::pair<int, std::string>> overhangs;
 
-        vector<int> visitedLineIndices;
+        std::vector<int> visitedLineIndices;
 
     };
 

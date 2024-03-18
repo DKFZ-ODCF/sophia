@@ -30,8 +30,6 @@
 
 namespace sophia {
 
-using namespace std;
-
     class ChosenBp {
         friend class Alignment;
 
@@ -71,15 +69,15 @@ using namespace std;
 
         ChrSize overhangStartIndex, overhangLength;
 
-        vector<SuppAlignment> supplementaryAlignments;
+        std::vector<SuppAlignment> supplementaryAlignments;
 
-        vector<int> childrenNodes;
+        std::vector<int> childrenNodes;
 
         int selfNodeIndex;
 
         void addChildNode(int indexIn);
 
-        void addSupplementaryAlignments(const vector<SuppAlignment> &suppAlignments);
+        void addSupplementaryAlignments(const std::vector<SuppAlignment> &suppAlignments);
     };
 
 }   // namespace sophia

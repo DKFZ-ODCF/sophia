@@ -27,8 +27,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     int ChosenBp::BP_SUPPORT_THRESHOLD{};
 
     void
@@ -38,7 +36,7 @@ namespace sophia {
 
     void
     ChosenBp::addSupplementaryAlignments(
-        const vector<SuppAlignment> &suppAlignments) {
+        const std::vector<SuppAlignment> &suppAlignments) {
         for (const auto &sa : suppAlignments) {
             auto it = find_if(supplementaryAlignments.begin(),
                               supplementaryAlignments.end(),

@@ -27,34 +27,31 @@
 
 namespace sophia {
 
-    using namespace std;
-   
+    class GermlineMatch {
+    public:
+        GermlineMatch(double clonalityIn, double conservativeClonalityIn, const std::vector<std::pair<SuppAlignmentAnno, double>>& suppMatchesIn);
+        const std::vector<SuppAlignmentAnno>& getSuppMatches() const {
+            return suppMatches;
+        }
 
-class GermlineMatch {
-public:
-	GermlineMatch(double clonalityIn, double conservativeClonalityIn, const vector<pair<SuppAlignmentAnno, double>>& suppMatchesIn);
-	const vector<SuppAlignmentAnno>& getSuppMatches() const {
-		return suppMatches;
-	}
+        const std::vector<double>& getClonalities() const {
+            return clonalities;
+        }
 
-	const vector<double>& getClonalities() const {
-		return clonalities;
-	}
+        double getClonality() const {
+            return clonality;
+        }
 
-	double getClonality() const {
-		return clonality;
-	}
+        double getConservativeClonality() const {
+            return conservativeClonality;
+        }
 
-	double getConservativeClonality() const {
-		return conservativeClonality;
-	}
-
-private:
-	double clonality;
-	double conservativeClonality;
-	vector<SuppAlignmentAnno> suppMatches;
-	vector<double> clonalities;
-};
+    private:
+        double clonality;
+        double conservativeClonality;
+        std::vector<SuppAlignmentAnno> suppMatches;
+        std::vector<double> clonalities;
+    };
 
 } /* namespace sophia */
 

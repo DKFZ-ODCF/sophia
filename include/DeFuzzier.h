@@ -36,45 +36,43 @@
 
 namespace sophia {
 
-using namespace std;
-
     class DeFuzzier {
       public:
 
         DeFuzzier(ChrSize maxDistanceIn,
                   bool mrefModeIn);
 
-        void deFuzzyDb(vector<BreakpointReduced> &bps) const;
+        void deFuzzyDb(std::vector<BreakpointReduced> &bps) const;
 
-        void deFuzzyDb(vector<MrefEntry> &bps) const;
+        void deFuzzyDb(std::vector<MrefEntry> &bps) const;
 
       private:
-        void processFuzzySa(vector<BreakpointReduced> &bps,
-                            vector<BreakpointReduced>::iterator startingIt,
+        void processFuzzySa(std::vector<BreakpointReduced> &bps,
+                            std::vector<BreakpointReduced>::iterator startingIt,
                             SuppAlignmentAnno *startingSa) const;
 
-        void dbSweep(vector<BreakpointReduced> &bps,
-                     vector<BreakpointReduced>::iterator startingIt,
+        void dbSweep(std::vector<BreakpointReduced> &bps,
+                     std::vector<BreakpointReduced>::iterator startingIt,
                      int increment,
                      SuppAlignmentAnno *consensusSa,
-                     vector<SuppAlignmentAnno *> &processedSas) const;
+                     std::vector<SuppAlignmentAnno *> &processedSas) const;
 
-        void selectBestSa(vector<SuppAlignmentAnno *> &processedSas,
+        void selectBestSa(std::vector<SuppAlignmentAnno *> &processedSas,
                           SuppAlignmentAnno *consensusSa) const;
 
-        void processFuzzySa(vector<MrefEntry> &bps,
-                            vector<MrefEntry>::iterator startingIt,
+        void processFuzzySa(std::vector<MrefEntry> &bps,
+                            std::vector<MrefEntry>::iterator startingIt,
                             SuppAlignmentAnno *startingSa) const;
 
-        void dbSweep(vector<MrefEntry> &bps, vector<MrefEntry>::iterator startingIt,
-                     unordered_set<unsigned short> &fileIndices,
+        void dbSweep(std::vector<MrefEntry> &bps, std::vector<MrefEntry>::iterator startingIt,
+                     std::unordered_set<unsigned short> &fileIndices,
                      int increment,
                      SuppAlignmentAnno *consensusSa,
-                     vector<SuppAlignmentAnno *> &processedSas) const;
+                     std::vector<SuppAlignmentAnno *> &processedSas) const;
 
-        void selectBestSa(vector<SuppAlignmentAnno *> &processedSas,
+        void selectBestSa(std::vector<SuppAlignmentAnno *> &processedSas,
                           SuppAlignmentAnno *consensusSa,
-                          const unordered_set<unsigned short> &fileIndices) const;
+                          const std::unordered_set<unsigned short> &fileIndices) const;
 
         const ChrSize MAX_DISTANCE;
 

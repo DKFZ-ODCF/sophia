@@ -22,11 +22,11 @@
 
 
 int main(int argc, char** argv) {
-    using namespace std;
+
     using namespace sophia;
 
     ChrSize defaultReadLength { 0 };
-    string assemblyName = "classic_hg37";
+    std::string assemblyName = "classic_hg37";
 
     try {
         boost::program_options::options_description desc("Allowed options for sophiaMref");
@@ -34,16 +34,16 @@ int main(int argc, char** argv) {
             ("help",
                 "produce help message")
             ("gzins",
-                boost::program_options::value<string>(),
+                boost::program_options::value<std::string>(),
                 "A file containing the the paths of the of all gzipped control beds, line-by-line")
             ("outputrootname",
-                boost::program_options::value<string>(),
+                boost::program_options::value<std::string>(),
                 "base name/path for the output files")
             ("version",
-                boost::program_options::value<string>(),
+                boost::program_options::value<std::string>(),
                 "version string used to match the PID in the BED files with the pattern\n  `.*/$pidName.{1}$version.+`")
             ("assemblyname",
-                boost::program_options::value<string>(&assemblyName)->default_value("classic_hg37"),
+                boost::program_options::value<std::string>(&assemblyName)->default_value("classic_hg37"),
                 "assembly name (classic_hg37, hg38, ...)")
             ("defaultreadlength",
                 boost::program_options::value<ChrSize>(&defaultReadLength),
@@ -56,56 +56,56 @@ int main(int argc, char** argv) {
         boost::program_options::notify(inputVariables);
 
         if (inputVariables.count("help")) {
-            cout << desc << endl;
+            std::cout << desc << std::endl;
             return 0;
         }
 
         std::optional<std::string> assemblyNameOpt { };
         if (inputVariables.count("assemblyname")) {
-            assemblyNameOpt = inputVariables["assemblyname"].as<string>();
+            assemblyNameOpt = inputVariables["assemblyname"].as<std::string>();
         }
         setApplicationConfig(assemblyNameOpt);
 
-        string gzInFilesList;
+        std::string gzInFilesList;
         if (inputVariables.count("gzins")) {
-            gzInFilesList = inputVariables["gzins"].as<string>();
+            gzInFilesList = inputVariables["gzins"].as<std::string>();
         } else {
-            cerr << "No gzipped control bed list file given, exiting" << endl;
+            std::cerr << "No gzipped control bed list file given, exiting" << std::endl;
             return 1;
         }
 
-        ifstream gzInFilesHandle { gzInFilesList };
-        vector<string> gzListIn;
-        for (string line; error_terminating_getline(gzInFilesHandle, line);) {
+        std::ifstream gzInFilesHandle { gzInFilesList };
+        std::vector<std::string> gzListIn;
+        for (std::string line; error_terminating_getline(gzInFilesHandle, line);) {
             gzListIn.push_back(line);
         }
 
-        string version { };
+        std::string version { };
         if (inputVariables.count("version")) {
-            version = inputVariables["version"].as<string>();
+            version = inputVariables["version"].as<std::string>();
         } else {
-            cerr << "No input version given, exiting" << endl;
+            std::cerr << "No input version given, exiting" << std::endl;
             return 1;
         }
 
         if (inputVariables.count("defaultreadlength")) {
             defaultReadLength = inputVariables["defaultreadlength"].as<ChrSize>();
         } else {
-            cerr << "Default read length not given, exiting" << endl;
+            std::cerr << "Default read length not given, exiting" << std::endl;
             return 1;
         }
         if (defaultReadLength < 1) {
-            cerr << "Default read length " << std::to_string(defaultReadLength)
-                 << " is invalid." << endl;
+            std::cerr << "Default read length " << std::to_string(defaultReadLength)
+                 << " is invalid." << std::endl;
             return 1;
         }
 
 
-        string outputRoot { };
+        std::string outputRoot { };
         if (inputVariables.count("outputrootname")) {
-            outputRoot = inputVariables["outputrootname"].as<string>();
+            outputRoot = inputVariables["outputrootname"].as<std::string>();
         } else {
-            cerr << "No output file root name given, exiting" << endl;
+            std::cerr << "No output file root name given, exiting" << std::endl;
             return 1;
         }
 
@@ -113,15 +113,15 @@ int main(int argc, char** argv) {
         SuppAlignmentAnno::DEFAULT_READ_LENGTH = defaultReadLength;
         MrefEntry::NUM_PIDS = gzListIn.size();
 
-        cerr << "Running sophiaMref on " << MrefEntry::NUM_PIDS << " PIDs ..." << endl;
+        std::cerr << "Running sophiaMref on " << MrefEntry::NUM_PIDS << " PIDs ..." << std::endl;
         MasterRefProcessor mRefProcessor { gzListIn, outputRoot, version, defaultReadLength };
 
         return 0;
     } catch (boost::exception &e) {
-        cerr << "Error: " << boost::diagnostic_information(e) << endl;
+        std::cerr << "Error: " << boost::diagnostic_information(e) << std::endl;
         return 1;
     } catch (std::exception& e) {
-        cerr << "Error: " << e.what() << endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 }

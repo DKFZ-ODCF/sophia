@@ -32,19 +32,17 @@
 
 namespace sophia {
 
-    using namespace std;
-
     struct PerfectInterval;
 
     class Sdust {
 
       public:
 
-        Sdust(const vector<int> &overhangIn);
+        Sdust(const std::vector<int> &overhangIn);
 
         ~Sdust() = default;
 
-        const vector<PerfectInterval> &getRes() const { return res; }
+        const std::vector<PerfectInterval> &getRes() const { return res; }
 
       private:
 
@@ -52,11 +50,11 @@ namespace sophia {
 
         static const int WINDOW_SIZE = 64;
 
-        vector<PerfectInterval> res;
+        std::vector<PerfectInterval> res;
 
-        set<PerfectInterval> P;
+        std::set<PerfectInterval> P;
 
-        deque<int> w;
+        std::deque<int> w;
 
         int L;
 
@@ -64,22 +62,22 @@ namespace sophia {
 
         int rV;
 
-        vector<int> cW;
+        std::vector<int> cW;
 
-        vector<int> cV;
+        std::vector<int> cV;
 
         void saveMaskedRegions(int wStart);
 
-        int triplet(const vector<int> &overhangIn, int indexPos);
+        int triplet(const std::vector<int> &overhangIn, int indexPos);
 
         void shiftWindow(int t);
 
-        void addTripletInfo(int &r, vector<int> &c, int t);
+        void addTripletInfo(int &r, std::vector<int> &c, int t);
 
 
-        void removeTripletInfo(int &r, vector<int> &c, int t);
+        void removeTripletInfo(int &r, std::vector<int> &c, int t);
 
-        void findPerfectRegions(int wStart, int r, vector<int> c);
+        void findPerfectRegions(int wStart, int r, std::vector<int> c);
 
     };
 

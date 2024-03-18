@@ -32,111 +32,109 @@
 
 namespace sophia {
 
-using namespace std;
+    class MrefEntryAnno {
 
-class MrefEntryAnno {
+      public:
 
-  public:
+        static int PIDS_IN_MREF;
 
-    static int PIDS_IN_MREF;
+        static ChrSize DEFAULT_READ_LENGTH;
 
-    static ChrSize DEFAULT_READ_LENGTH;
+        static boost::format doubleFormatter;
 
-    static boost::format doubleFormatter;
+        MrefEntryAnno(const std::string &mrefEntryIn);
 
-    MrefEntryAnno(const string &mrefEntryIn);
-
-    template <typename T> bool operator<(const T &rhs) const {
-        return static_cast<int>(pos) < static_cast<int>(rhs.getPos());
-    }
-
-    template <typename T> int distanceTo(const T &rhs) const {
-        return abs(static_cast<int>(pos) - static_cast<int>(rhs.getPos()));
-    }
-    template <typename T> int distanceToBp(const T &compIn) const {
-        return abs(static_cast<int>(pos) - static_cast<int>(compIn.getPos()));
-    }
-
-    bool operator==(const MrefEntryAnno &rhs) const {
-        return pos == rhs.getPos();
-    }
-
-    ChrSize getPos() const { return pos; }
-
-    vector<SuppAlignmentAnno *> getSuppAlignmentsPtr() {
-        vector<SuppAlignmentAnno *> res{};
-        for (auto &sa : suppAlignments) {
-            res.push_back(&sa);
+        template <typename T> bool operator<(const T &rhs) const {
+            return static_cast<int>(pos) < static_cast<int>(rhs.getPos());
         }
-        return res;
-    }
 
-    void removeMarkedFuzzies() {
-        while (!suppAlignments.empty() && suppAlignments.back().isToRemove()) {
-            suppAlignments.pop_back();
+        template <typename T> int distanceTo(const T &rhs) const {
+            return abs(static_cast<int>(pos) - static_cast<int>(rhs.getPos()));
         }
-        for (auto saIt = suppAlignments.begin(); saIt != suppAlignments.end();
-             ++saIt) {
-            if (saIt->isToRemove()) {
-                swap(*saIt, suppAlignments.back());
+        template <typename T> int distanceToBp(const T &compIn) const {
+            return abs(static_cast<int>(pos) - static_cast<int>(compIn.getPos()));
+        }
+
+        bool operator==(const MrefEntryAnno &rhs) const {
+            return pos == rhs.getPos();
+        }
+
+        ChrSize getPos() const { return pos; }
+
+        std::vector<SuppAlignmentAnno *> getSuppAlignmentsPtr() {
+            std::vector<SuppAlignmentAnno *> res{};
+            for (auto &sa : suppAlignments) {
+                res.push_back(&sa);
             }
-            while (!suppAlignments.empty() &&
-                   suppAlignments.back().isToRemove()) {
+            return res;
+        }
+
+        void removeMarkedFuzzies() {
+            while (!suppAlignments.empty() && suppAlignments.back().isToRemove()) {
                 suppAlignments.pop_back();
             }
-        }
-    }
-    //	SuppAlignmentAnno* searchFuzzySa(const SuppAlignmentAnno& fuzzySa);
-
-    const vector<SuppAlignmentAnno> &getSuppAlignments() const {
-        return suppAlignments;
-    }
-
-    vector<SuppAlignmentAnno *> getSupplementsPtr() {
-        vector<SuppAlignmentAnno *> res{};
-        for (auto &sa : suppAlignments) {
-            res.push_back(&sa);
-        }
-        return res;
-    }
-
-    bool closeToSupp(const SuppAlignmentAnno &compIn, ChrDistance fuzziness) const {
-        if (compIn.isFuzzy()) {
-            fuzziness = int(2.5 * DEFAULT_READ_LENGTH);   /* truncate */
-            return (static_cast<long>(pos) - fuzziness) <= (static_cast<long>(compIn.getExtendedPos()) + fuzziness) &&
-                   (static_cast<long>(compIn.getPos()) - fuzziness) <= (static_cast<long>(pos) + fuzziness);
-        } else {
-            return ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos()))) <= fuzziness;
-        }
-    }
-
-    ChrDistance distanceToSupp(const SuppAlignmentAnno &compIn) const {
-        ChrDistance result;
-        if (compIn.isFuzzy()) {
-            if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
-                result = 0;
-            } else {
-                if (pos < compIn.getPos()) {
-                    result = ChrDistance(compIn.getPos() - pos);
-                } else {
-                    result = ChrDistance(pos - compIn.getExtendedPos());
+            for (auto saIt = suppAlignments.begin(); saIt != suppAlignments.end();
+                 ++saIt) {
+                if (saIt->isToRemove()) {
+                    std::swap(*saIt, suppAlignments.back());
+                }
+                while (!suppAlignments.empty() &&
+                       suppAlignments.back().isToRemove()) {
+                    suppAlignments.pop_back();
                 }
             }
-        } else {
-            result = ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos())));
         }
-        return result;
-    }
+        //	SuppAlignmentAnno* searchFuzzySa(const SuppAlignmentAnno& fuzzySa);
 
-    short getNumHits() const { return numHits; }
+        const std::vector<SuppAlignmentAnno> &getSuppAlignments() const {
+            return suppAlignments;
+        }
 
-    void setNumHits(short numHits) { this->numHits = numHits; }
+        std::vector<SuppAlignmentAnno *> getSupplementsPtr() {
+            std::vector<SuppAlignmentAnno *> res{};
+            for (auto &sa : suppAlignments) {
+                res.push_back(&sa);
+            }
+            return res;
+        }
 
-  private:
-    ChrSize pos;
-    short numHits;
-    vector<SuppAlignmentAnno> suppAlignments;
-};
+        bool closeToSupp(const SuppAlignmentAnno &compIn, ChrDistance fuzziness) const {
+            if (compIn.isFuzzy()) {
+                fuzziness = int(2.5 * DEFAULT_READ_LENGTH);   /* truncate */
+                return (static_cast<long>(pos) - fuzziness) <= (static_cast<long>(compIn.getExtendedPos()) + fuzziness) &&
+                       (static_cast<long>(compIn.getPos()) - fuzziness) <= (static_cast<long>(pos) + fuzziness);
+            } else {
+                return ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos()))) <= fuzziness;
+            }
+        }
+
+        ChrDistance distanceToSupp(const SuppAlignmentAnno &compIn) const {
+            ChrDistance result;
+            if (compIn.isFuzzy()) {
+                if (compIn.getPos() <= pos && pos <= compIn.getExtendedPos()) {
+                    result = 0;
+                } else {
+                    if (pos < compIn.getPos()) {
+                        result = ChrDistance(compIn.getPos() - pos);
+                    } else {
+                        result = ChrDistance(pos - compIn.getExtendedPos());
+                    }
+                }
+            } else {
+                result = ChrDistance(abs(static_cast<long>(pos) - static_cast<long>(compIn.getPos())));
+            }
+            return result;
+        }
+
+        short getNumHits() const { return numHits; }
+
+        void setNumHits(short numHits) { this->numHits = numHits; }
+
+      private:
+        ChrSize pos;
+        short numHits;
+        std::vector<SuppAlignmentAnno> suppAlignments;
+    };
 
 } /* namespace sophia */
 

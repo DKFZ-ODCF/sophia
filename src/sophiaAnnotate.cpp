@@ -27,7 +27,7 @@
 int main(int argc, char** argv) {
     using namespace sophia;
 
-    string assemblyName = "classic_hg37";
+    std::string assemblyName = "classic_hg37";
     int artifactlofreq { 33 };
     int artifacthifreq { 50 };
     int clonalitylofreq { 5 };
@@ -41,24 +41,24 @@ int main(int argc, char** argv) {
     ChrSize defaultReadLengthControl { 0 };
 
     try {
-        ios_base::sync_with_stdio(false);
+        std::ios_base::sync_with_stdio(false);
         namespace po = boost::program_options;
-        cin.tie(nullptr);
+        std::cin.tie(nullptr);
         po::options_description options("Allowed options for sophiaAnnotate");
         options.add_options()
             ("help",
                 "produce help message")
             ("mref",
-                po::value<string>(),
+                po::value<std::string>(),
                 "path to mref file")
             ("tumorresults",
-                po::value<string>(),
+                po::value<std::string>(),
                 "path to _bps.bed.gz file from `sophia` for the tumor, or control for a no-tumor analysis")
             ("controlresults",
-                po::value<string>(),
+                po::value<std::string>(),
                 "path to _bps.bed.gz file from `sophia` for the control")
             ("assemblyname",
-                po::value<string>(&assemblyName)->default_value(assemblyName),
+                po::value<std::string>(&assemblyName)->default_value(assemblyName),
                 "assembly name (classic_hg37, hg38, ...)")
             ("defaultreadlengthtumor",
                 po::value<ChrSize>(&defaultReadLengthTumor),
@@ -102,49 +102,49 @@ int main(int argc, char** argv) {
         po::notify(inputVariables);
 
         if (inputVariables.count("help")) {
-            cout << options << endl;
+            std::cout << options << std::endl;
             return 0;
         }
 
         std::optional<std::string> assemblyNameOpt { };
         if (inputVariables.count("assemblyname")) {
-            assemblyNameOpt = inputVariables["assemblyname"].as<string>();
+            assemblyNameOpt = inputVariables["assemblyname"].as<std::string>();
         }
         setApplicationConfig(assemblyNameOpt);
 
         CompressedMrefIndex vectorSize =
             GlobalAppConfig::getInstance().getChrConverter().nChromosomesCompressedMref();
 
-        vector<vector<MrefEntryAnno>> mref { static_cast<unsigned int>(vectorSize), vector<MrefEntryAnno> { } };
+        std::vector<std::vector<MrefEntryAnno>> mref { static_cast<unsigned int>(vectorSize), std::vector<MrefEntryAnno> { } };
         if (!inputVariables.count("mref")) {
-            cerr << "No mref file given, exiting" << endl;
+            std::cerr << "No mref file given, exiting" << std::endl;
             return 1;
         }
 
-        string tumorResults;
+        std::string tumorResults;
         if (inputVariables.count("tumorresults")) {
-            tumorResults = inputVariables["tumorresults"].as<string>();
+            tumorResults = inputVariables["tumorresults"].as<std::string>();
         } else {
-            cerr << "No input file given, exiting" << endl;
+            std::cerr << "No input file given, exiting" << std::endl;
             return 1;
         }
 
         if (inputVariables.count("pidsinmref")) {
             pidsInMref = inputVariables["pidsinmref"].as<int>();
         } else {
-            cerr << "number of PIDS in the MREF not given, exiting" << endl;
+            std::cerr << "number of PIDS in the MREF not given, exiting" << std::endl;
             return 1;
         }
 
         if (inputVariables.count("defaultreadlengthtumor")) {
             defaultReadLengthTumor = inputVariables["defaultreadlengthtumor"].as<ChrSize>();
         } else {
-            cerr << "Default read length not given, exiting" << endl;
+            std::cerr << "Default read length not given, exiting" << std::endl;
             return 1;
         }
         if (defaultReadLengthTumor < 1) {
-            cerr << "Default read length tumor " << std::to_string(defaultReadLengthTumor)
-                 << " is invalid." << endl;
+            std::cerr << "Default read length tumor " << std::to_string(defaultReadLengthTumor)
+                 << " is invalid." << std::endl;
             return 1;
         }
 
@@ -182,14 +182,15 @@ int main(int argc, char** argv) {
         }
 
         MrefEntryAnno::PIDS_IN_MREF = pidsInMref;
-        unique_ptr<ifstream> mrefInputHandle
-            { make_unique<ifstream>(inputVariables["mref"].as<string>(), ios_base::in | ios_base::binary) };
-        unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle
-            { make_unique<boost::iostreams::filtering_istream>() };
+        std::unique_ptr<std::ifstream> mrefInputHandle
+            { std::make_unique<std::ifstream>(inputVariables["mref"].as<std::string>(),
+                                              std::ios_base::in | std::ios_base::binary) };
+        std::unique_ptr<boost::iostreams::filtering_istream> mrefGzHandle
+            { std::make_unique<boost::iostreams::filtering_istream>() };
+
         mrefGzHandle->push(boost::iostreams::gzip_decompressor());
         mrefGzHandle->push(*mrefInputHandle);
-//        cerr << "m\n";
-        string line { };
+        std::string line { };
 
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
 
@@ -240,16 +241,16 @@ int main(int argc, char** argv) {
         AnnotationProcessor::ABRIDGED_OUTPUT = true;
         Breakpoint::BP_SUPPORT_THRESHOLD = 3;
         if (inputVariables.count("controlresults")) {
-            string controlResults { inputVariables["controlresults"].as<string>() };
+            std::string controlResults { inputVariables["controlresults"].as<std::string>() };
             if (inputVariables.count("defaultreadlengthcontrol")) {
                 defaultReadLengthControl = inputVariables["defaultreadlengthcontrol"].as<ChrSize>();
             } else {
-                cerr << "Default read length control not given, exiting" << endl;
+                std::cerr << "Default read length control not given, exiting" << std::endl;
                 return 1;
             }
             if (defaultReadLengthControl < 1) {
-                cerr << "Default read length control " << std::to_string(defaultReadLengthControl)
-                     << " is invalid." << endl;
+                std::cerr << "Default read length control " << std::to_string(defaultReadLengthControl)
+                     << " is invalid." << std::endl;
                 return 1;
             }
 
@@ -272,10 +273,10 @@ int main(int argc, char** argv) {
 
         return 0;
     } catch (boost::exception &e) {
-        cerr << "Error: " << boost::diagnostic_information(e) << endl;
+        std::cerr << "Error: " << boost::diagnostic_information(e) << std::endl;
         return 1;
     } catch (std::exception& e) {
-        cerr << "Error: " << e.what() << endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 }

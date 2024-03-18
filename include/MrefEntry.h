@@ -32,8 +32,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     /**
      * @brief MrefEntry class is a container for the mref entries
      * It contains the position, the file indices, the artifact ratios and the support alignments.
@@ -61,14 +59,14 @@ namespace sophia {
 
         ChrSize getPos() const {
             if (!isValid()) {
-                throw_with_trace(logic_error("MrefEntry is invalid"));
+                throw_with_trace(std::logic_error("MrefEntry is invalid"));
             }
             return pos;
         }
 
-        const vector<float> &getArtifactRatios() const { return artifactRatios; }
+        const std::vector<float> &getArtifactRatios() const { return artifactRatios; }
 
-        const vector<unsigned short> &getFileIndices() const { return fileIndices; }
+        const std::vector<unsigned short> &getFileIndices() const { return fileIndices; }
 
         ValidityScore getValidityScore() const { return validity; }
 
@@ -81,25 +79,25 @@ namespace sophia {
                                  suppAlignments.end());
         }
 
-        string printBpInfo(const string &chromosome);
+        std::string printBpInfo(const std::string &chromosome);
 
-        string printArtifactRatios(const string &chromosome);
+        std::string printArtifactRatios(const std::string &chromosome);
 
         SuppAlignmentAnno *searchFuzzySa(const SuppAlignmentAnno &fuzzySa);
 
-        vector<SuppAlignmentAnno *> getSupplementsPtr() {
-            vector<SuppAlignmentAnno *> res{};
+        std::vector<SuppAlignmentAnno *> getSupplementsPtr() {
+            std::vector<SuppAlignmentAnno *> res{};
             for (auto &sa : suppAlignments) {
                 res.push_back(&sa);
             }
             return res;
         }
 
-        const vector<unsigned short> &getFileIndicesWithArtifactRatios() const {
+        const std::vector<unsigned short> &getFileIndicesWithArtifactRatios() const {
             return fileIndicesWithArtifactRatios;
         }
 
-        const vector<SuppAlignmentAnno> &getSuppAlignments() const {
+        const std::vector<SuppAlignmentAnno> &getSuppAlignments() const {
             return suppAlignments;
         }
 
@@ -122,13 +120,13 @@ namespace sophia {
 
         ChrSize pos;
 
-        vector<unsigned short> fileIndices;
+        std::vector<unsigned short> fileIndices;
 
-        vector<unsigned short> fileIndicesWithArtifactRatios;
+        std::vector<unsigned short> fileIndicesWithArtifactRatios;
 
-        vector<float> artifactRatios;
+        std::vector<float> artifactRatios;
 
-        vector<SuppAlignmentAnno> suppAlignments;
+        std::vector<SuppAlignmentAnno> suppAlignments;
     };
 
 } /* namespace sophia */

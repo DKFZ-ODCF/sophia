@@ -37,8 +37,6 @@
 
 namespace sophia {
 
-using namespace std;
-
     class SamSegmentMapper {
       public:
 
@@ -59,7 +57,7 @@ using namespace std;
 
         void incrementCoverages(const Alignment &alignment);
 
-        void assignBps(shared_ptr<Alignment> &alignment);
+        void assignBps(std::shared_ptr<Alignment> &alignment);
 
         const time_t STARTTIME;
 
@@ -75,15 +73,15 @@ using namespace std;
 
         ChrSize minPos, maxPos;
 
-        map<ChrSize, Breakpoint> breakpointsCurrent;
+        std::map<ChrSize, Breakpoint> breakpointsCurrent;
 
-        deque<CoverageAtBase> coverageProfiles;
+        std::deque<CoverageAtBase> coverageProfiles;
 
-        deque<MateInfo> discordantAlignmentsPool;
+        std::deque<MateInfo> discordantAlignmentsPool;
 
-        deque<MateInfo> discordantAlignmentCandidatesPool;
+        std::deque<MateInfo> discordantAlignmentCandidatesPool;
 
-        deque<MateInfo> discordantLowQualAlignmentsPool;
+        std::deque<MateInfo> discordantLowQualAlignmentsPool;
     };
 
 } /* namespace sophia */

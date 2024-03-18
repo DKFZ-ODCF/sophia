@@ -40,8 +40,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     enum ArtifactStatus { ARTIFACT, BORDERLINE, CLEAN, AS_UNKNOWN };
 
     enum ClonalityStatus { HOMO, HETERO, SUBCLONAL, EXTREME_SUBCLONAL, CS_UNKNOWN };
@@ -66,7 +64,7 @@ namespace sophia {
 
         static double CLONALITY_HIGH_THRESHOLD;
 
-        static string PIDS_IN_MREF_STR;
+        static std::string PIDS_IN_MREF_STR;
 
         static int HALF_DEFAULT_READ_LENGTH;
 
@@ -78,29 +76,29 @@ namespace sophia {
 
         static bool DEBUG_MODE;
 
-        const static vector<string> EVENTTYPES;
+        const static std::vector<std::string> EVENTTYPES;
 
         SvEvent(const BreakpointReduced &bp1In,
                 const BreakpointReduced &bp2In,
                 const SuppAlignmentAnno &sa1In,
                 const SuppAlignmentAnno &sa2In,
-                const vector<pair<int, string>> &overhangDb);
+                const std::vector<std::pair<int, std::string>> &overhangDb);
 
         SvEvent(const BreakpointReduced &bp1In,
                 const BreakpointReduced &bp2In,
                 const SuppAlignmentAnno &sa1In,
-                const vector<pair<int, string>> &overhangDb,
+                const std::vector<std::pair<int, std::string>> &overhangDb,
                 const SuppAlignmentAnno &dummySaIn);
 
         SvEvent(const BreakpointReduced &bp1In,
                 const SuppAlignmentAnno &sa1In,
                 GermlineMatch germlineInfo2,
                 MrefMatch hitsInMref2In,
-                const vector<pair<int, string>> &overhangDb,
+                const std::vector<std::pair<int, std::string>> &overhangDb,
                 const SuppAlignmentAnno &dummySaIn);
 
         //	vector<int> getKey() const;
-        string getKey() const;
+        std::string getKey() const;
 
         bool isGermline() const { return germline; }
 
@@ -132,7 +130,7 @@ namespace sophia {
 
         const SuppAlignmentAnno &getSelectedSa2() const { return selectedSa2; }
 
-        string printMatch(const vector<pair<int, string>> &overhangDb) const;
+        std::string printMatch(const std::vector<std::pair<int, std::string>> &overhangDb) const;
 
         bool isToRemove() const { return toRemove; }
 
@@ -151,13 +149,13 @@ namespace sophia {
 
       private:
 
-        pair<int, double> mateQualityConditions(const SuppAlignmentAnno &sa);
+        std::pair<int, double> mateQualityConditions(const SuppAlignmentAnno &sa);
 
-        pair<bool, int> assessOverhangQualityCompensation(
+        std::pair<bool, int> assessOverhangQualityCompensation(
             int lineIndex,
-            const vector<pair<int, string>> &overhangDb) const;
+            const std::vector<std::pair<int, std::string>> &overhangDb) const;
 
-        pair<bool, short> processMrefHits(const MrefMatch &hitsInMref,
+        std::pair<bool, short> processMrefHits(const MrefMatch &hitsInMref,
                                           const SuppAlignmentAnno &sa,
                                           int evidenceLevelIn) const;
 
@@ -177,7 +175,7 @@ namespace sophia {
 
         int filterMatchUnknown(const BreakpointReduced &bp1);
 
-        pair<double, double> assessSvClonality(const BreakpointReduced &bp,
+        std::pair<double, double> assessSvClonality(const BreakpointReduced &bp,
                                                int eventSupportTotal) const;
 
         ClonalityStatus
@@ -201,15 +199,15 @@ namespace sophia {
 
         int assessEventScore(bool hardClipSuspiciousCall, int inputScoreCategory);
 
-        void assessContamination(const vector<pair<int, string>> &overhangDb);
+        void assessContamination(const std::vector<std::pair<int, std::string>> &overhangDb);
 
-        pair<int, double>
+        std::pair<int, double>
         assessContaminationSingleBp(int overhangIndex,
-                                    const vector<pair<int, string>> &overhangDb,
+                                    const std::vector<std::pair<int, std::string>> &overhangDb,
                                     const SuppAlignmentAnno &selectedSa);
 
-        string collapseRange(const vector<string> &vec,
-                             const string &delimiter) const {
+        std::string collapseRange(const std::vector<std::string> &vec,
+                             const std::string &delimiter) const {
             if (vec.empty()) {
                 return "_";
             } else {

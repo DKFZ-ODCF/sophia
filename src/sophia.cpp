@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
     try {
         std::ios_base::sync_with_stdio(false);
-        cin.tie(nullptr);
+        std::cin.tie(nullptr);
         namespace po = boost::program_options;
         po::options_description desc("Allowed options for sophia");
         desc.add_options()
@@ -89,25 +89,25 @@ int main(int argc, char** argv) {
         po::notify(inputVariables);
 
         if (inputVariables.count("help")) {
-            cout << desc << endl;
+            std::cout << desc << std::endl;
             return 0;
         }
 
         std::optional<std::string> assemblyNameOpt { };
         if (inputVariables.count("assemblyname")) {
-            assemblyNameOpt = inputVariables["assemblyname"].as<string>();
+            assemblyNameOpt = inputVariables["assemblyname"].as<std::string>();
         }
         setApplicationConfig(assemblyNameOpt);
 
         if (inputVariables.count("defaultreadlength")) {
             defaultReadLength = inputVariables["defaultreadlength"].as<ChrSize>();
         } else {
-            cerr << "Default read Length not given, exiting. Use --defaultreadlength." << endl;
+            std::cerr << "Default read Length not given, exiting. Use --defaultreadlength." << std::endl;
             return 1;
         }
         if (defaultReadLength < 1) {
-            cerr << "Default read length " << std::to_string(defaultReadLength)
-                 << " is invalid." << endl;
+            std::cerr << "Default read length " << std::to_string(defaultReadLength)
+                 << " is invalid." << std::endl;
             return 1;
         }
 
@@ -149,24 +149,24 @@ int main(int argc, char** argv) {
             mergedIsizeFile = inputVariables["mergedisizes"].as<std::string>();
             auto isizeparams = getIsizeParameters(mergedIsizeFile);
             Alignment::ISIZEMAX =
-                min(4000.0,
-                    isizeparams.first + isizeSigmaLevel * isizeparams.second);
+                std::min(4000.0,
+                         isizeparams.first + isizeSigmaLevel * isizeparams.second);
             SuppAlignment::ISIZEMAX = Alignment::ISIZEMAX;
         } else {
             if (inputVariables.count("medianisize") && inputVariables.count("stdisizepercentage")) {
                 auto medianIsize = inputVariables["medianisize"].as<double>();
                 auto isizeStdPercentage = inputVariables["stdisizepercentage"].as<double>();
                 Alignment::ISIZEMAX =
-                    min(4000.0,
-                        medianIsize + isizeSigmaLevel * medianIsize * isizeStdPercentage * 0.01);
+                    std::min(4000.0,
+                             medianIsize + isizeSigmaLevel * medianIsize * isizeStdPercentage * 0.01);
                 SuppAlignment::ISIZEMAX = Alignment::ISIZEMAX;
             } else {
                 Alignment::ISIZEMAX = 2000.0;
                 SuppAlignment::ISIZEMAX = 2000.0;
-                cerr << "No insert size distribution file given (mergedisizes). "
+                std::cerr << "No insert size distribution file given (mergedisizes). "
                      << "Using a dummy default value of 2000, "
                      << "because the min insert size of a distant event. "
-                     << endl;
+                     << std::endl;
             }
         }
 
@@ -181,16 +181,16 @@ int main(int argc, char** argv) {
 
         SuppAlignment::DEFAULT_READ_LENGTH = defaultReadLength;
         ChosenBp::BP_SUPPORT_THRESHOLD = bpSupport;
-        cout << Breakpoint::COLUMN_STR;
+        std::cout << Breakpoint::COLUMN_STR;
         SamSegmentMapper segmentRefMaster { defaultReadLength };
         segmentRefMaster.parseSamStream();
 
         return 0;
     } catch (boost::exception &e) {
-        cerr << "Error: " << boost::diagnostic_information(e) << endl;
+        std::cerr << "Error: " << boost::diagnostic_information(e) << std::endl;
         return 1;
     } catch (std::exception& e) {
-        cerr << "Error: " << e.what() << endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 }

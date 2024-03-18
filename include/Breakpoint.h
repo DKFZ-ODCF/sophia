@@ -38,15 +38,13 @@
 
 namespace sophia {
 
-    using namespace std;
-
     class Breakpoint {
       public:
 
         Breakpoint(ChrIndex chrIndexIn,
                    ChrSize posIn);
 
-        static Breakpoint parse(const string &bpIn,
+        static Breakpoint parse(const std::string &bpIn,
                                 bool ignoreOverhang);
 
         ~Breakpoint() = default;
@@ -73,16 +71,16 @@ namespace sophia {
 
         static int bpindex;
 
-        static const string COLUMN_STR;
+        static const std::string COLUMN_STR;
 
-        void addSoftAlignment(shared_ptr<Alignment> alignmentIn);
+        void addSoftAlignment(std::shared_ptr<Alignment> alignmentIn);
 
-        void addHardAlignment(shared_ptr<Alignment> alignmentIn);
+        void addHardAlignment(std::shared_ptr<Alignment> alignmentIn);
 
         bool finalizeBreakpoint(
-            const deque<MateInfo> &discordantAlignmentsPool,
-            const deque<MateInfo> &discordantLowQualAlignmentsPool,
-            const deque<MateInfo> &discordantAlignmentCandidatesPool);
+            const std::deque<MateInfo> &discordantAlignmentsPool,
+            const std::deque<MateInfo> &discordantLowQualAlignmentsPool,
+            const std::deque<MateInfo> &discordantAlignmentCandidatesPool);
 
         void setLeftCoverage(int leftCoverageIn) { leftCoverage = leftCoverageIn; }
 
@@ -188,24 +186,24 @@ namespace sophia {
 
         bool isMissingInfoBp() const { return missingInfoBp; }
 
-        const vector<SuppAlignment> &getDoubleSidedMatches() const {
+        const std::vector<SuppAlignment> &getDoubleSidedMatches() const {
             return doubleSidedMatches;
         }
 
-        vector<SuppAlignment *> getDoubleSidedMatchesPtr() {
-            vector<SuppAlignment *> res{};
+        std::vector<SuppAlignment *> getDoubleSidedMatchesPtr() {
+            std::vector<SuppAlignment *> res{};
             for (auto &sa : doubleSidedMatches) {
                 res.push_back(&sa);
             }
             return res;
         }
 
-        const vector<SuppAlignment> &getSupplementsPrimary() const {
+        const std::vector<SuppAlignment> &getSupplementsPrimary() const {
             return supplementsPrimary;
         }
 
-        vector<SuppAlignment *> getSupplementsPrimaryPtr() {
-            vector<SuppAlignment *> res{};
+        std::vector<SuppAlignment *> getSupplementsPrimaryPtr() {
+            std::vector<SuppAlignment *> res{};
             for (auto &sa : supplementsPrimary) {
                 res.push_back(&sa);
             }
@@ -222,7 +220,7 @@ namespace sophia {
 
         int getBreaksShortIndel() const { return breaksShortIndel; }
 
-        const vector<string> &getConsensusOverhangs() const {
+        const std::vector<std::string> &getConsensusOverhangs() const {
             return consensusOverhangs;
         }
 
@@ -262,32 +260,32 @@ namespace sophia {
       private:
 
         // Compose the string that will be printed as column 8 into the breakpoint BED.
-        string finalizeOverhangs();
+        std::string finalizeOverhangs();
 
         // Actually prints to stdout.
-        void printBreakpointReport(const string &overhangStr);
+        void printBreakpointReport(const std::string &overhangStr);
 
-        bool matchDetector(const shared_ptr<Alignment> &longAlignment,
-                           const shared_ptr<Alignment> &shortAlignment) const;
+        bool matchDetector(const std::shared_ptr<Alignment> &longAlignment,
+                           const std::shared_ptr<Alignment> &shortAlignment) const;
 
         void detectDoubleSupportSupps();
 
-        void collapseSuppRange(string &res, const vector<SuppAlignment> &vec) const;
+        void collapseSuppRange(std::string &res, const std::vector<SuppAlignment> &vec) const;
 
-        template <typename T> void cleanUpVector(vector<T> &objectPool);
+        template <typename T> void cleanUpVector(std::vector<T> &objectPool);
 
-        void fillMatePool(const deque<MateInfo> &discordantAlignmentsPool,
-                          const deque<MateInfo> &discordantLowQualAlignmentsPool,
-                          const deque<MateInfo> &discordantAlignmentCandidatesPool);
+        void fillMatePool(const std::deque<MateInfo> &discordantAlignmentsPool,
+                          const std::deque<MateInfo> &discordantLowQualAlignmentsPool,
+                          const std::deque<MateInfo> &discordantAlignmentCandidatesPool);
 
         void collectMateSupport();
 
-        void compressMatePool(vector<MateInfo> &discordantAlignmentsPool);
+        void compressMatePool(std::vector<MateInfo> &discordantAlignmentsPool);
 
         void
         collectMateSupportHelper(SuppAlignment &sa,
-                                 vector<MateInfo> &discordantAlignmentsPool,
-                                 vector<MateInfo> &discordantLowQualAlignmentsPool);
+                                 std::vector<MateInfo> &discordantAlignmentsPool,
+                                 std::vector<MateInfo> &discordantLowQualAlignmentsPool);
 
         void saHomologyClashSolver();
 
@@ -326,21 +324,21 @@ namespace sophia {
 
         bool germline;
 
-        vector<shared_ptr<Alignment>> supportingSoftAlignments;
+        std::vector<std::shared_ptr<Alignment>> supportingSoftAlignments;
 
-        vector<shared_ptr<Alignment>> supportingHardAlignments;
+        std::vector<std::shared_ptr<Alignment>> supportingHardAlignments;
 
-        vector<shared_ptr<Alignment>> supportingHardLowMapqAlignments;
+        std::vector<std::shared_ptr<Alignment>> supportingHardLowMapqAlignments;
 
-        vector<SuppAlignment> supplementsPrimary;
+        std::vector<SuppAlignment> supplementsPrimary;
 
-        vector<SuppAlignment> doubleSidedMatches;
+        std::vector<SuppAlignment> doubleSidedMatches;
 
-        vector<string> consensusOverhangs;
+        std::vector<std::string> consensusOverhangs;
 
-        vector<MateInfo> poolLeft, poolRight, poolLowQualLeft, poolLowQualRight;
+        std::vector<MateInfo> poolLeft, poolRight, poolLowQualLeft, poolLowQualRight;
 
-        vector<SuppAlignment> supplementsSecondary;
+        std::vector<SuppAlignment> supplementsSecondary;
     };
 
 } /* namespace sophia */

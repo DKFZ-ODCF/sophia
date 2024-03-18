@@ -32,8 +32,6 @@
 
 namespace sophia {
 
-    using namespace std;
-
     boost::format BreakpointReduced::doubleFormatter{"%.3f"};
 
     ChrSize BreakpointReduced::DEFAULT_READ_LENGTH{};
@@ -42,7 +40,7 @@ namespace sophia {
 
     double BreakpointReduced::ARTIFACT_FREQ_HIGH_THRESHOLD{};
 
-    string BreakpointReduced::PIDS_IN_MREF_STR{};
+    std::string BreakpointReduced::PIDS_IN_MREF_STR{};
 
     sophia::BreakpointReduced::BreakpointReduced(const Breakpoint &tmpBp,
                                                  int lineIndexIn,
@@ -98,7 +96,7 @@ namespace sophia {
                 }
                 cumulativeMateSupport += sa.getMateSupport();
                 maxExpectedDiscordants =
-                    max(maxExpectedDiscordants, sa.getExpectedDiscordants());
+                    std::max(maxExpectedDiscordants, sa.getExpectedDiscordants());
             }
         }
         if (candidateCount == 2 &&
@@ -189,11 +187,11 @@ namespace sophia {
         return true;
     }
 
-    string
+    std::string
     BreakpointReduced::printOverhang(double germlineClonality,
                                      int numHits,
-                                     const string &overhang) const {
-        string res{"##"};
+                                     const std::string &overhang) const {
+        std::string res{"##"};
         res.append(GlobalAppConfig::getInstance().getChrConverter().indexToChrName(chrIndex)).append("\t");
         res.append(strtk::type_to_string<int>(pos - 1)).append("\t");
         res.append(strtk::type_to_string<int>(pos)).append("\t");

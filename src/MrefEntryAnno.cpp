@@ -27,7 +27,6 @@
 #include <unordered_set>
 
 namespace sophia {
-    using namespace std;
 
     boost::format MrefEntryAnno::doubleFormatter { "%.5f" };
 
@@ -35,12 +34,12 @@ namespace sophia {
 
     int MrefEntryAnno::PIDS_IN_MREF { };
 
-    MrefEntryAnno::MrefEntryAnno(const string& mrefEntryIn) :
+    MrefEntryAnno::MrefEntryAnno(const std::string& mrefEntryIn) :
                     pos { 0 },
                     numHits { 0 },
                     suppAlignments { } {
         unsigned int index = 0;
-        vector<unsigned int> bpChunkPositions { };
+        std::vector<unsigned int> bpChunkPositions { };
         bpChunkPositions.reserve(7);
         auto cit = mrefEntryIn.cbegin();
         if (mrefEntryIn.back() != '.') {
@@ -52,7 +51,7 @@ namespace sophia {
                 ++cit;
             }
             try {
-            string saStr { };
+            std::string saStr { };
                 for (auto i = bpChunkPositions[7] + 1; i < mrefEntryIn.length(); ++i) {
                     if (mrefEntryIn[i] == ';') {
                         suppAlignments.emplace_back(saStr);
@@ -82,7 +81,7 @@ namespace sophia {
             numHits = numHits * 10 + (mrefEntryIn[i] - '0');
         }
         if (mrefEntryIn[0] == 'Y') {
-            numHits = min(PIDS_IN_MREF, 2 * numHits);
+            numHits = std::min(PIDS_IN_MREF, 2 * numHits);
         }
         for (auto &sa : suppAlignments) {
             sa.setSecondarySupport(numHits);

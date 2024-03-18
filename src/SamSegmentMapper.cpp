@@ -48,7 +48,7 @@ namespace sophia {
     SamSegmentMapper::parseSamStream() {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         while (true) {
-            auto alignment = make_shared<Alignment>();
+            auto alignment = std::make_shared<Alignment>();
 
             // Used to be `alignment->getChrIndex() > 1000`, i.e. excluding MT and phiX and INVALID.
             // This is the same as `!chrConverter.isCompressedMref(alignment->getChrIndex())`.
@@ -70,7 +70,7 @@ namespace sophia {
         }
         // EOF event for the samtools pipe. printing the end of the very last
         // chromosome,
-        printBps(numeric_limits<int>::max());
+        printBps(std::numeric_limits<int>::max());
     }
 
     void
@@ -78,7 +78,7 @@ namespace sophia {
         // As we entered a new chromosome here, now print the previous chromosome's
         // unprinted regions
         if (chrIndexCurrent != 0) {
-            printBps(numeric_limits<int>::max());
+            printBps(std::numeric_limits<int>::max());
         }
         chrIndexCurrent = alignment.getChrIndex();
         breakpointsCurrent.clear();
@@ -442,7 +442,7 @@ namespace sophia {
     }
 
     void
-    SamSegmentMapper::assignBps(shared_ptr<Alignment> &alignment) {
+    SamSegmentMapper::assignBps(std::shared_ptr<Alignment> &alignment) {
         switch (alignment->getReadType()) {
         case 1:
             for (auto i = 0u; i < alignment->getReadBreakpoints().size(); ++i) {
@@ -451,8 +451,8 @@ namespace sophia {
                     auto it = breakpointsCurrent.find(bpLoc);
                     if (it == breakpointsCurrent.end()) {
                         auto newIt = breakpointsCurrent.emplace(
-                            piecewise_construct, forward_as_tuple(bpLoc),
-                            forward_as_tuple(chrIndexCurrent, bpLoc));
+                            std::piecewise_construct, std::forward_as_tuple(bpLoc),
+                            std::forward_as_tuple(chrIndexCurrent, bpLoc));
                         newIt.first->second.addSoftAlignment(alignment);
                     } else {
                         it->second.addSoftAlignment(alignment);
@@ -467,8 +467,8 @@ namespace sophia {
                     auto it = breakpointsCurrent.find(bpLoc);
                     if (it == breakpointsCurrent.end()) {
                         auto newIt = breakpointsCurrent.emplace(
-                            piecewise_construct, forward_as_tuple(bpLoc),
-                            forward_as_tuple(chrIndexCurrent, bpLoc));
+                            std::piecewise_construct, std::forward_as_tuple(bpLoc),
+                            std::forward_as_tuple(chrIndexCurrent, bpLoc));
                         newIt.first->second.addHardAlignment(alignment);
                     } else {
                         it->second.addHardAlignment(alignment);
@@ -484,21 +484,21 @@ namespace sophia {
     // void SamSegmentMapper::printMetadata(int ISIZESIGMALEVEL) {
     //	auto elapsedTime = div(difftime(time(nullptr), STARTTIME), 60);
     //	*metaOutputHandle << "#Using soft/hard clip length threshold " <<
-    //Alignment::CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD << endl; 	*metaOutputHandle <<
+    //Alignment::CLIPPED_NUCLEOTIDE_COUNT_THRESHOLD << std::endl; 	*metaOutputHandle <<
     //"#Using low quality clipped overhang length threshold " <<
-    //Alignment::LOW_QUAL_CLIP_THRESHOLD << endl; 	*metaOutputHandle << "#Using Base
-    //Quality Threshold " << Alignment::BASE_QUALITY_THRESHOLD << endl;
+    //Alignment::LOW_QUAL_CLIP_THRESHOLD << std::endl; 	*metaOutputHandle << "#Using Base
+    //Quality Threshold " << Alignment::BASE_QUALITY_THRESHOLD << std::endl;
     //	*metaOutputHandle << "#Using Base Quality Threshold Low " <<
-    //Alignment::BASE_QUALITY_THRESHOLD_LOW << endl; 	*metaOutputHandle << "#Using
+    //Alignment::BASE_QUALITY_THRESHOLD_LOW << std::endl; 	*metaOutputHandle << "#Using
     //sigmas = " << ISIZESIGMALEVEL << " away from the median insert size for
-    //'distant' classification" << endl; 	*metaOutputHandle << "#Using minimum isize
-    //for 'distant' classification = " << Alignment::ISIZEMAX << " bps" << endl;
+    //'distant' classification" << std::endl; 	*metaOutputHandle << "#Using minimum isize
+    //for 'distant' classification = " << Alignment::ISIZEMAX << " bps" << std::endl;
     //	*metaOutputHandle << "#Using minimum reads supporting a breakpoint " <<
-    //Breakpoint::BP_SUPPORT_THRESHOLD << endl; 	*metaOutputHandle << "#Using minimum
+    //Breakpoint::BP_SUPPORT_THRESHOLD << std::endl; 	*metaOutputHandle << "#Using minimum
     //reads supporting a discordant mate contig " << Breakpoint::BP_SUPPORT_THRESHOLD
-    //<< endl; 	*metaOutputHandle << "#Using (-F 0x600 -f 0x001)" << endl;
+    //<< std::endl; 	*metaOutputHandle << "#Using (-F 0x600 -f 0x001)" << std::endl;
     //	*metaOutputHandle << "#done\t" << printedBps << " lines printed in " <<
-    //elapsedTime.quot << " minutes, " << elapsedTime.rem << " seconds" << endl;
+    //elapsedTime.quot << " minutes, " << elapsedTime.rem << " seconds" << std::endl;
     // }
 
 } /* namespace sophia */
