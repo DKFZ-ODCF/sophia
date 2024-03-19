@@ -15,7 +15,7 @@ For a detailed description of the algorithm, please refer to [Umut Topraks's dis
 SOPHIA is a very fast and resource-light algorithm. 
 It uses 2GB RAM, 2 CPU cores and runs in ~3.5 hours for 50x coverage WGS, and can detect variants with a single pass of the input BAM files. No local assembly is done.
 
-Sophia is included in the [SophiaWorkflow](https://github.com/DKFZ-ODCF/SophiaWorkflow) that uses the [Roddy Workflow Management Systems](https://github.com/TheRoddyWMS/Roddy).
+SOPHIA is included in the [SophiaWorkflow](https://github.com/DKFZ-ODCF/SophiaWorkflow) that uses the [Roddy Workflow Management Systems](https://github.com/TheRoddyWMS/Roddy).
 
 
 ### Citing
@@ -27,7 +27,7 @@ You can cite the original version (35) of SOPHIA as follows:
     Umut Toprak (2019).
     DOI 10.11588/heidok.000274296
 
-The code for the original version 35 can be found in the old [SOPHIA repository](https://bitbucket.org/utoprak/sophia/src/master/) bitbucket repository. 
+The code for the original version 35 can be found in the old [SOPHIA repository](https://bitbucket.org/utoprak/sophia/src/master/) Bitbucket repository. 
 
 The code here is a fork of that repository. If you use the newer versions here, please also include a reference to this repository in your citation -- in particular if you use SOPHIA for any other reference genome that the [1000 genomes reference](ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
 ). The original code was cleaned up and tested for the `hg38` assembly. See [Contributors](CONTRIBUTORS.md).
@@ -36,12 +36,18 @@ The code here is a fork of that repository. If you use the newer versions here, 
 
 For instructions and short explanations of on commandline parameters, invoke each tool with `--help`.
 
+![](Overview.svg)
+
+You may get more information about how to use SOPHIA from the implementation in the [Roddy Workflow Management Systems](https://github.com/DKFZ-ODCF/SophiaWorkflow).
+
+The following is the information we could gather from the source code and the Roddy workflow.
+
 #### `sophia` Tool
 
 The main tool for SV calling.
-`sophia` reads in a position-sorted BAM file and outputs a list of SVs breakpoints in a tab-separated BED format.
+`sophia` reads in a position-sorted TAM (ASCII SAM format) file and outputs a list of SVs breakpoints in a tab-separated BED format.
 
-> NOTE: We have only tested BAM created by BWA-MEM.
+> NOTE: We have only tested SAM data created by BWA-MEM.
 
 A call to `sophia` may look like this:
 
@@ -58,7 +64,7 @@ samtools view -F 0x600 -f 0x001 /yourPositionSorted.bam \
            --lowqualclipsize 5 \
            --isizesigma 5 \
            --bpsupport 3 \
-  | gzip --best > out.breakpoints.mref.gz
+  | gzip > breakpoints.bed.gz
 ```
 
 A run on a typical Illumina X10 sample with 30x coverage takes about 5 GB of memory, 2 cores.
@@ -91,9 +97,9 @@ If `--mergedisizes` is provided, `--medianisize` and `--stdisizepercentage` are 
 
 If none of these options are provided, instead a maximum insert size of 2000 is assumed.
 
-##### Outputs
+##### Output
 
-The output is a BED file, which means the start and end positions are 0-based, and left-inclusive, right-exclusive. The 8 columns are:
+The output is a BED file, which means the start and end positions are 0-based, and left-inclusive, right-exclusive. The BED's 8 columns are:
 
 | Column | Description                                                                                                                                                                                                                                                                                                                                | Format                                                                                                              |
 |--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
@@ -131,8 +137,8 @@ It reads in an output of `sophiaMref` and annotates the SVs in the input file wi
 
 ```bash
 sophiaAnnotate \
-  --tumorresults $tumorSampleFile \
-  --controlresults $controlSampleFile \
+  --tumorresults $tumorSampleGzFile \
+  --controlresults $controlSampleGzFile \
   --mref $mRef \
   --PIDS_IN_MREF $pidsInMref \
   --bpfreq $bpFreq \
@@ -148,6 +154,10 @@ sophiaAnnotate \
   > $outputFile
 ```
 
+##### Output
+
+TBD
+
 
 
 #### `sophiaMref` Tool
@@ -155,39 +165,48 @@ sophiaAnnotate \
 The `sophiaMref` tool is used to create a reference file that can be used by `sophiaAnnotate` for annotating SVs with gene information.
 Usually, you will only need to run `sophiaMref`, if you adapt SOPHIA to a new genome assembly.
 
-`sophiaMref` processes a list of gzipped BED files that were generated with the `sophia` tool.
+`sophiaMref` processes a list of *gzipped* BED files that were generated with the `sophia` tool. Usually, these will be breakpoints found by `sophia` in tumor samples. 
 From these it generates a reference that can be used by `sophiaAnnotate` for annotating structural variants with gene information. 
 
-The file produced by `sophiaMref` is a BED file suffixed with with the following columns (see `MrefEntry::printBpInfo` for details):
+##### Output
 
-| Column | Description                                              | Format                                                                                                            |
-|--------|----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
-| 1      | chromosome identifier                                    | string w/o \{:space:, :tab:, :newline, :carriage_return:\}                                                        |
-| 2      | 0-based start (inclusive)                                | `\d+`                                                                                                             |
+The file produced by `sophiaMref` is a BED file suffixed with the following columns (see `MrefEntry::printBpInfo` for details):
+
+| Column | Description                                               | Format                                                                                                            |
+|--------|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| 1      | chromosome identifier                                     | string w/o \{:space:, :tab:, :newline, :carriage_return:\}                                                        |
+| 2      | 0-based start (inclusive)                                 | `\d+`                                                                                                             |
 | 3      | 0-based end (exclusive). This is just start position + 1. | `\d+`                                                                                                             |
-| 4      | number of fileIndices given in column 10                 | `\d+`                                                                                                             |
-| 5      | number of fileIndicesWithArtifactsRatio                  | `\d+`                                                                                                             |
+| 4      | number of files supporting the breakpoint                 | `\d+`                                                                                                             |
+| 5      | number of fileIndicesWithArtifactsRatio                   | `\d+`                                                                                                             |
 | 6      | fileIndices.size() / NUM_PIDS                             | `\d\.\d+`                                                                                                         |
 | 7      | fileIndicesWithArtifactsRatio / NUM_PIDS                  | `\d\.\d+`                                                                                                         |
-| 8      | average artifacts ratio                                  | `NA` if there are no artifacts ratios; otherwise `\d\.\d+`                                                        |
-| 9      | suppAlignments                                           | `.` if there are no supplementary alignments; otherwise the same format as columns 6 and 7 of the `sophia` output |
-| 10     | fileIndices                                              | Comma-separated list of file indices (`\d+`). Maybe empty string.                                                 |
+| 8      | average artifacts ratio                                   | `NA` if there are no artifacts ratios; otherwise `\d\.\d+`                                                        |
+| 9      | suppAlignments                                            | `.` if there are no supplementary alignments; otherwise the same format as columns 6 and 7 of the `sophia` output |
+| 10     | indices of files supporting the breakpoint                | Comma-separated list of file indices (`\d+`). Maybe empty string.                                                 |
 
 The "fileIndices" are the 0-based index into the list of gzipped control-BED input files given to `sophiaMref`.
 
 Currently, the artifacts ratios are tracked, but not printed.
 Files get an artifacts ratio only if a number of conditions are met (undocumented; see `MrefEntry::addEntry` for details).
 
-Note that `sophiaMref` uses a lot of memory (e.g. 400 GB is a safe choice for human assembly), but usually will be only used for generating the reference files for a new genome assembly (which, currently, are hardcoded anyway).
+Note that `sophiaMref` uses a lot of memory (e.g. 350 GB is a safe choice for a human assembly), but usually will be only used for generating the reference files for a new genome assembly.
 
 `sophiaMref` expects that the input BED files match the filename pattern `.*/$realPidName.{1}$version.+`.
 The `$version` is the value provided by the `--version` parameter that is only used to delimit the right end of the PID name.
 For instance `/path/to/somePid1_35.1_bps.tsv.gz` would be a valid filename for the version `35.1` and the extracted PID will be `somePid`.
 
+To increase the reliability of the master reference breakpoint set for the `sophiaAnnotate` tool you may want to filter the `sophiaMref` output, e.g. restricting to only those breakpoint sites, supported by at least, say, 2 tumor samples, e.g. with
+
+```bash
+awk -F '\t' '$4 > 2' | cut -f 1-9 | gzip > mref.bed.gz
+```
+
+The stringency for filtering will depend on the size and heterogeneity of your reference tumor dataset that you use.
 
 ## Dependencies
 
-If you built SOPHIA with dynamic libraries, the some libraries are runtime requirements, namely:
+If you built SOPHIA with dynamic libraries, then some libraries are runtime requirements, namely:
 
   * Boost 1.82.0
   * libbacktrace 20220708
@@ -196,28 +215,21 @@ If you built SOPHIA with dynamic libraries, the some libraries are runtime requi
   * rapidcsv 8.0.0
   * strtk 0.6.0
 
-These may be runtime dependencies, if you choose a dynamic build.
+Some of these may remain runtime dependencies, if you choose a dynamic build.
 The static build creates self-contained binaries that do not have any runtime dependencies.
 
 You can install all dependencies for the dynamic build with [Conda](https://docs.conda.io/):
 
 ```bash
-conda create -n sophia gxx_linux-64=13 boost=1.82.0 gtest=1.14.0 backtrace=20220708
+conda create -n sophia gxx_linux-64=13 boost=1.82.0 gtest=1.14.0 gmock=1.14.0 backtrace=20220708
 ```
 
 ## Building
 
 > Note that `make` will download [StrTk](https://github.com/ArashPartow/strtk) for string processing and [rapidcsv](https://github.com/d99kris/rapidcsv) for TSV file parsing. If you want to delete an already downloaded file and download it again, run `make clean-all` before the compilation. See the `Makefile` for details.
 
+
 ### Dynamic Build
-
-For compilation you additionally need the g++ compiler. So extend the Conda environment a bit:
-
-```bash
-conda create -n sophia gxx_linux-64=13 boost=1.82.0 gtest=1.14.0 backtrace=20220708
-```
-
-Then you can do
 
 ```bash
 source activate sophia
@@ -229,7 +241,7 @@ The binaries will be located in the top-level directory.
 
 ### Static Build
 
-Static building produced 100% self-contained binaries that you can copy to any compatible OS independent of which libraries are installed there.
+Static building produced 100% self-contained binaries that you can copy to an compatible OS independent of which libraries are installed there.
 
 For static building all dependencies need to be available as static libraries (`.a` files). 
 Specifically, libz, libm, glibc, and libstdc++ need to be available as static libraries. 
@@ -297,14 +309,17 @@ See `testRunner --help` for details.
 The 35 version of SOPHIA was extensively tested on the [1000 genomes reference](ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz) with a [phix](https://www.ncbi.nlm.nih.gov/nuccore/NC_001422.1) sequence added.
 
 The original code logic for the "classic_hg37" is still available with the option `--assemblyname classic_hg37`.
-"classic_hg37" is also the default if the `--assemblyname` option is omitted.
+For backwards compatibility, "classic_hg37" is also the default if the `--assemblyname` option is omitted.
 
-Please have a look at the [resources/hg37.tsv](resources/hg37.tsv) file for a compilation of chromosome names and parameters used for that assembly.
+Please have a look at the [resources/hs37d5+phix.tsv](resources/hg37.tsv) file for a compilation of chromosome names and parameters used for that assembly.
 Note however, that this specific file will not be used if you use the `--assemblyname classic_hg37` option, because the "classic_hg37" has all these information hardcoded.
+
+The file [resources/hs37d5+phix.tsv](resources/hg37.tsv) will be used if you use the `--assemblyname hs37d5+phix` option.
+In this case, SOPHIA will use work like "classic_hg37", but use the same re-implementation of some of the infrastructure logic (not the bionformatic logic) that is also used if you use the `--assemblyname hg38` option. 
 
 ### "hg38" and others
 
-Since version 35.1.0 SOPHIA supports other assemblies than "classic_hg37".
+Since version 35.1.0 SOPHIA supports other assemblies than the specific 1000 genomes variant used by the original SOPHIA 35.
 Remember that because SOPHIA needs to map chromosome names, the exact names of the chromosomes are part of the notion of reference/assembly.
 With any other `$assemblyName` value for the `--assemblyname` parameter than "classic_hg37", the value will be composed to a filename `resources/$assemblyName.tsv`.
 
@@ -326,7 +341,8 @@ The `$assemblyName.tsv` file must be a TSV-separated with 4 columns and a header
     * `false`, `no`, `f`, `n`, or `0`: The chromosome is not part of the compressed master-ref set of chromosomes.
   * `category`: The following categories are allowed. See `GenericChrConverter::Category` for details. Categories are converted to lower-case and matched against the following strings:
     * `autosomal`: e.g. chr1, chr2, ...
-    * `gonosomal`: e.g. chrX, chrY
+    * `x`: chrX
+    * `y`: chrY
     * `virus`: e.g. chrEBV
     * `decoy`: e.g. all chromosomes with a _decoy suffix or hs37d5
     * `unassigned`: sequences that belong to normal nuclear genome, but could not be positioned exactly, such as "unplaced", "random", "unlocalized" chromosomes in human assemblies, e.g. chrUn_gl000220
@@ -336,16 +352,16 @@ The `$assemblyName.tsv` file must be a TSV-separated with 4 columns and a header
     * `hla`: HLA contigs
 
     > **NOTE**: The fact that these "categories" exist does not mean that they are used in the code.
-If you want to know more then, currently, the only documentation of we can offer you for SOPHIA is the source code itself. In the future, these categories may also be removed or combined.
-
-
+If you want to know more then, currently, the only documentation we can offer you for SOPHIA is the source code itself. In the future, these categories may also be removed or combined.
 
 ## Changes
 
 * 35.1.0 (upcoming)
-  * Minor: Generic assembly support
+  * Minor: Generic assembly/reference support
     * Added `--assemblyname` option, defaulting to SOPHIA 35.0.0's chromosome converter implementation "classic_hg37" when omitted.
-    > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted. Furthermore, the runtime will be longer than for classic_hg37 and also classic_hg37 runtime has increase slightly (due to class polymorphism).
+    * Added "hs37d5+phix" configuration for the generic re-implementation of the "classic_hg37" chromosome converter.
+    * Added "hg38" configuration for the generic implementation.
+    > WARNING: hg38 support was not excessively tested. In particular, yet hardcoded parameters may have to be adjusted. Furthermore, the runtime will be longer than for "classic_hg37" and also "classic_hg37" runtime has increase slightly (due to class polymorphism).
   * Minor: Build system
     * Use `make` as build system
     * `Release_*` directories with old build-scripts removed
@@ -357,7 +373,17 @@ If you want to know more then, currently, the only documentation of we can offer
   * Patch: Added unit tests.
   * Patch: Code readability improvements, documentation, `.editorconfig` file, and `clang-format` configuration
   * Patch: Major refactorings for code clarity (and understanding of the convoluted code) and to improve usage of C++ type system for compiler-based checks of changes.
-  * Patch: For `sophiaAnnotate` the default value for clonalitylofreq was advertised in the usage information as 10, but the actual value was 5. Now, the correct values (5) is advertised as default.
-    
+  * Patch: For `sophiaAnnotate` the default value for `clonalitylofreq` was advertised in the usage information as 10, but the actual value was 5. Now, the previously used values (5) is also advertised as default.
+
+> Some basic performance numbers for the original hg37 version, the refactored original version (classic_hg37), and the generic reimplementation (hs73d5s+phix).
+>
+> | Tool | Original Runtime (hg37) | classic_hg37 | hs37d5+phix | Memory |
+> |------|-------------------------|--------------|-------------|--------|
+> | sophiaMref | 47 min                  | 48 min       | TBD         | 314.5 GB           |
+> | sophia | TBD                     | TBD          | TBD         | 1 GB        |
+> | sophiaAnnotate | TBD                     | TBD          | TBD         | 4 GB        |
+>
+> Note that this is data from single runs on a dedicated compute node at *different* times, but using the same input data and parameters, except for the assembly name.
+
 * 35 (9e3b6ed)
   * Forked from [bitbucket](https://bitbucket.org/compbio_charite/sophia/src/master/)
