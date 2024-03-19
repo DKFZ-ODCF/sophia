@@ -610,7 +610,7 @@ namespace sophia {
     }
 
     bool
-    Hg37ChrConverter::isInBlockedRegion(ChrIndex chrIndex, ChrSize position) const {
+    Hg37ChrConverter::isInIgnoredRegion(ChrIndex chrIndex, ChrSize position) const {
 //        assertValid(chrIndex);
          // For mate not in range 33140000-33149999 on chromosome 2, do ...
         return !(chrIndex == 2 && (position / 10000 == 3314));

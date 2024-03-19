@@ -170,7 +170,7 @@ namespace sophia {
         /** Map a chromosome name to an index position. */
         ChrIndex chrNameToIndex(std::string chrName) const;
 
-        bool isInBlockedRegion(ChrIndex chrIndex, ChrSize position) const;
+        bool isInIgnoredRegion(ChrIndex chrIndex, ChrSize position) const;
 
         /* This is parsing code. It takes a position in a character stream, and translates the
            following character(s) into index positions (see ChrConverter::indexToChrName). It is

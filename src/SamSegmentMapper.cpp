@@ -230,7 +230,7 @@ namespace sophia {
                 coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementNormalSpans();
             }
             if (!chrConverter.isTechnical(alignment.getMateChrIndex())
-                && !chrConverter.isInBlockedRegion(alignment.getMateChrIndex(),
+                && !chrConverter.isInIgnoredRegion(alignment.getMateChrIndex(),
                                                    alignment.getMatePos())) {
 
                 if (PROPER_PAIR_COMPENSATION_MODE) {
@@ -287,7 +287,7 @@ namespace sophia {
             if (!alignment.isSupplementary() &&
                 !chrConverter.isTechnical(alignment.getMateChrIndex()) &&
                 alignment.isDistantMate()) {
-                if (!chrConverter.isInBlockedRegion(alignment.getMateChrIndex(),
+                if (!chrConverter.isInIgnoredRegion(alignment.getMateChrIndex(),
                                                     alignment.getMatePos())) {
                     discordantLowQualAlignmentsPool.emplace_back(
                         alignment.getStartPos(),
