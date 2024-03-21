@@ -170,7 +170,7 @@ sophiaMref: $(BUILD_DIR)/global.o \
 			$(BUILD_DIR)/sophiaMref.o
 	$(CXX) $(LD_BEGIN_FLAGS) -o $@ $^ $(LD_END_FLAGS)
 
-binaries: $(BINARIES)
+binaries: $(BINARIES) testRunner
 
 
 # Rule for clean
