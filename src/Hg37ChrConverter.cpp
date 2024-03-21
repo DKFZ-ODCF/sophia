@@ -657,7 +657,7 @@ namespace sophia {
                 chrIndex = chrIndex * 10 + ChrIndex(*chr_cit - '0');
             }
         } else {
-            switch (*start) {
+            switch (static_cast<char>(*start)) {
                 case 'h':
                     chrIndex = hg37::decoyIndex;
                     break;
@@ -679,7 +679,7 @@ namespace sophia {
                     } else {
                         throw_with_trace(
                             DomainError("Chromosome identifier with invalid prefix 'M" +
-                                              std::to_string(*start) + "'."));
+                                        std::to_string(static_cast<char>(*start)) + "'."));
                     }
                     break;
                 case 'N':
@@ -688,9 +688,14 @@ namespace sophia {
                 case 'p':
                     chrIndex = hg37::phixIndex;
                     break;
+                case '*':
+                    /* The input stream may contain an unaligned read, which is uses '*' as chromosome name.
+                       We do not have a specific index for this, so we return INVALID. */
+                    chrIndex = hg37::INVALID;
+                    break;
                 default:
-                    throw_with_trace(DomainError("Chromosome identifier with invalid prefix '"
-                                                       + std::to_string(*start) + "'."));
+                    throw_with_trace(DomainError("Chromosome identifier with invalid prefix '" +
+                                                 std::to_string(static_cast<char>(*start)) + "'."));
             }
         }
         return chrIndex;

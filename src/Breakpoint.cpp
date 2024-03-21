@@ -117,19 +117,15 @@ namespace sophia {
             unpairedBreaksSoft + unpairedBreaksHard + breaksShortIndel;
         auto artifactTotal =
             lowQualBreaksSoft + lowQualSpansSoft + lowQualSpansHard;
-        int branch = 0;
         if ((eventTotal + artifactTotal > 50) &&
             (artifactTotal / (0.0 + eventTotal + artifactTotal)) > 0.85) {
-            branch = 1;
             ++bpindex;
             missingInfoBp = true;
         } else if (static_cast<int>(supportingSoftAlignments.size()) == MAX_PERMISSIBLE_SOFTCLIPS &&
                    eventTotal + normalSpans + artifactTotal >  MAX_PERMISSIBLE_HARDCLIPS * 20) {
-            branch = 2;
             ++bpindex;
             missingInfoBp = true;
         } else {
-            branch = 3;
             fillMatePool(discordantAlignmentsPool, discordantLowQualAlignmentsPool,
                          discordantAlignmentCandidatesPool);
             if (eventTotal < BP_SUPPORT_THRESHOLD &&
@@ -152,13 +148,6 @@ namespace sophia {
         if (eventTotal + mateSupport + artifactTotal < BP_SUPPORT_THRESHOLD ||
             (eventTotal + artifactTotal < BP_SUPPORT_THRESHOLD &&
              doubleSidedMatches.empty() && supplementsPrimary.empty())) {
-            if (chrIndex == 999 && pos == 19404) {
-                std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
-                     << "OverhangStr: " << overhangStr << std::endl
-                     << "MissingInfoBp: " << missingInfoBp << std::endl
-                     << "Branch: " << branch << std::endl
-                     << "Short circuited 1!" << std::endl;
-            }
             return false;
         }
         if (missingInfoBp ||
@@ -175,22 +164,8 @@ namespace sophia {
                 pairedBreaksSoft + unpairedBreaksSoft + pairedBreaksHard;
             auto covCriterion = (eventTotal2 + artifactTotal2) > 10;
             if (!(covCriterion && eventTotal2Strict + artifactTotal2Relaxed > 0)) {
-                if (chrIndex == 999 && pos == 19404) {
-                    std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
-                         << "OverhangStr: " << overhangStr << std::endl
-                         << "MissingInfoBp: " << missingInfoBp << std::endl
-                         << "Branch: " << branch << std::endl
-                         << "Short circuited 2!" << std::endl;
-                }
                 return false;
             }
-        }
-        if (chrIndex == 999 && pos == 19404) {
-            std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
-                 << "OverhangStr: " << overhangStr << std::endl
-                 << "MissingInfoBp: " << missingInfoBp << std::endl
-                 << "Branch: " << branch << std::endl
-                 << "Printed!" << std::endl;
         }
         printBreakpointReport(overhangStr);
         return true;
@@ -261,10 +236,6 @@ namespace sophia {
     Breakpoint::finalizeOverhangs() {
         ++bpindex;
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        if (chrIndex == 999 && pos == 19404) {
-            std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
-                 << "supportingSoftAlignments.size()" << supportingSoftAlignments.size() << std::endl;
-        }
         for (size_t i = 0u; i < supportingSoftAlignments.size(); ++i) {
             supportingSoftAlignments[i]->setChosenBp(pos, i);
             if (supportingSoftAlignments[i]->assessOutlierMateDistance()) {
@@ -421,10 +392,6 @@ namespace sophia {
             if (!consensusOverhangsTmp.empty()) {
                 consensusOverhangsTmp.pop_back();
             } else {
-                if (chrIndex == 999 && pos == 19404) {
-                    std::cerr << "Breakpoint: " << chrIndex << ":" << pos << std::endl
-                         << "consensusOverhangsTmp is empty" << std::endl;
-                }
                 return std::string();
             }
         }
