@@ -1199,7 +1199,7 @@ namespace sophia {
         // Column 1: chrIndex.
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         try {
-            result.chrIndex = chrConverter.parseChrAndReturnIndex(bpIn.cbegin(), bpIn.cend(), '\t');
+            result.chrIndex = chrConverter.parseChrReturnIndex(bpIn.cbegin(), bpIn.cend(), '\t');
         } catch (DomainError &e) {
             e <<
                 error_info_string("from = " +

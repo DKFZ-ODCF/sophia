@@ -38,7 +38,7 @@ namespace sophia {
           printedBps{0u},
           chrIndexCurrent{0},
           minPos{std::numeric_limits<ChrSize>::max()},
-          maxPos{std::numeric_limits<ChrSize>::min()},
+          maxPos{std::numeric_limits<ChrSize>::max()},
           breakpointsCurrent{},
           discordantAlignmentsPool{},
           discordantAlignmentCandidatesPool{},
@@ -75,9 +75,10 @@ namespace sophia {
 
     void
     SamSegmentMapper::switchChromosome(const Alignment &alignment) {
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         // As we entered a new chromosome here, now print the previous chromosome's
         // unprinted regions
-        if (chrIndexCurrent != 0) {
+        if (chrConverter.isValid(chrIndexCurrent)) {
             printBps(std::numeric_limits<int>::max());
         }
         chrIndexCurrent = alignment.getChrIndex();
@@ -89,7 +90,7 @@ namespace sophia {
         }
         discordantLowQualAlignmentsPool.clear();
         minPos = std::numeric_limits<ChrSize>::max();
-        maxPos = std::numeric_limits<ChrSize>::min();
+        maxPos = std::numeric_limits<ChrSize>::max();
     }
 
     /** Does a lot of stuff, and -- just by the way -- also prints the results to stdout :(.
@@ -134,7 +135,7 @@ namespace sophia {
                 } else {
                     coverageProfiles.clear();
                     minPos = std::numeric_limits<ChrSize>::max();
-                    maxPos = std::numeric_limits<ChrSize>::min();
+                    maxPos = std::numeric_limits<ChrSize>::max();
                     break;
                 }
             }
@@ -229,9 +230,9 @@ namespace sophia {
                 coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementCoverage();
                 coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementNormalSpans();
             }
-            if (!chrConverter.isTechnical(alignment.getMateChrIndex())
-                && !chrConverter.isInIgnoredRegion(alignment.getMateChrIndex(),
-                                                   alignment.getMatePos())) {
+            if (( chrConverter.isValid(alignment.getMateChrIndex())
+                  && !chrConverter.isTechnical(alignment.getMateChrIndex()))
+                && !chrConverter.isInIgnoredRegion(alignment.getMateChrIndex(), alignment.getMatePos())) {
 
                 if (PROPER_PAIR_COMPENSATION_MODE) {
                     discordantAlignmentCandidatesPool.emplace_back(
@@ -239,7 +240,7 @@ namespace sophia {
                         alignment.getEndPos(),
                         alignment.getMateChrIndex(),
                         alignment.getMatePos(),
-                        2,   // TODO is this a chromosome index
+                        2,  // source type
                         alignment.isInvertedMate());
                 }
                 if (!alignment.isNullMapq()) {
@@ -248,12 +249,15 @@ namespace sophia {
                         alignment.getEndPos(),
                         alignment.getMateChrIndex(),
                         alignment.getMatePos(),
-                        2,   // TODO is this a chromosome index
+                        2,  // source type
                         alignment.isInvertedMate());
                 } else {
                     discordantLowQualAlignmentsPool.emplace_back(
-                        alignment.getStartPos(), alignment.getEndPos(),
-                        alignment.getMateChrIndex(), alignment.getMatePos(), 2,
+                        alignment.getStartPos(),
+                        alignment.getEndPos(),
+                        alignment.getMateChrIndex(),
+                        alignment.getMatePos(),
+                        2,  // source type
                         alignment.isInvertedMate());
                 }
             }
@@ -285,7 +289,8 @@ namespace sophia {
                 coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementLowQualSpansSoft();
             }
             if (!alignment.isSupplementary() &&
-                !chrConverter.isTechnical(alignment.getMateChrIndex()) &&
+                ( chrConverter.isValid(alignment.getMateChrIndex())
+                  && !chrConverter.isTechnical(alignment.getMateChrIndex())) &&
                 alignment.isDistantMate()) {
                 if (!chrConverter.isInIgnoredRegion(alignment.getMateChrIndex(),
                                                     alignment.getMatePos())) {
@@ -294,7 +299,7 @@ namespace sophia {
                         alignment.getEndPos(),
                         alignment.getMateChrIndex(),
                         alignment.getMatePos(),
-                        2,   // TODO Is this a chromosome index?
+                        2,  // source type
                         alignment.isInvertedMate(),
                         alignment.getReadBreakpoints());
                 }

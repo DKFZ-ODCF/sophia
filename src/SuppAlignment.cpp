@@ -168,7 +168,7 @@ namespace sophia {
         // Update `chrIndex` field.
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         try {
-            result.chrIndex = chrConverter.parseChrAndReturnIndex(
+            result.chrIndex = chrConverter.parseChrReturnIndex(
                 fieldBegins[RNAME],
                 fieldEnds[RNAME],
                 ',');
@@ -316,7 +316,7 @@ namespace sophia {
             // need to anchor first character after the position which is either a `|` or a `(`, and then
             // track back to the *last* colon.
             try {
-                result.chrIndex = chrConverter.parseChrAndReturnIndex(
+                result.chrIndex = chrConverter.parseChrReturnIndex(
                     next(saIn.cbegin(), index),
                     saIn.cend(),
                     ':',

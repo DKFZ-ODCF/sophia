@@ -81,7 +81,7 @@ namespace sophia {
             // need to anchor first character after the position which is either a `|` or a `(`, and then
             // track back to the *last* colon.
             try {
-                chrIndex = chrConverter.parseChrAndReturnIndex(
+                chrIndex = chrConverter.parseChrReturnIndex(
                     next(saStrIn.cbegin(), index),
                     saStrIn.cend(),
                     ':',

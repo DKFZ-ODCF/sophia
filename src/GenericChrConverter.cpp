@@ -46,7 +46,7 @@ namespace sophia {
     GenericChrConverter::buildAllChromosomeLookup(const ChrInfoTable::ChrNames &chromosomes) {
         ChrToIndexMap mapping;
         mapping.reserve(chromosomes.size());
-        for (ChrIndex i = 0; i < (ChrIndex) chromosomes.size(); ++i) {
+        for (ChrIndex i = 0; i < static_cast<ChrIndex>(chromosomes.size()); ++i) {
             mapping[chromosomes[static_cast<long>(i)]] = i;
         }
         return mapping;
@@ -56,7 +56,7 @@ namespace sophia {
     GenericChrConverter::buildCompressedMrefToAllMapping(ChrInfoTable chrInfoIn) {
         std::vector<ChrIndex> mapping;
         mapping.reserve((size_t) chrInfoIn.nChromosomes());
-        for (ChrIndex idx = 0; idx < (ChrIndex) chrInfoIn.nChromosomes(); ++idx) {
+        for (ChrIndex idx = 0; idx < static_cast<ChrIndex>(chrInfoIn.nChromosomes()); ++idx) {
             if (chrInfoIn.getChrInfos()[static_cast<long>(idx)].isCompressedMref()) {
                 mapping.emplace_back(idx);
             }
@@ -109,6 +109,14 @@ namespace sophia {
             throw_with_trace(DomainError("Chromosome name not found: '" + chrName + "'"));
         }
         return result;
+    }
+
+    bool GenericChrConverter::isValid(ChrIndex index) const {
+        return index != std::numeric_limits<ChrIndex>::max();
+    }
+
+    ChrIndex GenericChrConverter::getInvalid() const {
+        return std::numeric_limits<ChrIndex>::max();
     }
 
 
@@ -242,11 +250,20 @@ namespace sophia {
         // separator.
         auto isStopChar = [stopChar](char c) { return c == stopChar; };
         auto reverseStartIt = std::reverse_iterator(endMatchIt);
+        auto reverseEndIt = std::reverse_iterator(startIt);
         auto reverseEndMatchIt = std::find_if(reverseStartIt,
-                                              std::reverse_iterator(startIt),
+                                              reverseEndIt,
                                               isStopChar);
+
+        // If the reverseEndMatchIt indicates a failure to find a secondary stop char, then
+        // apparently the string was not in the correct format. Throw an exception.
+        if (reverseEndMatchIt == reverseEndIt) {
+            throw_with_trace(std::invalid_argument("Couldn't parse breakpoint from '" +
+                                                   std::string(startIt, endIt) + "'."));
+        }
+
         // The reverseEndMatchIt now points onto the stopChar. We need to reverse it again (base())
-        // which will *include* the stopChar in the result, which we don't want. Therefore, we
+        // which may *include* the stopChar in the result, which we don't want. Therefore, we
         // increment the reverseEndMatchIt once.
         ++reverseEndMatchIt;
 
@@ -260,7 +277,7 @@ namespace sophia {
     }
 
     /** Parse the chromosome index just by finding the `stopChar`. Everything between the `startIt`,
-           and the first occurrence of the `stopChar` is returned as chromosome name. */
+        and the first occurrence of the `stopChar` is returned as chromosome name. */
     ChrName GenericChrConverter::parseChrSimple(std::string::const_iterator startIt,
                                              std::string::const_iterator endIt,
                                              char stopChar) {
@@ -287,23 +304,28 @@ namespace sophia {
         }
     }
 
-    ChrIndex GenericChrConverter::parseChrAndReturnIndex(std::string::const_iterator startIt,
-                                                         std::string::const_iterator endIt,
-                                                         char stopChar,
-                                                         const std::string &stopCharsExt) const {
+    ChrIndex GenericChrConverter::parseChrReturnIndex(std::string::const_iterator startIt,
+                                                      std::string::const_iterator endIt,
+                                                      char stopChar,
+                                                      const std::string &stopCharsExt) const {
         ChrName chrName = parseChr(startIt, endIt, stopChar, stopCharsExt);
 
-        // Map to ChrIndex and return it, of if the chromosome is not registered, give a helpful
-        // error message, that shows the parsed name and from what input it was parsed.
-        try {
-            return allChromosomeLookup.at(chrName);
-        } catch (std::out_of_range& e) {
-            throw_with_trace(DomainError(
-                "Chromosome name '" + chrName + "' not found for assembly '" +
-                getAssemblyName() + "'."));
+        if (chrName == "*") {
+            // When reading SAM format, we may encounter '*' as chromosome for unaligned reads.
+            return getInvalid();
+        } else {
+            // Map to ChrIndex and return it, of if the chromosome is not registered, give a helpful
+            // error message, that shows the parsed name and from what input it was parsed.
+            try {
+                return allChromosomeLookup.at(chrName);
+            } catch (std::out_of_range& e) {
+                throw_with_trace(DomainError(
+                    "Chromosome name '" + chrName + "' not found for assembly '" +
+                    getAssemblyName() + "'."));
+            }
+            // Just to get rid of a warning.
+            return getInvalid();
         }
-        // Just to get rid of a warning.
-        return std::numeric_limits<ChrIndex>::max();
     }
 
 } /* namespace sophia */

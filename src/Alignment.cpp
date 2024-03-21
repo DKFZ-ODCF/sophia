@@ -76,7 +76,8 @@ namespace sophia {
                 ++index;
             }
             try {
-                chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
+                // WARNING: SAM-format may contain unaligned reads with chromosome "name" '*'.
+                chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrReturnIndex(
                     next(samLine.cbegin(), static_cast<long>(samTabPositions[1]) + 1),
                     samLine.cend(),
                     '\t');
@@ -205,8 +206,9 @@ namespace sophia {
             mateChrIndex = chrIndex;
         } else {
             try {
+                // WARNING: SAM format may contain unaligned reads with chromosome name '*'.
                 mateChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-                    parseChrAndReturnIndex(
+                    parseChrReturnIndex(
                         next(samLine.cbegin(), 1 + static_cast<long>(samTabPositions[5])),
                         samLine.cend(),
                         '\t');

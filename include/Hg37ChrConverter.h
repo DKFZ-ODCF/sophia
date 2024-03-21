@@ -53,13 +53,13 @@ namespace sophia {
         /* Mapping of compressed mref indices to indices. */
         const std::vector<ChrIndex> _compressedMrefIndexToIndex;
 
-        static bool isValid(ChrIndex index);
+        inline static bool _isValid(ChrIndex index);
 
-        static void assertValid(ChrIndex index);
+        static void _assertValid(ChrIndex index);
 
-        static bool isValid(CompressedMrefIndex index);
+        inline static bool _isValid(CompressedMrefIndex index);
 
-        static void assertValid(CompressedMrefIndex index);
+        static void _assertValid(CompressedMrefIndex index);
 
         // The following static methods are used for checks during construction, but also
         // to implement the public interface.
@@ -118,6 +118,12 @@ namespace sophia {
 
         /** Map an index position to a chromosome name for compressed mref files. */
         std::string compressedMrefIndexToChrName(CompressedMrefIndex index) const;
+
+        /** Some INVALID chromomosome indices are not removed early, but carried on in the code,
+          * e.g. unaligned reads from SAM files (that have a chromosome name '*'). The client
+          * code had to deal with them */
+        bool isValid(ChrIndex index) const;
+        ChrIndex getInvalid() const;
 
         /** chr1-chr22, GL00+ */
         bool isAutosome(ChrIndex index) const;
@@ -199,10 +205,10 @@ namespace sophia {
            IMPORTANT: The hg37 parser, here, ignores the `stopCharExt`, but instead keeps the
                       legacy behavior only using the `stopChar`
         */
-        ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
-                                        std::string::const_iterator endIt,
-                                        char stopChar,
-                                        const std::string &stopCharFirst = "") const;
+        ChrIndex parseChrReturnIndex(std::string::const_iterator startIt,
+                                     std::string::const_iterator endIt,
+                                     char stopChar,
+                                     const std::string &stopCharFirst = "") const;
 
     };
 
