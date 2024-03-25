@@ -299,7 +299,7 @@ namespace sophia {
         //
         // Note that NA is only used when mapping from ChrIndex to CompressedMrefIndex, to indicate
         // that chromosome is actually not among the compressed master ref chromosomes.
-        static const CompressedMrefIndex NA = 1003;
+        static const CompressedMrefIndex NA = std::numeric_limits<CompressedMrefIndex>::max();
 
         // This used to be `indexConverter`.
         static const std::vector<CompressedMrefIndex> indexToCompressedMrefIndex {
@@ -392,7 +392,9 @@ namespace sophia {
     }
 
     bool Hg37ChrConverter::_isValid(CompressedMrefIndex index) {
-        return index != hg37::NA;
+        return index >= 0 &&
+               static_cast<unsigned long>(index) < hg37::chrSizesCompressedMref.size()
+               && index != hg37::NA;
     }
 
     void Hg37ChrConverter::_assertValid(CompressedMrefIndex index) {

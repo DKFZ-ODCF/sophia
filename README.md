@@ -377,11 +377,11 @@ If you want to know more then, currently, the only documentation we can offer yo
 
 > Some basic performance numbers for the original hg37 version, the refactored original version (classic_hg37), and the generic reimplementation (hs73d5s+phix).
 >
-> | Tool | Original Runtime (hg37) | classic_hg37 | hs37d5+phix | Memory |
-> |------|-------------------------|--------------|-------------|--------|
-> | sophiaMref | 47 min                  | 48 min       | TBD         | 314.5 GB           |
-> | sophia | TBD                     | TBD          | TBD         | 1 GB        |
-> | sophiaAnnotate | TBD                     | TBD          | TBD         | 4 GB        |
+> | Tool                                     | Original Runtime (hg37)         | classic_hg37 | hs37d5+phix | Memory   |
+> |------------------------------------------|---------------------------------|--------------|-------------|----------|
+> | sophiaMref                               | 47 min                          | 48 min       | TBD         | 314.5 GB |
+> | sophia<br/>(tumor+control processes together) | 306 min <br/>(700 min CPU-time) | TBD          | TBD         | 271 MB   |
+> | sophiaAnnotate                           | TBD                             | TBD          | TBD         | 4 GB     |
 >
 > Note that this is data from single runs on a dedicated compute node at *different* times, but using the same input data and parameters, except for the assembly name.
 

@@ -45,31 +45,41 @@ namespace sophia {
           discordantLowQualAlignmentsPool{} {}
 
     void
-    SamSegmentMapper::parseSamStream() {
+    SamSegmentMapper::parseSamStream(std::istream &inputStream) {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+        #ifdef DEBUG
+        unsigned long count = 0;
+        #endif
         while (true) {
-            auto alignment = std::make_shared<Alignment>();
+            std::shared_ptr<Alignment> alignment = std::make_shared<Alignment>(Alignment());
+            alignment->parseSamLine(inputStream);
 
-            // Used to be `alignment->getChrIndex() > 1000`, i.e. excluding MT and phiX and INVALID.
-            // This is the same as `!chrConverter.isCompressedMref(alignment->getChrIndex())`.
-            if (!chrConverter.isCompressedMref(alignment->getChrIndex())) {
-                continue;
-            }
-
+            // There used to be a `continue` statement here, if `alignment->getChrIndex() > 1000`.
+            // The condition is equivalent to the new `!chrConverter.isCompressedMref(alignment->getChrIndex())`.
+            // Instead, we negated the condition and only process the data, *after* the check, whether
+            // the line is valid.
             if (alignment->isValidLine()) {
-                if (alignment->getChrIndex() != chrIndexCurrent) {
-                    switchChromosome(*alignment);
+                #ifdef DEBUG
+                ++count;
+                if (count % 1000000 == 0) {
+                    std::cerr << "Read " << count << " lines. Stream position "
+                              << static_cast<long int>(inputStream.tellg()) << std::endl;
                 }
-                alignment->continueConstruction();
-                printBps(alignment->getStartPos());
-                incrementCoverages(*alignment);
-                assignBps(alignment);
+                #endif
+                if (chrConverter.isCompressedMref(alignment->getChrIndex())) {
+                    if (alignment->getChrIndex() != chrIndexCurrent) {
+                        switchChromosome(*alignment);
+                    }
+                    alignment->continueConstruction();
+                    printBps(alignment->getStartPos());
+                    incrementCoverages(*alignment);
+                    assignBps(alignment);
+                }
             } else {
                 break;
             }
         }
-        // EOF event for the samtools pipe. printing the end of the very last
-        // chromosome,
+        // EOF event for the samtools pipe. printing the end of the very last chromosome.
         printBps(std::numeric_limits<int>::max());
     }
 

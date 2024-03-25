@@ -44,7 +44,7 @@ namespace sophia {
 
         ~SamSegmentMapper() = default;
 
-        void parseSamStream();
+        void parseSamStream(std::istream &inputStream);
 
       private:
 
