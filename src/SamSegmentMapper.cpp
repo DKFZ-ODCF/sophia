@@ -27,6 +27,9 @@
 #include <iostream>
 #include <limits>
 #include "GlobalAppConfig.h"
+#include <sys/types.h>
+#include <unistd.h>
+
 
 namespace sophia {
 
@@ -47,9 +50,7 @@ namespace sophia {
     void
     SamSegmentMapper::parseSamStream(std::istream &inputStream) {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
-        #ifdef DEBUG
         unsigned long count = 0;
-        #endif
         while (true) {
             std::shared_ptr<Alignment> alignment = std::make_shared<Alignment>(Alignment());
             alignment->parseSamLine(inputStream);
@@ -62,8 +63,7 @@ namespace sophia {
                 #ifdef DEBUG
                 ++count;
                 if (count % 1000000 == 0) {
-                    std::cerr << "Read " << count << " lines. Stream position "
-                              << static_cast<long int>(inputStream.tellg()) << std::endl;
+                    std::cerr << "Read " << count << " lines ..." << std::endl;
                 }
                 #endif
                 if (chrConverter.isCompressedMref(alignment->getChrIndex())) {
@@ -79,6 +79,7 @@ namespace sophia {
                 break;
             }
         }
+        std::cerr << "SamSegmentMapper(" << getpid() << "): Processed " << count << " lines." << std::endl;
         // EOF event for the samtools pipe. printing the end of the very last chromosome.
         printBps(std::numeric_limits<int>::max());
     }

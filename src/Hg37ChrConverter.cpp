@@ -364,18 +364,7 @@ namespace sophia {
     }
 
     bool Hg37ChrConverter::_isValid(ChrIndex index) {
-        return index != hg37::INVALID && index != hg37::ZERO && (
-            _isAutosome(index) ||
-            _isX(index) ||
-            _isY(index) ||
-            _isTechnical(index) ||
-            _isVirus(index) ||
-            _isExtrachromosomal(index) ||
-            _isDecoy(index) ||
-            _isUnassigned(index) /* ||  // There are no HLA and ALT contigs in hg37. The ranges are empty.
-            _isHLA(index) ||
-            _isALT(index) */
-        );
+        return index != hg37::INVALID && index != hg37::ZERO;
     }
 
     bool Hg37ChrConverter::isValid(ChrIndex index) const {
@@ -573,7 +562,8 @@ namespace sophia {
     /* Compressed Master Ref chromosomes are 1-22, X, Y, GL* (unassigned), hs37d4 (decoys), and
      * NC_007605 (virus). Excluded are MT and phix. Used to be index <= 1000 (virus). */
     bool Hg37ChrConverter::isCompressedMref(ChrIndex index) const {
-        return _isValid(_indexToCompressedMrefIndex.at(static_cast<unsigned int>(index)));
+        CompressedMrefIndex mappedIndex = _indexToCompressedMrefIndex.at(static_cast<unsigned int>(index));
+        return _isValid(mappedIndex);
     }
 
     /** Map an compressed mref index to a chromosome name. */

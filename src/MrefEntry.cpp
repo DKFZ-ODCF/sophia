@@ -76,7 +76,7 @@ namespace sophia {
                 // CompressedMrefIndex, that contained `-2` values (now `NA` constant) for chromosomes that were not
                 // in the compressed mref set.
                 // Note that the mitochondrial chromosome itself is *not* among the compressed mrefs. So the
-                // condition is somewhat redundant.
+                // condition is somewhat redundant. I kept it for backwards compatibility.
                 if (saPtr->isSuspicious()
                     || saPtr->isToRemove()
                     || (!chrConverter.isExtrachromosomal(saPtr->getChrIndex())
