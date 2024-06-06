@@ -356,7 +356,8 @@ namespace sophia {
         } else if (eventSize > 1500) {
             distant = true;
         }
-        if (distant && chrIndex1 == chrIndex2 &&
+        if (distant &&
+            chrIndex1 == chrIndex2 &&
             (selectedSa1.isFuzzy() || selectedSa1.isStrictFuzzyCandidate())) {
             if (eventSize < 5000) {
                 distant = false;

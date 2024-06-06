@@ -75,6 +75,7 @@ namespace sophia {
         EXPECT_TRUE(converter.isDecoy(456)); // chrUn_KN707606v1_decoy
         EXPECT_TRUE(converter.isALT(194)); // chr1_KI270762v1_alt
         EXPECT_TRUE(converter.isHLA(2841)); // HLA-A*01:01:01:01
+        EXPECT_TRUE(! converter.isValid(converter.getInvalid()));
     }
 
     TEST_F(GenericChrConverterFixture, GenericChrConverter_isCompressedMrefIndex) {
@@ -116,11 +117,16 @@ namespace sophia {
     }
 
     TEST_F(GenericChrConverterFixture, GenericChrConverterTest_ParseSimpleStrings) {
-        const std::string test1 = "chr1\tsomething\telse\n";
         const GenericChrConverter &converter =
             dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+
+        const std::string test1 = "chr1\tsomething\telse\n";
         EXPECT_EQ(converter.parseChr(test1.begin(), test1.end(), '\t'),
                   "chr1");
+
+        const std::string test2 = "*\tsomething\telse\n";
+        EXPECT_EQ(converter.parseChr(test2.begin(), test2.end(), '\t'),
+                  "*");
     }
 
     TEST_F(GenericChrConverterFixture, GenericChrConverter_chrSizeCompressedMref) {
@@ -151,6 +157,41 @@ namespace sophia {
         EXPECT_EQ(converter.parseChr(test3.begin(), test3.end(), ':', stopChars),
                   "HLA-DRB1*13:01:01");
 
+        const std::string test4 = "*";
+        EXPECT_THROW(converter.parseChr(test4.begin(), test4.end(), ':', stopChars),
+                     std::invalid_argument);
+
+        const std::string test5 = "*\t";
+        EXPECT_EQ(converter.parseChr(test5.begin(), test5.end(), '\t', ""),
+                  "*");
+
+      }
+
+      TEST_F(GenericChrConverterFixture, GenericChrConverterTest_ParseToIndex) {
+        const std::string stopChars = "|(,!/?;";
+
+        const GenericChrConverter& converter =
+            dynamic_cast<const GenericChrConverter&>(GlobalAppConfig::getInstance().getChrConverter());
+
+        const std::string test1 = "HLA-DRB1*13:01:01:2914|(4,0,0?/0)";
+        EXPECT_EQ(converter.parseChrReturnIndex(test1.begin(), test1.end(), ':', stopChars),
+                  3354);
+
+        const std::string test2 = "chrUn_KI270749v1:13653-13654(1,0,3?/4)";
+        EXPECT_EQ(converter.parseChrReturnIndex(test2.begin(), test2.end(), ':', stopChars),
+                  181);
+
+        const std::string test3 = test1 + ";" + test2;
+        EXPECT_EQ(converter.parseChrReturnIndex(test3.begin(), test3.end(), ':', stopChars),
+                  3354);
+
+        const std::string test4 = "*";
+        EXPECT_THROW(converter.parseChrReturnIndex(test4.begin(), test4.end(), ':', stopChars),
+                     std::invalid_argument);
+
+        const std::string test5 = "*\t";
+        EXPECT_EQ(converter.parseChrReturnIndex(test5.begin(), test5.end(), '\t', ""),
+                  converter.getInvalid());
       }
 
 } // namespace sophia

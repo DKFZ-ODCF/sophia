@@ -27,6 +27,9 @@
 #include <iostream>
 #include <limits>
 #include "GlobalAppConfig.h"
+#include <sys/types.h>
+#include <unistd.h>
+
 
 namespace sophia {
 
@@ -38,46 +41,55 @@ namespace sophia {
           printedBps{0u},
           chrIndexCurrent{0},
           minPos{std::numeric_limits<ChrSize>::max()},
-          maxPos{std::numeric_limits<ChrSize>::min()},
+          maxPos{std::numeric_limits<ChrSize>::max()},
           breakpointsCurrent{},
           discordantAlignmentsPool{},
           discordantAlignmentCandidatesPool{},
           discordantLowQualAlignmentsPool{} {}
 
     void
-    SamSegmentMapper::parseSamStream() {
+    SamSegmentMapper::parseSamStream(std::istream &inputStream) {
         const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
+        unsigned long count = 0;
         while (true) {
-            auto alignment = std::make_shared<Alignment>();
+            std::shared_ptr<Alignment> alignment = std::make_shared<Alignment>(Alignment());
+            alignment->parseSamLine(inputStream);
 
-            // Used to be `alignment->getChrIndex() > 1000`, i.e. excluding MT and phiX and INVALID.
-            // This is the same as `!chrConverter.isCompressedMref(alignment->getChrIndex())`.
-            if (!chrConverter.isCompressedMref(alignment->getChrIndex())) {
-                continue;
-            }
-
+            // There used to be a `continue` statement here, if `alignment->getChrIndex() > 1000`.
+            // The condition is equivalent to the new `!chrConverter.isCompressedMref(alignment->getChrIndex())`.
+            // Instead, we negated the condition and only process the data, *after* the check, whether
+            // the line is valid.
             if (alignment->isValidLine()) {
-                if (alignment->getChrIndex() != chrIndexCurrent) {
-                    switchChromosome(*alignment);
+                #ifdef DEBUG
+                ++count;
+                if (count % 1000000 == 0) {
+                    std::cerr << "Read " << count << " lines ..." << std::endl;
                 }
-                alignment->continueConstruction();
-                printBps(alignment->getStartPos());
-                incrementCoverages(*alignment);
-                assignBps(alignment);
+                #endif
+                if (chrConverter.isCompressedMref(alignment->getChrIndex())) {
+                    if (alignment->getChrIndex() != chrIndexCurrent) {
+                        switchChromosome(*alignment);
+                    }
+                    alignment->continueConstruction();
+                    printBps(alignment->getStartPos());
+                    incrementCoverages(*alignment);
+                    assignBps(alignment);
+                }
             } else {
                 break;
             }
         }
-        // EOF event for the samtools pipe. printing the end of the very last
-        // chromosome,
+        std::cerr << "SamSegmentMapper(" << getpid() << "): Processed " << count << " lines." << std::endl;
+        // EOF event for the samtools pipe. printing the end of the very last chromosome.
         printBps(std::numeric_limits<int>::max());
     }
 
     void
     SamSegmentMapper::switchChromosome(const Alignment &alignment) {
+        const ChrConverter &chrConverter = GlobalAppConfig::getInstance().getChrConverter();
         // As we entered a new chromosome here, now print the previous chromosome's
         // unprinted regions
-        if (chrIndexCurrent != 0) {
+        if (chrConverter.isValid(chrIndexCurrent)) {
             printBps(std::numeric_limits<int>::max());
         }
         chrIndexCurrent = alignment.getChrIndex();
@@ -89,7 +101,7 @@ namespace sophia {
         }
         discordantLowQualAlignmentsPool.clear();
         minPos = std::numeric_limits<ChrSize>::max();
-        maxPos = std::numeric_limits<ChrSize>::min();
+        maxPos = std::numeric_limits<ChrSize>::max();
     }
 
     /** Does a lot of stuff, and -- just by the way -- also prints the results to stdout :(.
@@ -134,7 +146,7 @@ namespace sophia {
                 } else {
                     coverageProfiles.clear();
                     minPos = std::numeric_limits<ChrSize>::max();
-                    maxPos = std::numeric_limits<ChrSize>::min();
+                    maxPos = std::numeric_limits<ChrSize>::max();
                     break;
                 }
             }
@@ -229,9 +241,9 @@ namespace sophia {
                 coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementCoverage();
                 coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementNormalSpans();
             }
-            if (!chrConverter.isTechnical(alignment.getMateChrIndex())
-                && !chrConverter.isInBlockedRegion(alignment.getMateChrIndex(),
-                                                   alignment.getMatePos())) {
+            if (( chrConverter.isValid(alignment.getMateChrIndex())
+                  && !chrConverter.isTechnical(alignment.getMateChrIndex()))
+                && !chrConverter.isInIgnoredRegion(alignment.getMateChrIndex(), alignment.getMatePos())) {
 
                 if (PROPER_PAIR_COMPENSATION_MODE) {
                     discordantAlignmentCandidatesPool.emplace_back(
@@ -239,7 +251,7 @@ namespace sophia {
                         alignment.getEndPos(),
                         alignment.getMateChrIndex(),
                         alignment.getMatePos(),
-                        2,   // TODO is this a chromosome index
+                        2,  // source type
                         alignment.isInvertedMate());
                 }
                 if (!alignment.isNullMapq()) {
@@ -248,12 +260,15 @@ namespace sophia {
                         alignment.getEndPos(),
                         alignment.getMateChrIndex(),
                         alignment.getMatePos(),
-                        2,   // TODO is this a chromosome index
+                        2,  // source type
                         alignment.isInvertedMate());
                 } else {
                     discordantLowQualAlignmentsPool.emplace_back(
-                        alignment.getStartPos(), alignment.getEndPos(),
-                        alignment.getMateChrIndex(), alignment.getMatePos(), 2,
+                        alignment.getStartPos(),
+                        alignment.getEndPos(),
+                        alignment.getMateChrIndex(),
+                        alignment.getMatePos(),
+                        2,  // source type
                         alignment.isInvertedMate());
                 }
             }
@@ -285,16 +300,17 @@ namespace sophia {
                 coverageProfiles[static_cast<unsigned long>(i - minPos)].incrementLowQualSpansSoft();
             }
             if (!alignment.isSupplementary() &&
-                !chrConverter.isTechnical(alignment.getMateChrIndex()) &&
+                ( chrConverter.isValid(alignment.getMateChrIndex())
+                  && !chrConverter.isTechnical(alignment.getMateChrIndex())) &&
                 alignment.isDistantMate()) {
-                if (!chrConverter.isInBlockedRegion(alignment.getMateChrIndex(),
+                if (!chrConverter.isInIgnoredRegion(alignment.getMateChrIndex(),
                                                     alignment.getMatePos())) {
                     discordantLowQualAlignmentsPool.emplace_back(
                         alignment.getStartPos(),
                         alignment.getEndPos(),
                         alignment.getMateChrIndex(),
                         alignment.getMatePos(),
-                        2,   // TODO Is this a chromosome index?
+                        2,  // source type
                         alignment.isInvertedMate(),
                         alignment.getReadBreakpoints());
                 }

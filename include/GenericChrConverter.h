@@ -116,6 +116,12 @@ namespace sophia {
         /** Map an index position to a chromosome name for compressed mref files. */
         ChrName compressedMrefIndexToChrName(CompressedMrefIndex index) const;
 
+        /** Some INVALID chromomosome indices are not removed early, but carried on in the code,
+          * e.g. unaligned reads from SAM files (that have a chromosome name '*'). The client
+          * code had to deal with them */
+        bool isValid(ChrIndex index) const;
+        ChrIndex getInvalid() const;
+
         // The following methods could also be implemented as isCategory(ChrIndex, ChrCategory),
         // but, for performance reason we provide them as separate methods.
 
@@ -184,10 +190,10 @@ namespace sophia {
                          const std::string &stopCharExt = "");
 
         // The same as `parseChr`, but returns the index instead of the name.
-        ChrIndex parseChrAndReturnIndex(std::string::const_iterator startIt,
-                                        std::string::const_iterator endIt,
-                                        char stopChar,
-                                        const std::string &stopCharExt = nullptr) const;
+        ChrIndex parseChrReturnIndex(std::string::const_iterator startIt,
+                                     std::string::const_iterator endIt,
+                                     char stopChar,
+                                     const std::string &stopCharExt = nullptr) const;
 
     };
 

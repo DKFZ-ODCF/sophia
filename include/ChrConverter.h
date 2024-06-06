@@ -53,6 +53,11 @@ namespace sophia {
 
         std::string getAssemblyName() const;
 
+        /** The client code yet does not discard "invalid" chromosome indices. E.g. when reading
+          * unaligned reads from SAM files. */
+        virtual bool isValid(ChrIndex index) const = 0;
+        virtual ChrIndex getInvalid() const = 0;
+
         /** Number of chromosomes. */
         virtual ChrIndex nChromosomes() const = 0;
 
@@ -118,7 +123,7 @@ namespace sophia {
         virtual ChrSize chrSizeCompressedMref(CompressedMrefIndex index) const = 0;
 
         /** Returns true, if the region of the read is aligned to is blocked. */
-        virtual bool isInBlockedRegion(ChrIndex chrIndex, ChrSize position) const;
+        virtual bool isInIgnoredRegion(ChrIndex chrIndex, ChrSize position) const;
 
         /** Parse chromosome index.
           *
@@ -146,10 +151,10 @@ namespace sophia {
           * boost::exception information.
           **/
         virtual ChrIndex
-        parseChrAndReturnIndex(std::string::const_iterator startIt,
-                               std::string::const_iterator endIt,
-                               char stopChar,
-                               const std::string &stopCharExt = "") const = 0;
+        parseChrReturnIndex(std::string::const_iterator startIt,
+                            std::string::const_iterator endIt,
+                            char stopChar,
+                            const std::string &stopCharExt = "") const = 0;
 
     };
 

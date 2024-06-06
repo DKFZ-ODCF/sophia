@@ -210,7 +210,7 @@ namespace sophia {
                 // Parse the chromosome name in the first column of the gzip file.
                 ChrIndex globalIndex;
                 try {
-                    globalIndex = chrConverter.parseChrAndReturnIndex(
+                    globalIndex = chrConverter.parseChrReturnIndex(
                         sophiaLine.cbegin(), sophiaLine.cend(), '\t');
                 } catch (const DomainError &e) {
                     e << error_info_string("file = " + gzPath + ", line = " + sophiaLine);

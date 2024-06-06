@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
             };
             ChrIndex globalIndex;
             try {
-                globalIndex = chrConverter.parseChrAndReturnIndex(line.cbegin(), line.cend(), '\t');
+                globalIndex = chrConverter.parseChrReturnIndex(line.cbegin(), line.cend(), '\t');
             } catch (const DomainError &e) {
                 e <<
                     error_info_string("line = " + line);

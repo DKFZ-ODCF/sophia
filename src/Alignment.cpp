@@ -57,7 +57,7 @@ namespace sophia {
           mateChrIndex(0),
           matePos(0),
           samLine(),
-          validLine(error_terminating_getline(std::cin, samLine)),
+          validLine(false),
           samTabPositions(),
           saCbegin(),
           saCend(),
@@ -65,7 +65,11 @@ namespace sophia {
           supplementary(false),
           fwdStrand(true),
           invertedMate(false),
-          qualChecked(false) {
+          qualChecked(false) {}
+
+    void Alignment::parseSamLine(std::istream &in) {
+        error_terminating_getline(in, samLine);
+        validLine = !in.fail();  // https://en.cppreference.com/w/cpp/io/basic_ios/operator_bool
 
         if (validLine) {
             unsigned int index = 0;
@@ -76,7 +80,8 @@ namespace sophia {
                 ++index;
             }
             try {
-                chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrAndReturnIndex(
+                // WARNING: SAM-format may contain unaligned reads with chromosome "name" '*'.
+                chrIndex = GlobalAppConfig::getInstance().getChrConverter().parseChrReturnIndex(
                     next(samLine.cbegin(), static_cast<long>(samTabPositions[1]) + 1),
                     samLine.cend(),
                     '\t');
@@ -85,7 +90,7 @@ namespace sophia {
                                        std::string(next(samLine.cbegin(),
                                                    static_cast<long>(samTabPositions[1]) + 1),
                                                    samLine.cend()));
-                throw e;
+                throw e;   // rethrow; DomainError is a boost::exception
             }
         }
     }
@@ -205,8 +210,9 @@ namespace sophia {
             mateChrIndex = chrIndex;
         } else {
             try {
+                // WARNING: SAM format may contain unaligned reads with chromosome name '*'.
                 mateChrIndex = GlobalAppConfig::getInstance().getChrConverter().
-                    parseChrAndReturnIndex(
+                    parseChrReturnIndex(
                         next(samLine.cbegin(), 1 + static_cast<long>(samTabPositions[5])),
                         samLine.cend(),
                         '\t');
@@ -457,13 +463,16 @@ namespace sophia {
         }
         saCbegin = samLine.cend();
         saCend = samLine.cend();
-        if (samLine.back() == ';' && samLine[samTabPositions.back() + 1] == 'S' &&
+        if (samLine.back() == ';' &&
+            samLine[samTabPositions.back() + 1] == 'S' &&
             samLine[samTabPositions.back() + 2] == 'A') {
+
             saCbegin = samLine.cbegin() + static_cast<long>(samTabPositions.back()) + 6;
             saCend = samLine.cend() - 1;
             hasSa = true;
         } else {
             for (auto i = 10u; i < samTabPositions.size() - 1; ++i) {
+
                 if (samLine[samTabPositions[i + 1] - 1] == ';' &&
                     samLine[samTabPositions[i] + 1] == 'S' &&
                     samLine[samTabPositions[i] + 2] == 'A') {
@@ -688,13 +697,15 @@ namespace sophia {
                                     chosenBp->selfNodeIndex,
                                     bpChrIndex,
                                     bpPos);
-                if (!chrConverter.isTechnical(saTmp.getChrIndex())) {
+                if (chrConverter.isValid(saTmp.getChrIndex()) &&
+                    !chrConverter.isTechnical(saTmp.getChrIndex())) {
                     suppAlignmentsTmp.push_back(saTmp);
                 }
             }
         }
         if (assessOutlierMateDistance()) {
-            if (!chrConverter.isTechnical(getMateChrIndex())) {
+            if (chrConverter.isValid(getMateChrIndex()) &&
+                !chrConverter.isTechnical(getMateChrIndex())) {
                 auto foundMatch = false;
                 MateInfo tmpPairDummy{
                     0, 0, getMateChrIndex(), getMatePos(), true, invertedMate};

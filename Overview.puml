@@ -1,0 +1,76 @@
+@startuml
+
+
+frame Preparation {
+
+    collections sophiaTumorBeds as "sophia tumor BEDs"
+
+    component filterTumorBed as "filter"
+    note top of filterTumorBed
+    E.g. `awk -F '\t' '$4 > 2'`
+    end note
+
+    collections filteredSophiaTumorBeds as "filtered tumor BEDs"
+
+    component sophiaMref
+    component gzipMref as "gzip"
+    file MrefFilePreparation as "sophia mref file"
+
+    sophiaTumorBeds "1..n" -left-> filterTumorBed
+    filterTumorBed "1..n" -down-> filteredSophiaTumorBeds
+    filteredSophiaTumorBeds "1..n" -down-> sophiaMref
+    sophiaMref -down-> gzipMref
+    gzipMref -down-> MrefFilePreparation
+
+}
+
+
+frame Analysis {
+
+    together {
+        file controlTAM as "control TAM"
+        component sophiaControl as "sophia"
+        component gzipControl as "gzip"
+        file sophiaControlBed as "control sophia output"
+
+
+        controlTAM -down-> sophiaControl
+        sophiaControl -down-> gzipControl
+        gzipControl -down-> sophiaControlBed
+
+    }
+
+    together {
+        file tumorTAM as "tumor TAM"
+        component sophiaTumor as "sophia"
+        component gzipTumor as "gzip"
+        file sophiaTumorBed as "tumor sophia output"
+
+        tumorTAM -down-> sophiaTumor
+        sophiaTumor -down-> gzipTumor
+        gzipTumor -down-> sophiaTumorBed
+    }
+
+    sophiaControl -[hidden]right-> sophiaControl
+    tumorTAM -[hidden]right-> controlTAM
+
+    component sophiaAnnotate
+
+    file sophiaMrefAnalysis as "sophia mref file"
+
+    sophiaMrefAnalysis -right-> sophiaAnnotate
+    sophiaControlBed -down-> sophiaAnnotate
+    sophiaTumorBed -down-> sophiaAnnotate
+
+    component sophiaOutput
+    sophiaAnnotate -down-> sophiaOutput
+
+}
+
+Preparation -[hidden]right-> Analysis
+
+sophiaTumorBed .up.> "1..n" sophiaTumorBeds
+
+MrefFilePreparation .up.> sophiaMrefAnalysis
+
+@enduml

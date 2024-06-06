@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
         ChosenBp::BP_SUPPORT_THRESHOLD = bpSupport;
         std::cout << Breakpoint::COLUMN_STR;
         SamSegmentMapper segmentRefMaster { defaultReadLength };
-        segmentRefMaster.parseSamStream();
+        segmentRefMaster.parseSamStream(std::cin);
 
         return 0;
     } catch (boost::exception &e) {

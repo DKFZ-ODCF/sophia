@@ -35,6 +35,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <iostream>
+
 
 namespace sophia {
 
@@ -42,6 +44,8 @@ namespace sophia {
 
       public:
         Alignment();
+
+        void parseSamLine(std::istream &in);
 
         void continueConstruction();
 

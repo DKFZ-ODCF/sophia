@@ -32,7 +32,7 @@ namespace sophia {
         return assemblyName;
     }
 
-    bool ChrConverter::isInBlockedRegion(ChrIndex chrIndex [[gnu::unused]],
+    bool ChrConverter::isInIgnoredRegion(ChrIndex chrIndex [[gnu::unused]],
                                          ChrSize position [[gnu::unused]]) const {
         return false;
     }

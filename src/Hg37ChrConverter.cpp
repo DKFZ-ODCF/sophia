@@ -299,7 +299,7 @@ namespace sophia {
         //
         // Note that NA is only used when mapping from ChrIndex to CompressedMrefIndex, to indicate
         // that chromosome is actually not among the compressed master ref chromosomes.
-        static const CompressedMrefIndex NA = 1003;
+        static const CompressedMrefIndex NA = std::numeric_limits<CompressedMrefIndex>::max();
 
         // This used to be `indexConverter`.
         static const std::vector<CompressedMrefIndex> indexToCompressedMrefIndex {
@@ -359,37 +359,36 @@ namespace sophia {
 
     } /* namespace hg37 */
 
-    bool Hg37ChrConverter::isValid(ChrIndex index) {
-        return index != hg37::INVALID && index != hg37::ZERO && (
-            _isAutosome(index) ||
-            _isX(index) ||
-            _isY(index) ||
-            _isTechnical(index) ||
-            _isVirus(index) ||
-            _isExtrachromosomal(index) ||
-            _isDecoy(index) ||
-            _isUnassigned(index) /* ||  // There are no HLA and ALT contigs in hg37. The ranges are empty.
-            _isHLA(index) ||
-            _isALT(index) */
-        );
+    ChrIndex Hg37ChrConverter::getInvalid() const {
+        return hg37::INVALID;
     }
 
-    void Hg37ChrConverter::assertValid(ChrIndex index) {
+    bool Hg37ChrConverter::_isValid(ChrIndex index) {
+        return index != hg37::INVALID && index != hg37::ZERO;
+    }
+
+    bool Hg37ChrConverter::isValid(ChrIndex index) const {
+        return _isValid(index);
+    }
+
+    void Hg37ChrConverter::_assertValid(ChrIndex index [[gnu::unused]]) {
     #ifndef NDEBUG
-        if (!isValid(index)) {
+        if (!_isValid(index)) {
             throw_with_trace(std::runtime_error("Invalid chromosome index: " +
                              std::to_string(index)));
         }
     #endif
     }
 
-    bool Hg37ChrConverter::isValid(CompressedMrefIndex index) {
-        return index != hg37::NA;
+    bool Hg37ChrConverter::_isValid(CompressedMrefIndex index) {
+        return index >= 0 &&
+               static_cast<unsigned long>(index) < hg37::chrSizesCompressedMref.size()
+               && index != hg37::NA;
     }
 
-    void Hg37ChrConverter::assertValid(CompressedMrefIndex index) {
+    void Hg37ChrConverter::_assertValid(CompressedMrefIndex index [[gnu::unused]]) {
     #ifndef NDEBUG
-        if (!isValid(index)) {
+        if (!_isValid(index)) {
             throw_with_trace(std::runtime_error("Invalid compressed mref index: " +
                                      std::to_string(index)));
         }
@@ -400,32 +399,31 @@ namespace sophia {
         CompressedMrefIndex nCompressed,
         const std::vector<CompressedMrefIndex> &indexToCompressedMrefIndex) {
 
-        // This is now the only place, where invalid values are assigned, ...
-        std::vector<ChrIndex> result (static_cast<unsigned int>(nCompressed), hg37::NA);
-        for (ChrIndex globalIndex = 0;
-             globalIndex < ChrIndex(indexToCompressedMrefIndex.size());
-             ++globalIndex) {
+        // This is now the only place, where invalid ChrIndex values are assigned, ...
+        std::vector<ChrIndex> result (static_cast<unsigned int>(nCompressed), hg37::INVALID);
+        for (ChrIndex chrIndex = 0;
+             chrIndex < ChrIndex(indexToCompressedMrefIndex.size());
+             ++chrIndex) {
 
             CompressedMrefIndex compressedMrefIndex =
-                indexToCompressedMrefIndex[static_cast<unsigned int>(globalIndex)];
+                indexToCompressedMrefIndex[static_cast<unsigned int>(chrIndex)];
 
-            if (isValid(compressedMrefIndex)) {
+            if (_isValid(compressedMrefIndex)) {
                 unsigned int cIdx = static_cast<unsigned int>(compressedMrefIndex);
-                if (isValid(result[cIdx])) {
+                if (_isValid(result[cIdx])) {
                     throw_with_trace(std::runtime_error(
                         "Compressed mref index " + std::to_string(compressedMrefIndex) +
-                        " is already assigned to " +
-                        std::to_string(result[cIdx]) +
-                        " and cannot be assigned to " + std::to_string(globalIndex)));
+                        " is already assigned to " + std::to_string(result[cIdx]) +
+                        " and cannot be assigned to " + std::to_string(chrIndex)));
                 }
-                result[cIdx] = globalIndex;
+                result[cIdx] = chrIndex;
             }
         }
 
         // ... but before we continue, we ensure there are no gaps. There must be an index
         // in the global index space for all compressed mref indices/chromosomes.
-        for (auto it = result.cbegin(); it != result.cend(); ++it) {
-            assertValid(*it);
+        for (std::vector<ChrIndex>::const_iterator it = result.cbegin(); it != result.cend(); ++it) {
+            _assertValid(*it);
         }
 
         return result;
@@ -471,7 +469,6 @@ namespace sophia {
 
     /** Map an index position to a chromosome name. */
     ChrName Hg37ChrConverter::indexToChrName(ChrIndex index) const {
-//        assertValid(index);
         return _indexToChrName[static_cast<unsigned int>(index)];
     }
 
@@ -565,36 +562,31 @@ namespace sophia {
     /* Compressed Master Ref chromosomes are 1-22, X, Y, GL* (unassigned), hs37d4 (decoys), and
      * NC_007605 (virus). Excluded are MT and phix. Used to be index <= 1000 (virus). */
     bool Hg37ChrConverter::isCompressedMref(ChrIndex index) const {
-//        assertValid(index);
-        return isValid(_indexToCompressedMrefIndex.at(static_cast<unsigned int>(index)));
+        CompressedMrefIndex mappedIndex = _indexToCompressedMrefIndex.at(static_cast<unsigned int>(index));
+        return _isValid(mappedIndex);
     }
 
     /** Map an compressed mref index to a chromosome name. */
     ChrName
     Hg37ChrConverter::compressedMrefIndexToChrName(CompressedMrefIndex index) const {
-//        assertValid(index);
         return _compressedMrefIndexToChrName.at(static_cast<unsigned int>(index));
     }
 
     /** Map an index from the global index-space to the compressed mref index-space. */
     CompressedMrefIndex
     Hg37ChrConverter::indexToCompressedMrefIndex(ChrIndex index) const {
-//        assertValid(index);
         CompressedMrefIndex result = _indexToCompressedMrefIndex.at(static_cast<unsigned int>(index));
-//        assertValid(result);
         return result;
     }
 
     ChrIndex
     Hg37ChrConverter::compressedMrefIndexToIndex(CompressedMrefIndex index) const {
-//        assertValid(index);
         return _compressedMrefIndexToIndex.at(static_cast<unsigned int>(index));
     }
 
     /** Map compressed mref index to chromosome size. */
     ChrSize
     Hg37ChrConverter::chrSizeCompressedMref(CompressedMrefIndex index) const {
-//        assertValid(index);
         return _chrSizesCompressedMref[static_cast<unsigned int>(index)];
     }
 
@@ -602,7 +594,7 @@ namespace sophia {
     Hg37ChrConverter::chrNameToIndex(ChrName chrName) const {
         ChrIndex result;
         try {
-            result = parseChrAndReturnIndex(chrName.begin(), chrName.end(), ' ');
+            result = parseChrReturnIndex(chrName.begin(), chrName.end(), ' ');
         } catch (DomainError &e) {
            throw e << error_info_string("from = " + chrName);
         }
@@ -610,9 +602,8 @@ namespace sophia {
     }
 
     bool
-    Hg37ChrConverter::isInBlockedRegion(ChrIndex chrIndex, ChrSize position) const {
-//        assertValid(chrIndex);
-         // For mate not in range 33140000-33149999 on chromosome 2, do ...
+    Hg37ChrConverter::isInIgnoredRegion(ChrIndex chrIndex, ChrSize position) const {
+        // For mate not in range 33140000-33149999 on chromosome 2, do ...
         return !(chrIndex == 2 && (position / 10000 == 3314));
     }
 
@@ -643,7 +634,7 @@ namespace sophia {
        IMPORTANT: The hg37 parser here ignores the stopCharExt, but instead remains with the legacy
                   behavior.
     */
-    ChrIndex Hg37ChrConverter::parseChrAndReturnIndex(
+    ChrIndex Hg37ChrConverter::parseChrReturnIndex(
             std::string::const_iterator start,
             std::string::const_iterator end,
             char stopChar,
@@ -657,7 +648,7 @@ namespace sophia {
                 chrIndex = chrIndex * 10 + ChrIndex(*chr_cit - '0');
             }
         } else {
-            switch (*start) {
+            switch (static_cast<char>(*start)) {
                 case 'h':
                     chrIndex = hg37::decoyIndex;
                     break;
@@ -679,7 +670,7 @@ namespace sophia {
                     } else {
                         throw_with_trace(
                             DomainError("Chromosome identifier with invalid prefix 'M" +
-                                              std::to_string(*start) + "'."));
+                                        std::to_string(static_cast<char>(*start)) + "'."));
                     }
                     break;
                 case 'N':
@@ -688,9 +679,14 @@ namespace sophia {
                 case 'p':
                     chrIndex = hg37::phixIndex;
                     break;
+                case '*':
+                    /* The input stream may contain an unaligned read, which is uses '*' as chromosome name.
+                       We do not have a specific index for this, so we return INVALID. */
+                    chrIndex = hg37::INVALID;
+                    break;
                 default:
-                    throw_with_trace(DomainError("Chromosome identifier with invalid prefix '"
-                                                       + std::to_string(*start) + "'."));
+                    throw_with_trace(DomainError("Chromosome identifier with invalid prefix '" +
+                                                 std::to_string(static_cast<char>(*start)) + "'."));
             }
         }
         return chrIndex;
