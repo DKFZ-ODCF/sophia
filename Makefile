@@ -10,7 +10,7 @@ TESTS_DIR = ./tests
 LIBRARY_FLAGS := -lz -lm -lrt -lboost_system -lboost_iostreams -lboost_program_options -ldl -lbacktrace -lboost_stacktrace_backtrace -DBOOST_STACKTRACE_USE_BACKTRACE
 LDFLAGS := $(LDFLAGS) -flto=auto -rdynamic -no-pie
 # Turned on -Wsign-conversion to get warnings for conversions between signed and unsigned types. This is a cheap workaround to implementing ChrIndex and CompressedMrefIndex.
-CXXFLAGS := -I$(INCLUDE_DIR) $(CXXFLAGS) -std=c++20 -flto=auto -Wall -Wextra -Wsign-conversion -Werror -c -fmessage-length=0 -Wno-attributes -lbacktrace -lboost_stacktrace_backtrace -DBOOST_STACKTRACE_USE_BACKTRACE
+CXXFLAGS := -I$(INCLUDE_DIR) -std=c++20 -flto=auto -Wall -Wextra -Wsign-conversion -Werror -c -fmessage-length=0 -Wno-attributes -lbacktrace -lboost_stacktrace_backtrace -DBOOST_STACKTRACE_USE_BACKTRACE $(CXXFLAGS)
 
 ifeq ($(static),true)
 	LD_BEGIN_FLAGS := -L$(boost_lib_dir)

@@ -371,7 +371,7 @@ namespace sophia {
         return _isValid(index);
     }
 
-    void Hg37ChrConverter::_assertValid(ChrIndex index) {
+    void Hg37ChrConverter::_assertValid(ChrIndex index [[gnu::unused]]) {
     #ifndef NDEBUG
         if (!_isValid(index)) {
             throw_with_trace(std::runtime_error("Invalid chromosome index: " +
@@ -386,7 +386,7 @@ namespace sophia {
                && index != hg37::NA;
     }
 
-    void Hg37ChrConverter::_assertValid(CompressedMrefIndex index) {
+    void Hg37ChrConverter::_assertValid(CompressedMrefIndex index [[gnu::unused]]) {
     #ifndef NDEBUG
         if (!_isValid(index)) {
             throw_with_trace(std::runtime_error("Invalid compressed mref index: " +

@@ -208,7 +208,7 @@ The stringency for filtering will depend on the size and heterogeneity of your r
 
 If you built SOPHIA with dynamic libraries, then some libraries are runtime requirements, namely:
 
-  * Boost 1.82.0
+  * Boost 1.83.0
   * libbacktrace 20220708
   * gtest 1.14.0
   * gmock 1.14.0
@@ -221,7 +221,7 @@ The static build creates self-contained binaries that do not have any runtime de
 You can install all dependencies for the dynamic build with [Conda](https://docs.conda.io/):
 
 ```bash
-conda create -n sophia gxx_linux-64=13 boost=1.82.0 gtest=1.14.0 gmock=1.14.0 backtrace=20220708
+conda create -n sophia gxx_linux-64=13 boost=1.83.0 gtest=1.14.0 gmock=1.14.0 backtrace=20220708
 ```
 
 ## Building
@@ -230,6 +230,8 @@ conda create -n sophia gxx_linux-64=13 boost=1.82.0 gtest=1.14.0 gmock=1.14.0 ba
 
 
 ### Dynamic Build
+
+> NOTE: This is not working anymore. The Conda version of Boost does not provide libboost_stacktrace_backtrace. Thus, a custom build of Boost is required.
 
 ```bash
 source activate sophia
