@@ -239,7 +239,7 @@ To install boost statically (here without installing it system-wide) you need to
 
 ```bash
 # Download boost
-wget https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.tar.bz2
+wget https://archives.boost.io/release/1.82.0/source/boost_1_82_0.tar.bz2
 tar -xjf boost_1_82_0.tar.bz2
 
 # Build b2
